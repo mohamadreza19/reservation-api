@@ -8,6 +8,15 @@ export class Business {
   id: number;
 
   @Column()
+  name: string;
+
+  @Column()
+  icon: string;
+
+  @Column()
+  subDomainName: string;
+
+  @Column()
   serviceCategoryId: number;
 
   @OneToMany(

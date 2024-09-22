@@ -20,12 +20,12 @@ export class Transaction {
   transactionDate: Date;
 
   // Many-to-one relationship with ServiceProfile
-  //   @ManyToOne(
-  //     () => ServiceProfile,
-  //     (serviceProfile) => serviceProfile.transactions,
-  //     { nullable: false, onDelete: 'CASCADE' }
-  //   )
-  //   serviceProfile: ServiceProfile;
+  @ManyToOne(
+    () => ServiceProfile,
+    (serviceProfile) => serviceProfile.transactions,
+    { nullable: false, onDelete: 'CASCADE' },
+  )
+  serviceProfile: ServiceProfile;
 
   // Many-to-one relationship with User (if applicable)
   @ManyToOne(() => Customer, (customer) => customer.transactions, {

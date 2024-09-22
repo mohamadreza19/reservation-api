@@ -10,6 +10,9 @@ import { BusinessCategory } from './features/business-category/entities/business
 import { ServiceCategory } from './features/business-category/entities/service-category.entity';
 import { ServiceProfileModule } from './features/service-profile/service-profile.module';
 
+import { OtpModule } from './features/otp/otp.module';
+import { AuthModule } from './features/auth/auth.module';
+
 @Module({
   imports: [
     DatabaseModule,
@@ -19,6 +22,8 @@ import { ServiceProfileModule } from './features/service-profile/service-profile
     ServiceCategory,
     EmployeeModule,
     ServiceProfileModule,
+    OtpModule,
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [AppService],

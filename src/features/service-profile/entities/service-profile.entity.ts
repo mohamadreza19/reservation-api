@@ -11,6 +11,7 @@ import {
 import { AvailableTime } from '../available-time/entities/available-time.entity';
 import { Business } from 'src/features/business/entities/business.entity';
 import { Employee } from 'src/features/employee/entities/employee.entity';
+import { Transaction } from 'src/features/transaction/entities/transaction.entity';
 
 @Entity()
 export class ServiceProfile {
@@ -37,6 +38,9 @@ export class ServiceProfile {
 
   @Column('timestamp')
   endDate: Date;
+
+  @OneToMany(() => Transaction, (transaction) => transaction.serviceProfile)
+  transactions: Transaction[];
 
   @OneToMany(
     () => AvailableTime,
