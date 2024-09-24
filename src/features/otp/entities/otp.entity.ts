@@ -5,11 +5,11 @@ export class Otp {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ type: 'varchar', length: 6 })
+  @Column({ type: 'varchar' })
   code: string;
 
-  @Column({ type: 'varchar', length: 255 })
-  userId: string;
+  @Column()
+  userId: number;
 
   @Index() // Create an index on expiresAt
   @Column({ type: 'timestamp' })

@@ -6,10 +6,6 @@ import { TypeOrmModuleOptions } from '@nestjs/typeorm';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({
-      isGlobal: true, // Makes the environment variables available globally
-      envFilePath: '.env', // Specifies the path to the .env file
-    }),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],

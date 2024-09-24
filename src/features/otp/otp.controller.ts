@@ -1,4 +1,12 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+} from '@nestjs/common';
 import { OtpService } from './otp.service';
 import { CreateOtpDto } from './dto/create-otp.dto';
 import { UpdateOtpDto } from './dto/update-otp.dto';
@@ -9,17 +17,17 @@ export class OtpController {
 
   @Post()
   create(@Body() createOtpDto: CreateOtpDto) {
-    return this.otpService.create(createOtpDto);
+    // return this.otpService.create(createOtpDto);
   }
 
   @Get()
   findAll() {
-    return this.otpService.findAll();
+    // return this.otpService.findAll();
   }
 
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.otpService.findOne(+id);
+    // return this.otpService.findOne(+id);
   }
 
   @Patch(':id')
