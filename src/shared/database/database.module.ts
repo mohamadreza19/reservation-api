@@ -9,15 +9,18 @@ import { TypeOrmModuleOptions } from '@nestjs/typeorm';
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
-      useFactory: (configService: ConfigService): TypeOrmModuleOptions => ({
-        type: 'postgres',
-        url: configService.get<string>('DATABASE_URL'),
-        autoLoadEntities: true,
-        synchronize: true, // Set this to false in production
-        ssl: {
-          rejectUnauthorized: false, // For some managed databases, this might be necessary
-        },
-      }),
+      useFactory: (configService: ConfigService): TypeOrmModuleOptions => {
+        return {
+          type: 'postgres',
+          url: configService.get<string>('DATABASE_URL'),
+          autoLoadEntities: true,
+          synchronize: true, // Set this to false in production
+          entities: [__dirname + '/../../**/*.entity{.ts,.js}'],
+          ssl: {
+            rejectUnauthorized: false, // For some managed databases, this might be necessary
+          },
+        };
+      },
     }),
   ],
 })

@@ -15,15 +15,17 @@ import { AuthModule } from './features/auth/auth.module';
 
 import { RedisModule } from 'nestjs-redis';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { CacheManagerModule } from './shared/cache-manager/cache-manager.module';
+import { TransactionModule } from './features/transaction/transaction.module';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({
-      isGlobal: true, // Makes the environment variables available globally
-      envFilePath: '.env', // Specifies the path to the .env file
-    }),
+    ConfigModule.forRoot(),
+    CacheManagerModule,
     DatabaseModule,
+    //
     CustomerModule,
+    TransactionModule,
     BusinessModule,
     BusinessCategory,
     ServiceCategory,
@@ -31,16 +33,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
     ServiceProfileModule,
     OtpModule,
     AuthModule,
-    // RedisDatabaseModule,
-    RedisModule.forRootAsync({
-      imports: [ConfigModule], // Import ConfigModule to use ConfigService
-      useFactory: (configService: ConfigService) => ({
-        host: configService.get<string>('REDIS_HOST', 'localhost'), // Read host from env or fallback to localhost
-        port: configService.get<number>('REDIS_PORT', 6379), // Read port from env or fallback to 6379
-        db: configService.get<number>('REDIS_DB', 0), // Redis DB number from env or default to 0
-      }),
-      inject: [ConfigService], // Inject ConfigService
-    }),
+    //
   ],
   controllers: [AppController],
   providers: [AppService],

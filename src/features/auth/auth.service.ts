@@ -1,26 +1,31 @@
-import { Injectable } from '@nestjs/common';
-import { CreateAuthDto } from './dto/create-auth.dto';
+import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
+// import { CreateAuthDto } from './dto/validate-phone.dto';
 import { UpdateAuthDto } from './dto/update-auth.dto';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { Cache } from 'cache-manager';
+import { OtpService } from './otp.service';
+import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
 export class AuthService {
-  create(createAuthDto: CreateAuthDto) {
-    return 'This action adds a new auth';
+  constructor(
+    private readonly otpService: OtpService,
+    private readonly jwtService: JwtService,
+  ) {}
+  async login(phoneNumber: string): Promise<string> {
+    const otp = await this.otpService.generateOtp(phoneNumber);
+    // Here you would send the OTP (via SMS, Email, etc.)
+    return otp; // In production, return a success message instead
   }
 
-  findAll() {
-    return `This action returns all auth`;
-  }
-
-  findOne(id: number) {
-    return `This action returns a #${id} auth`;
-  }
-
-  update(id: number, updateAuthDto: UpdateAuthDto) {
-    return `This action updates a #${id} auth`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} auth`;
+  async verifyOtp(phoneNumber: number, otp: number): Promise<boolean> {
+    const strPhoneNumber = phoneNumber.toString();
+    const strOtp = otp.toString();
+    const isValid = await this.otpService.validateOtp(strPhoneNumber, strOtp);
+    if (!isValid) {
+      throw new UnauthorizedException('Invalid OTP');
+    }
+    // Issue JWT Token after successful OTP verification
+    return true;
   }
 }
