@@ -6,34 +6,35 @@ import { CustomerModule } from './features/customer/customer.module';
 
 import { BusinessModule } from './features/business/business.module';
 import { EmployeeModule } from './features/employee/employee.module';
-import { BusinessCategory } from './features/business-category/entities/business-category.entity';
-import { ServiceCategory } from './features/business-category/entities/service-category.entity';
-import { ServiceProfileModule } from './features/service-profile/service-profile.module';
 
-import { OtpModule } from './features/otp/otp.module';
-import { AuthModule } from './features/auth/auth.module';
+import { ServiceProfileModule } from './features/service-profile/service-profile.module';
 
 import { RedisModule } from 'nestjs-redis';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { CacheManagerModule } from './shared/cache-manager/cache-manager.module';
 import { TransactionModule } from './features/transaction/transaction.module';
+import { JwtModule } from '@nestjs/jwt';
+import { CustomJwtModule } from './shared/jwt/customJwt.module';
+
+import { BusinessCategoryModule } from './features/business-category/business-category.module';
 
 @Module({
   imports: [
-    ConfigModule.forRoot(),
+    ConfigModule.forRoot({
+      isGlobal: true,
+    }),
     CacheManagerModule,
     DatabaseModule,
+    CustomJwtModule,
     //
     CustomerModule,
     TransactionModule,
     BusinessModule,
-    BusinessCategory,
-    ServiceCategory,
+    BusinessCategoryModule,
+
     EmployeeModule,
     ServiceProfileModule,
-    OtpModule,
-    AuthModule,
-    //
+    BusinessCategoryModule,
   ],
   controllers: [AppController],
   providers: [AppService],

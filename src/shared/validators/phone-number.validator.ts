@@ -3,8 +3,6 @@ import { IsPhoneNumberCustomConstraint } from '../decorators/phone-number.decora
 
 export function IsPhoneNumberCustom(validationOptions?: ValidationOptions) {
   return function (object: Object, propertyName: string) {
-    console.log('asd');
-    console.log(object, propertyName);
     registerDecorator({
       target: object.constructor,
       propertyName: propertyName,

@@ -11,13 +11,22 @@ export class Business {
   name: string;
 
   @Column()
+  phoneNumber: string;
+
+  @Column({
+    nullable: true,
+  })
   icon: string;
 
-  @Column()
+  @Column({
+    nullable: true,
+  })
   subDomainName: string;
 
-  @Column()
-  serviceCategoryId: number;
+  @Column({
+    nullable: true,
+  })
+  busunessCategoryId: number;
 
   @OneToMany(
     () => ServiceProfile,

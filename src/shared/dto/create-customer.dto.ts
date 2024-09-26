@@ -1,5 +1,5 @@
 import { IsNotEmpty, IsString } from 'class-validator';
-import { IsPhoneNumberCustom } from 'src/shared/validators/phone-number.validator';
+import { IsPhoneNumberCustom } from '../validators/phone-number.validator';
 
 export class CreateCustomerDto {
   @IsPhoneNumberCustom({ message: 'Phone number must be exactly 10 digits.' })

@@ -7,7 +7,7 @@ export class Customer {
   id: number;
 
   @Column()
-  phoneNumber: number;
+  phoneNumber: string;
 
   @Column()
   name: string;

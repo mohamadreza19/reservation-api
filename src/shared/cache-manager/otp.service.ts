@@ -9,13 +9,14 @@ export class OtpService {
   async generateOtp(phoneNumber: string): Promise<string> {
     const EXPIRE_TIME = 4 * 60 * 1000;
     const otp = this.codeGenerator();
-    console.log(otp);
-    await this.cacheManager.set(phoneNumber, otp, EXPIRE_TIME); // Expires in 5 minutes
+
+    await this.cacheManager.set(phoneNumber, otp, EXPIRE_TIME); // Expires in 4 minutes
     return otp;
   }
 
   async validateOtp(phoneNumber: string, otp: string): Promise<boolean> {
     const storedOtp = await this.cacheManager.get(phoneNumber);
+
     if (storedOtp === otp) {
       await this.cacheManager.del(phoneNumber); // Delete OTP after successful validation
       return true;
