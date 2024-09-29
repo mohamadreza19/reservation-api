@@ -18,7 +18,7 @@ export class ServiceProfile {
   @PrimaryGeneratedColumn()
   id: number;
   @Column()
-  SubServiceCategoryId: number;
+  serviceCategoryId: number;
 
   @Column()
   name: string;

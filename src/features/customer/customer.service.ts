@@ -10,44 +10,53 @@ import { Cache } from 'cache-manager';
 import { OtpService } from 'src/shared/cache-manager/otp.service';
 import { LoginDto } from 'src/shared/dto/login.dto';
 import { VerifyOtpDto } from 'src/shared/dto/verify-otp';
+import { SharedAuthService } from 'src/shared/services/shared-auth.service';
+import { UserRole } from 'src/shared/types/user-role.enum';
 
 @Injectable()
 export class CustomerService {
   constructor(
     @InjectRepository(Customer)
     private customerRepository: Repository<Customer>,
-    private otpService: OtpService,
-    private readonly jwtService: JwtService,
+    private readonly sharedAuthService: SharedAuthService,
   ) {}
 
   async Login(loginDto: LoginDto) {
-    const otp = await this.otpService.generateOtp(loginDto.phoneNumber);
-
-    return otp;
+    return this.sharedAuthService.login(loginDto.phoneNumber);
   }
 
   async verifyOtp(verifyOtp: VerifyOtpDto) {
-    const strPhoneNumber = verifyOtp.phoneNumber;
-    const strOtp = verifyOtp.otp;
-    const isValid = await this.otpService.validateOtp(strPhoneNumber, strOtp);
-    if (!isValid) {
-      throw new UnauthorizedException('Invalid OTP');
-    }
-    // Issue JWT Token after successful OTP verification
+    let isNew: boolean = false;
+    let customer: Customer;
+    //
+    await this.sharedAuthService.verifyOtp(
+      verifyOtp.phoneNumber,
+      verifyOtp.otp,
+    );
 
-    const customer = await this.findOneByPhoneNumber(strPhoneNumber);
+    customer = await this.findOneByPhoneNumber(verifyOtp.phoneNumber);
 
     if (!customer) {
-      await this.create({
+      customer = await this.create({
         name: verifyOtp.phoneNumber,
         phoneNumber: verifyOtp.phoneNumber,
       });
+
+      isNew = true;
     }
 
-    return customer;
+    const tokens = await this.sharedAuthService.generateTokens({
+      userId: customer.id,
+      phoneNumber: customer.phoneNumber,
+      role: customer.role,
+    });
+    return { ...tokens, isNew };
   }
   async create(createCustomerDto: CreateCustomerDto) {
-    const customer = this.customerRepository.create(createCustomerDto);
+    const customer = this.customerRepository.create({
+      ...createCustomerDto,
+      role: UserRole.Customer,
+    });
     return await this.customerRepository.save(customer);
   }
 

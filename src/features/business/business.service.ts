@@ -1,4 +1,8 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Business } from './entities/business.entity';
 import { Repository } from 'typeorm';
@@ -7,47 +11,78 @@ import { JwtService } from '@nestjs/jwt';
 import { VerifyOtpDto } from 'src/shared/dto/verify-otp';
 import { LoginDto } from 'src/shared/dto/login.dto';
 import { CreateBusinessDto } from './dto/create-business.dto';
+import { SharedAuthService } from 'src/shared/services/shared-auth.service';
+import { UserRole } from 'src/shared/types/user-role.enum';
+import { UpdateBusinessDto } from './dto/update-business.dto';
+import { UserPayload } from 'src/shared/types/user-payload.interface';
+import { BusinessCategoryService } from '../business-category/business-category.service';
 
 @Injectable()
 export class BusinessService {
   constructor(
     @InjectRepository(Business)
     private businessRepository: Repository<Business>,
-    private readonly otpService: OtpService,
-    private readonly jwtService: JwtService,
+    private businessCategoryService: BusinessCategoryService,
+    private readonly sharedAuthService: SharedAuthService,
   ) {}
 
   async Login(loginDto: LoginDto) {
-    const otp = await this.otpService.generateOtp(loginDto.phoneNumber);
+    const otp = await this.sharedAuthService.login(loginDto.phoneNumber);
 
     return otp;
   }
 
   async verifyOtp(verifyOtp: VerifyOtpDto) {
-    const strPhoneNumber = verifyOtp.phoneNumber;
-    const strOtp = verifyOtp.otp;
-    const isValid = await this.otpService.validateOtp(strPhoneNumber, strOtp);
+    let isNew: boolean = false;
+    let business: Business;
+    const isValid = await this.sharedAuthService.verifyOtp(
+      verifyOtp.phoneNumber,
+      verifyOtp.otp,
+    );
+
     if (!isValid) {
       throw new UnauthorizedException('Invalid OTP');
     }
     // Issue JWT Token after successful OTP verification
 
-    const business = await this.findOneByPhoneNumber(strPhoneNumber);
+    business = await this.findOneByPhoneNumber(verifyOtp.phoneNumber);
 
     if (!business) {
-      await this.create({
+      business = await this.create({
         name: verifyOtp.phoneNumber,
         phoneNumber: verifyOtp.phoneNumber,
       });
     }
 
-    return business;
+    const tokens = await this.sharedAuthService.generateTokens({
+      userId: business.id,
+      phoneNumber: business.phoneNumber,
+      role: business.role,
+    });
+    return { ...tokens, isNew };
   }
   async create(createBusinessDto: CreateBusinessDto) {
-    const business = this.businessRepository.create(createBusinessDto);
+    const business = this.businessRepository.create({
+      ...createBusinessDto,
+      role: UserRole.Business,
+    });
     return await this.businessRepository.save(business);
   }
-  async edit() {}
+  async update(updateBusinessDto: UpdateBusinessDto, user: UserPayload) {
+    const business = await this.businessRepository.findOne({
+      where: {
+        id: user.userId,
+      },
+    });
+    if (!business) {
+      throw new UnauthorizedException('Unauthorized');
+    }
+    Object.assign(business, updateBusinessDto);
+
+    await this.updateRelations(business, updateBusinessDto);
+
+    return await this.businessRepository.save(business);
+  }
   async findOneByPhoneNumber(phoneNumber: string) {
     const result = await this.businessRepository.findOne({
       where: {
@@ -55,5 +90,31 @@ export class BusinessService {
       },
     });
     return result;
+  }
+  private async updateRelations(
+    business: Business,
+    updateBusinessDto: UpdateBusinessDto,
+  ) {
+    // به‌روزرسانی رابطه BusinessCategory
+    if (updateBusinessDto.businessCategoryId) {
+      const businessCategory = await this.businessCategoryService.findOneById(
+        updateBusinessDto.businessCategoryId,
+      );
+      if (!businessCategory) {
+        throw new NotFoundException('Business category not found');
+      }
+      business.businessCategory = businessCategory;
+    }
+
+    // به‌روزرسانی رابطه‌های دیگر (مثال: employees)
+    // if (updateBusinessDto.employeeIds) {
+    //   const employees = await this.employeeService.findByIds(updateBusinessDto.employeeIds);
+    //   business.employees = employees;
+    // }
+
+    // // به‌روزرسانی رابطه‌های دیگر (مثال: serviceProfiles)
+    // if (updateBusinessDto.serviceProfileIds) {
+    //   const serviceProfiles = await this.serviceProfileService.findByIds(updateBusinessDto.serviceProfileIds);
+    //   business.serviceProfiles = serviceProfiles;
   }
 }

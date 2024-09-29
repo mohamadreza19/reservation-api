@@ -1,6 +1,14 @@
+import { BusinessCategory } from 'src/features/business-category/entities/business-category.entity';
 import { Employee } from 'src/features/employee/entities/employee.entity';
 import { ServiceProfile } from 'src/features/service-profile/entities/service-profile.entity';
-import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { UserRole } from 'src/shared/types/user-role.enum';
+import {
+  Column,
+  Entity,
+  ManyToOne,
+  OneToMany,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 
 @Entity()
 export class Business {
@@ -14,6 +22,13 @@ export class Business {
   phoneNumber: string;
 
   @Column({
+    type: 'enum',
+    enum: UserRole,
+    default: UserRole.Business,
+  })
+  role: UserRole;
+
+  @Column({
     nullable: true,
   })
   icon: string;
@@ -23,10 +38,11 @@ export class Business {
   })
   subDomainName: string;
 
-  @Column({
-    nullable: true,
-  })
-  busunessCategoryId: number;
+  @ManyToOne(
+    () => BusinessCategory,
+    (businessCategory: BusinessCategory) => businessCategory.businesses,
+  )
+  businessCategory: BusinessCategory;
 
   @OneToMany(
     () => ServiceProfile,

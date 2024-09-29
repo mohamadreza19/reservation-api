@@ -13,4 +13,10 @@ export class BusinessCategoryService {
   async getAllBusinessCategory() {
     return await this.businessCategoryRepository.find();
   }
+
+  async findOneById(id: number) {
+    return await this.businessCategoryRepository.findOneBy({
+      id,
+    });
+  }
 }

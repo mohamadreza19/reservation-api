@@ -2,7 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { IsOptional, IsNumber, IsString } from 'class-validator';
 import { IsPhoneNumberCustom } from 'src/shared/validators/phone-number.validator';
 
-export class CreateBusinessDto {
+export class UpdateBusinessDto {
   //   @IsPhoneNumberCustom({ message: 'Phone number must be exactly 10 digits.' })
   //   phoneNumber: string;
 
@@ -19,5 +19,5 @@ export class CreateBusinessDto {
   @ApiProperty()
   @IsNumber()
   @IsOptional()
-  busunessCategoryId: number;
+  businessCategoryId: number;
 }

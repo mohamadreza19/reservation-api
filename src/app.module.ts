@@ -17,6 +17,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { CustomJwtModule } from './shared/jwt/customJwt.module';
 
 import { BusinessCategoryModule } from './features/business-category/business-category.module';
+import { ServiceCategoryModule } from './features/service-category/service-category.module';
 
 @Module({
   imports: [
@@ -35,6 +36,7 @@ import { BusinessCategoryModule } from './features/business-category/business-ca
     EmployeeModule,
     ServiceProfileModule,
     BusinessCategoryModule,
+    ServiceCategoryModule,
   ],
   controllers: [AppController],
   providers: [AppService],

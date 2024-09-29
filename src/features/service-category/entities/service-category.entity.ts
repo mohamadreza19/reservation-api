@@ -1,5 +1,5 @@
+import { BusinessCategory } from 'src/features/business-category/entities/business-category.entity';
 import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
-import { BusinessCategory } from './business-category.entity';
 
 @Entity()
 export class ServiceCategory {

@@ -33,6 +33,15 @@ export class SwaggerConfig {
         },
         'admin',
       )
+      .addBearerAuth(
+        {
+          type: 'http',
+          scheme: 'bearer',
+          bearerFormat: 'JWT',
+          description: 'JWT Authorization for business',
+        },
+        'business',
+      )
       .build();
   }
 }

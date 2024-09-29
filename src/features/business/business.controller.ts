@@ -1,8 +1,20 @@
-import { Body, Controller, Get, Post, Put } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Post,
+  Put,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { LoginDto } from 'src/shared/dto/login.dto';
 import { BusinessService } from './business.service';
 import { VerifyOtpDto } from 'src/shared/dto/verify-otp';
+import { UpdateBusinessDto } from './dto/update-business.dto';
+import { JwtAuthGuard } from 'src/shared/guards/jwt-auth-guard';
+import { UserSerializeRequest } from 'src/shared/types/user-serialize-request.interface';
 
 @ApiTags('Business')
 @Controller('business')
@@ -20,9 +32,18 @@ export class BusinessController {
 
   @Post('verify-otp')
   async verifyOtp(@Body() verifyOtp: VerifyOtpDto) {
-    return await this.businessService.verifyOtp(verifyOtp);
-  }
+    const data = await this.businessService.verifyOtp(verifyOtp);
 
+    return data;
+  }
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('business')
   @Put(':id')
-  async update() {}
+  async update(
+    @Req() request: UserSerializeRequest,
+    @Param('id') id: number,
+    @Body() updateBusinessDto: UpdateBusinessDto,
+  ) {
+    return await this.businessService.update(updateBusinessDto, request.user);
+  }
 }
