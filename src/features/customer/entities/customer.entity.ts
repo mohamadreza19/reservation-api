@@ -13,13 +13,6 @@ export class Customer {
   @Column()
   name: string;
 
-  @Column({
-    type: 'enum',
-    enum: UserRole,
-    default: UserRole.Customer,
-  })
-  role: UserRole;
-
   @OneToMany(
     () => Transaction,
     (transaction: Transaction) => transaction.customer,

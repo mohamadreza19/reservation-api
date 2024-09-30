@@ -17,5 +17,6 @@ import { BusinessCategoryService } from '../business-category/business-category.
     TypeOrmModule.forFeature([Business]),
     BusinessCategoryModule,
   ],
+  exports: [BusinessService],
 })
 export class BusinessModule {}

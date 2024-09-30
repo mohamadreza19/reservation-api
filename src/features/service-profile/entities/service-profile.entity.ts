@@ -12,13 +12,17 @@ import { AvailableTime } from '../available-time/entities/available-time.entity'
 import { Business } from 'src/features/business/entities/business.entity';
 import { Employee } from 'src/features/employee/entities/employee.entity';
 import { Transaction } from 'src/features/transaction/entities/transaction.entity';
+import { ServiceCategory } from 'src/features/service-category/entities/service-category.entity';
 
 @Entity()
 export class ServiceProfile {
   @PrimaryGeneratedColumn()
   id: number;
-  @Column()
-  serviceCategoryId: number;
+  @ManyToOne(
+    () => ServiceCategory,
+    (serviceCategory: ServiceCategory) => serviceCategory.serviceProfiles,
+  )
+  serviceCategory: ServiceCategory;
 
   @Column()
   name: string;
@@ -28,9 +32,9 @@ export class ServiceProfile {
     (employee: Employee) => employee.serviceProfiles, // The serviceProfiles field in Employee
     { nullable: false, onDelete: 'CASCADE' }, // Ensure this is not nullable
   )
-  employee: Employee[];
+  employees: Employee[];
 
-  @Column('decimal', { precision: 10, scale: 2 })
+  @Column()
   deposit: number;
 
   @Column('timestamp')

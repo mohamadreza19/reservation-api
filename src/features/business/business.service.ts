@@ -57,14 +57,12 @@ export class BusinessService {
     const tokens = await this.sharedAuthService.generateTokens({
       userId: business.id,
       phoneNumber: business.phoneNumber,
-      role: business.role,
     });
     return { ...tokens, isNew };
   }
   async create(createBusinessDto: CreateBusinessDto) {
     const business = this.businessRepository.create({
       ...createBusinessDto,
-      role: UserRole.Business,
     });
     return await this.businessRepository.save(business);
   }
@@ -91,15 +89,34 @@ export class BusinessService {
     });
     return result;
   }
+  async findOneById(id: number) {
+    const business = await this.businessRepository.findOne({
+      where: {
+        id,
+      },
+    });
+
+    if (!business)
+      throw new UnauthorizedException(
+        'You are not authorized to perform this action. Business not found.',
+      );
+
+    return business;
+  }
+
   private async updateRelations(
     business: Business,
     updateBusinessDto: UpdateBusinessDto,
   ) {
     // به‌روزرسانی رابطه BusinessCategory
+    if (updateBusinessDto.businessCategoryId === 0)
+      throw new NotFoundException('Business category not found');
+
     if (updateBusinessDto.businessCategoryId) {
       const businessCategory = await this.businessCategoryService.findOneById(
         updateBusinessDto.businessCategoryId,
       );
+
       if (!businessCategory) {
         throw new NotFoundException('Business category not found');
       }

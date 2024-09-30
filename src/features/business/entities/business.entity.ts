@@ -22,13 +22,6 @@ export class Business {
   phoneNumber: string;
 
   @Column({
-    type: 'enum',
-    enum: UserRole,
-    default: UserRole.Business,
-  })
-  role: UserRole;
-
-  @Column({
     nullable: true,
   })
   icon: string;
@@ -50,6 +43,6 @@ export class Business {
   )
   serviceProfiles: ServiceProfile[];
 
-  @OneToMany(() => Employee, (employee: Employee) => employee.master)
+  @OneToMany(() => Employee, (employee: Employee) => employee.business)
   employees: Employee[];
 }

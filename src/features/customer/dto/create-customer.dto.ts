@@ -1,3 +1,4 @@
+import { Transform } from 'class-transformer';
 import { IsNotEmpty, IsString } from 'class-validator';
 import { IsPhoneNumberCustom } from 'src/shared/validators/phone-number.validator';
 

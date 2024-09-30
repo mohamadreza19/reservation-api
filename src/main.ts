@@ -1,10 +1,10 @@
 import { NestFactory } from '@nestjs/core';
-import { AppModule } from './app.module';
+import { AppModule } from './features/app.module';
 import { SwaggerConfig } from './shared/config/SwaggerConfig';
 import { ValidationPipe } from '@nestjs/common';
 
-const URL_Prefix = '/v1/api';
 async function bootstrap() {
+  const URL_Prefix = '/api';
   const app = await NestFactory.create(AppModule);
   app.setGlobalPrefix(URL_Prefix);
   app.enableCors({

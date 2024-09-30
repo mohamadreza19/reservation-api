@@ -48,15 +48,11 @@ export class CustomerService {
     const tokens = await this.sharedAuthService.generateTokens({
       userId: customer.id,
       phoneNumber: customer.phoneNumber,
-      role: customer.role,
     });
     return { ...tokens, isNew };
   }
   async create(createCustomerDto: CreateCustomerDto) {
-    const customer = this.customerRepository.create({
-      ...createCustomerDto,
-      role: UserRole.Customer,
-    });
+    const customer = this.customerRepository.create(createCustomerDto);
     return await this.customerRepository.save(customer);
   }
 

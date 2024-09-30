@@ -1,5 +1,12 @@
 import { BusinessCategory } from 'src/features/business-category/entities/business-category.entity';
-import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { ServiceProfile } from 'src/features/service-profile/entities/service-profile.entity';
+import {
+  Column,
+  Entity,
+  ManyToOne,
+  OneToMany,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 
 @Entity()
 export class ServiceCategory {
@@ -14,4 +21,10 @@ export class ServiceCategory {
     (businessCategory: BusinessCategory) => businessCategory.serviceCategory,
   )
   businessCategory: BusinessCategory;
+
+  @OneToMany(
+    () => ServiceProfile,
+    (serviceProfile: ServiceProfile) => serviceProfile.serviceCategory,
+  )
+  serviceProfiles: ServiceProfile;
 }

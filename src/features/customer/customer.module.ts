@@ -10,7 +10,7 @@ import { SharedAuthService } from 'src/shared/services/shared-auth.service';
 
 @Module({
   controllers: [CustomerController],
-  providers: [CustomerService, OtpService, SharedAuthService],
+  providers: [CustomerService, SharedAuthService],
   imports: [
     CacheManagerModule,
     TransactionModule,

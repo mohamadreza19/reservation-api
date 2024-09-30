@@ -12,8 +12,8 @@ import { ApiTags } from '@nestjs/swagger';
 import { LoginDto } from 'src/shared/dto/login.dto';
 import { VerifyOtpDto } from 'src/shared/dto/verify-otp';
 import { JwtService } from '@nestjs/jwt';
-@ApiTags('Customer')
-@Controller('customer')
+@ApiTags('Customer-V1')
+@Controller('customer/v1')
 export class CustomerController {
   constructor(private readonly customerService: CustomerService) {}
 

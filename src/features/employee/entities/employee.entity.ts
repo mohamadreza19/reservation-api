@@ -2,6 +2,7 @@ import { Business } from 'src/features/business/entities/business.entity';
 import { ServiceProfile } from 'src/features/service-profile/entities/service-profile.entity';
 
 import {
+  Column,
   Entity,
   ManyToOne,
   OneToMany,
@@ -15,11 +16,14 @@ export class Employee {
   id: number;
 
   @ManyToOne(() => Business, (business: Business) => business.employees)
-  master: Business;
+  business: Business;
 
   @OneToMany(
     () => ServiceProfile,
-    (serviceProfile: ServiceProfile) => serviceProfile.employee,
+    (serviceProfile: ServiceProfile) => serviceProfile.employees,
   )
   serviceProfiles: ServiceProfile[];
+
+  @Column()
+  name: string;
 }
