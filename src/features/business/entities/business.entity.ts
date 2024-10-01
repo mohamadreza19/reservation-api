@@ -1,12 +1,14 @@
 import { BusinessCategory } from 'src/features/business-category/entities/business-category.entity';
+import { BusinessSchedule } from 'src/features/business-schedule/entities/business-schedule.entity';
 import { Employee } from 'src/features/employee/entities/employee.entity';
 import { ServiceProfile } from 'src/features/service-profile/entities/service-profile.entity';
-import { UserRole } from 'src/shared/types/user-role.enum';
+
 import {
   Column,
   Entity,
   ManyToOne,
   OneToMany,
+  OneToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 
@@ -36,6 +38,16 @@ export class Business {
     (businessCategory: BusinessCategory) => businessCategory.businesses,
   )
   businessCategory: BusinessCategory;
+
+  @OneToOne(
+    () => BusinessSchedule,
+    (businessSchedule: BusinessSchedule) => businessSchedule,
+    {
+      nullable: true,
+      onDelete: 'CASCADE',
+    },
+  )
+  businessSchedule: BusinessSchedule;
 
   @OneToMany(
     () => ServiceProfile,

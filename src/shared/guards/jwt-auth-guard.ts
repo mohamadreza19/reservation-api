@@ -7,10 +7,18 @@ import {
 import { JwtService } from '@nestjs/jwt';
 import { Request } from 'express';
 import { UserSerializeRequest } from '../types/user-serialize-request.interface';
+import { CustomerService } from 'src/features/customer/customer.service';
+import { BusinessService } from 'src/features/business/business.service';
+import { UserPayload } from '../types/user-payload.interface';
+import { UserRole } from '../types/user-role.enum';
 
 @Injectable()
 export class JwtAuthGuard implements CanActivate {
-  constructor(private jwtService: JwtService) {}
+  constructor(
+    private jwtService: JwtService,
+    private customerService: CustomerService,
+    private businessService: BusinessService,
+  ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest<UserSerializeRequest>();
@@ -24,9 +32,28 @@ export class JwtAuthGuard implements CanActivate {
 
     try {
       // Step 2: Verify and decode the JWT token
-      const payload = this.jwtService.verify(token, {
+      const payload: UserPayload = this.jwtService.verify(token, {
         secret: process.env.JWT_SECRET, // Make sure to keep your JWT secret safe
       });
+
+      switch (payload.role) {
+        case UserRole.Customer:
+          const customer = await this.customerService.findOneById(
+            payload.userId,
+          );
+          if (!customer) {
+            throw new UnauthorizedException({ message: 'Customer not found' });
+          }
+          break;
+        case UserRole.Business:
+          const business = await this.businessService.findOneById(
+            payload.userId,
+          );
+          if (!business) {
+            throw new UnauthorizedException({ message: 'Business not found' });
+          }
+          break;
+      }
 
       // Step 3: Attach the decoded payload (e.g., user data) to the request object
       request.user = payload;

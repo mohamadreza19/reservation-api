@@ -2,7 +2,6 @@ import { ApiProperty } from '@nestjs/swagger';
 import {
   IsArray,
   IsDateString,
-  IsDecimal,
   IsNumber,
   IsPositive,
   IsString,
@@ -22,9 +21,6 @@ export class CreateServiceProfileDto {
   })
   @IsArray()
   @IsNumber({}, { each: true })
-  @IsPositive({
-    each: true,
-  })
   employeeIds: number[];
 
   @ApiProperty()

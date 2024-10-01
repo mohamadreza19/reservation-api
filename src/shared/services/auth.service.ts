@@ -5,7 +5,7 @@ import { OtpService } from '../cache-manager/otp.service';
 import { UserPayload } from '../types/user-payload.interface';
 
 @Injectable()
-export class SharedAuthService {
+export class AuthService {
   constructor(
     private readonly jwtService: JwtService,
     private readonly otpService: OtpService,
@@ -27,22 +27,16 @@ export class SharedAuthService {
   async generateTokens(
     payload: UserPayload,
   ): Promise<{ accessToken: string; refreshToken: string }> {
-    const accessToken = this.jwtService.sign({ payload }, { expiresIn: '15m' });
-    const refreshToken = this.jwtService.sign(
-      { payload },
-      {
-        expiresIn: '7d',
-        secret: process.env.JWT_REFRESH_SECRET,
-      },
-    );
+    const accessToken = this.jwtService.sign(payload, { expiresIn: '2h' });
+    const refreshToken = this.jwtService.sign(payload, {
+      expiresIn: '30d',
+      secret: process.env.JWT_REFRESH_SECRET,
+    });
     return { accessToken: accessToken, refreshToken: refreshToken };
   }
 
-  // Decrypt the token payload for validation
-  decryptPayload(tokenData: string): any {
-    // return this.encryptionService.decryptPayload(tokenData);
-  }
-  async login(phoneNumber: string) {
+  // Generate  OTP
+  async generateOtp(phoneNumber: string) {
     return await this.otpService.generateOtp(phoneNumber);
   }
 }

@@ -6,16 +6,16 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Business } from './entities/business.entity';
 import { Repository } from 'typeorm';
-import { OtpService } from 'src/shared/cache-manager/otp.service';
-import { JwtService } from '@nestjs/jwt';
+
 import { VerifyOtpDto } from 'src/shared/dto/verify-otp';
 import { LoginDto } from 'src/shared/dto/login.dto';
 import { CreateBusinessDto } from './dto/create-business.dto';
-import { SharedAuthService } from 'src/shared/services/shared-auth.service';
-import { UserRole } from 'src/shared/types/user-role.enum';
+import { AuthService } from 'src/shared/services/auth.service';
+
 import { UpdateBusinessDto } from './dto/update-business.dto';
 import { UserPayload } from 'src/shared/types/user-payload.interface';
 import { BusinessCategoryService } from '../business-category/business-category.service';
+import { UserRole } from 'src/shared/types/user-role.enum';
 
 @Injectable()
 export class BusinessService {
@@ -23,11 +23,11 @@ export class BusinessService {
     @InjectRepository(Business)
     private businessRepository: Repository<Business>,
     private businessCategoryService: BusinessCategoryService,
-    private readonly sharedAuthService: SharedAuthService,
+    private readonly AuthService: AuthService,
   ) {}
 
   async Login(loginDto: LoginDto) {
-    const otp = await this.sharedAuthService.login(loginDto.phoneNumber);
+    const otp = await this.AuthService.generateOtp(loginDto.phoneNumber);
 
     return otp;
   }
@@ -35,7 +35,7 @@ export class BusinessService {
   async verifyOtp(verifyOtp: VerifyOtpDto) {
     let isNew: boolean = false;
     let business: Business;
-    const isValid = await this.sharedAuthService.verifyOtp(
+    const isValid = await this.AuthService.verifyOtp(
       verifyOtp.phoneNumber,
       verifyOtp.otp,
     );
@@ -52,11 +52,13 @@ export class BusinessService {
         name: verifyOtp.phoneNumber,
         phoneNumber: verifyOtp.phoneNumber,
       });
+      isNew = true;
     }
 
-    const tokens = await this.sharedAuthService.generateTokens({
+    const tokens = await this.AuthService.generateTokens({
       userId: business.id,
-      phoneNumber: business.phoneNumber,
+
+      role: UserRole.Business,
     });
     return { ...tokens, isNew };
   }
