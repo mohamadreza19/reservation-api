@@ -17,7 +17,6 @@ import { CustomJwtModule } from '../../shared/jwt/customJwt.module';
 
 import { BusinessCategoryModule } from '../business-category/business-category.module';
 import { ServiceCategoryModule } from '../service-category/service-category.module';
-import { BusinessScheduleModule } from '../business-schedule/business-schedule.module';
 
 @Module({
   imports: [
@@ -35,7 +34,6 @@ import { BusinessScheduleModule } from '../business-schedule/business-schedule.m
     ServiceProfileModule,
 
     BusinessModule,
-    BusinessScheduleModule,
 
     BusinessCategoryModule,
     ServiceCategoryModule,

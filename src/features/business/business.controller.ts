@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   Post,
@@ -9,15 +10,18 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { Roles } from 'src/shared/decorators/roles.decorator';
 import { LoginDto } from 'src/shared/dto/login.dto';
-import { BusinessService } from './business.service';
 import { VerifyOtpDto } from 'src/shared/dto/verify-otp';
-import { UpdateBusinessDto } from './dto/update-business.dto';
 import { JwtAuthGuard } from 'src/shared/guards/jwt-auth-guard';
+import { RolesGuard } from 'src/shared/guards/roles.guard';
+import { UserRole } from 'src/shared/types/user-role.enum';
 import { UserSerializeRequest } from 'src/shared/types/user-serialize-request.interface';
+import { BusinessService } from './business.service';
+import { UpdateBusinessDto } from './dto/update-business.dto';
 
-@ApiTags('Business')
-@Controller('business')
+@ApiTags('Business-V1')
+@Controller('business/v1')
 export class BusinessController {
   constructor(private readonly businessService: BusinessService) {}
   @Get()
@@ -36,14 +40,33 @@ export class BusinessController {
 
     return data;
   }
-  @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth('business')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.Business)
+  @ApiBearerAuth(UserRole.Business)
   @Put(':id')
   async update(
     @Req() request: UserSerializeRequest,
     @Param('id') id: number,
     @Body() updateBusinessDto: UpdateBusinessDto,
   ) {
-    return await this.businessService.update(updateBusinessDto, request.user);
+    return await this.businessService.update(
+      updateBusinessDto,
+      request.user.userId,
+    );
+  }
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.Business)
+  @ApiBearerAuth(UserRole.Business)
+  @Get('profile')
+  async getBusinessProflie(@Req() req: UserSerializeRequest) {
+    return this.businessService.findOneById(req.user.userId);
+  }
+  //
+
+  // @Get(':id')
+
+  @Delete(':id')
+  deletebyId(@Param('id') id: number) {
+    return this.businessService.deleteBusinessWithSchedule(id);
   }
 }

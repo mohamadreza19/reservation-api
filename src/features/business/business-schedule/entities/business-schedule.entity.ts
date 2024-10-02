@@ -1,4 +1,5 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { Business } from '../../entities/business.entity';
 
 @Entity()
 export class BusinessSchedule {
@@ -16,4 +17,7 @@ export class BusinessSchedule {
 
   @Column({ type: 'int' })
   timeInterval: number; // Interval in minutes
+
+  @OneToOne(() => Business)
+  business: Business;
 }

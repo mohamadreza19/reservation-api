@@ -28,19 +28,19 @@ export class CreateBusinessScheduleDto {
     example: 'hh:mm:ss',
   })
   @IsString()
-  @Matches(/^([01]\d|2[0-3]):([0-5]\d):([0-5]\d)$/, {
-    message: 'startTime must be in the format hh:mm:ss',
+  @Matches(/^([01]\d|2[0-3]):([0-5]\d)$/, {
+    message: 'startTime must be in the format hh:mm',
   })
-  startTime: string; // Working start time (e.g., '09:00:00')
+  startTime: string; // Working start time (e.g., '09:00')
 
   @ApiProperty({
-    example: 'hh:mm:ss',
+    example: 'hh:mm',
   })
   @IsString()
-  @Matches(/^([01]\d|2[0-3]):([0-5]\d):([0-5]\d)$/, {
-    message: 'endTime must be in the format hh:mm:ss',
+  @Matches(/^([01]\d|2[0-3]):([0-5]\d)$/, {
+    message: 'endTime must be in the format hh:mm',
   })
-  endTime: string; // Working end time (e.g., '17:00:00')
+  endTime: string; // Working end time (e.g., '17:00')
 
   @ApiProperty({
     example: 30,
