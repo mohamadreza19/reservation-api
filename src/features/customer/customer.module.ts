@@ -1,18 +1,20 @@
-import { Global, Module } from '@nestjs/common';
-import { CustomerService } from './customer.service';
-import { CustomerController } from './customer.controller';
-import { TransactionModule } from '../transaction/transaction.module';
+import { forwardRef, Global, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { Customer } from './entities/customer.entity';
 import { CacheManagerModule } from 'src/shared/cache-manager/cache-manager.module';
+import { TransactionModule } from '../transaction/transaction.module';
+import { CustomerController } from './customer.controller';
+import { CustomerService } from './customer.service';
+import { Customer } from './entities/customer.entity';
 
 import { AuthService } from 'src/shared/services/auth.service';
+import { BusinessModule } from '../business/business.module';
 
 @Global()
 @Module({
   controllers: [CustomerController],
   providers: [CustomerService, AuthService],
   imports: [
+    forwardRef(() => BusinessModule),
     CacheManagerModule,
     TransactionModule,
     TypeOrmModule.forFeature([Customer]),

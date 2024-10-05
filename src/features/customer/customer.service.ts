@@ -1,20 +1,28 @@
-import { Injectable } from '@nestjs/common';
+import {
+  forwardRef,
+  Inject,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 
 import { InjectRepository } from '@nestjs/typeorm';
+import { CreateCustomerDto } from 'src/shared/dto/create-customer.dto';
 import { Repository } from 'typeorm';
 import { Customer } from './entities/customer.entity';
-import { CreateCustomerDto } from 'src/shared/dto/create-customer.dto';
 
+import { CustomerVerifyOtp } from 'src/shared/dto/customer-verify-otp';
 import { LoginDto } from 'src/shared/dto/login.dto';
-import { VerifyOtpDto } from 'src/shared/dto/verify-otp';
 import { AuthService } from 'src/shared/services/auth.service';
 import { UserRole } from 'src/shared/types/user-role.enum';
+import { BusinessService } from '../business/business.service';
 
 @Injectable()
 export class CustomerService {
   constructor(
     @InjectRepository(Customer)
     private customerRepository: Repository<Customer>,
+    @Inject(forwardRef(() => BusinessService))
+    private businessService: BusinessService,
     private readonly AuthService: AuthService,
   ) {}
 
@@ -22,11 +30,21 @@ export class CustomerService {
     return this.AuthService.generateOtp(loginDto.phoneNumber);
   }
 
-  async verifyOtp(verifyOtp: VerifyOtpDto) {
+  async verifyOtp(verifyOtp: CustomerVerifyOtp) {
     let isNew: boolean = false;
     let customer: Customer;
     //
     await this.AuthService.verifyOtp(verifyOtp.phoneNumber, verifyOtp.otp);
+
+    const business = await this.businessService.findBySubDomainName(
+      verifyOtp.businessSubDomainName,
+    );
+
+    if (!business) {
+      throw new UnauthorizedException({
+        message: `Can not find business By subDomain: ${verifyOtp.businessSubDomainName}`,
+      });
+    }
 
     customer = await this.findOneByPhoneNumber(verifyOtp.phoneNumber);
 
@@ -42,6 +60,7 @@ export class CustomerService {
     const tokens = await this.AuthService.generateTokens({
       userId: customer.id,
       role: UserRole.Customer,
+      businessId: business.id,
     });
     return { ...tokens, isNew };
   }

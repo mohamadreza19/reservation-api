@@ -1,0 +1,16 @@
+Command to Run Migration Generation
+Make sure you have the correct command syntax. The migration:generate command requires both the path for the migration file and the data source file. Here’s how to run it:
+
+bash
+npm run typeorm:js -- migration:generate src/shared/database/migrations/CreateBusinessScheduleMigration -d src/shared/database/data-source.ts
+
+
+Breakdown of the Command:
+npm run typeorm:js - This runs the TypeORM CLI using the ts-node environment.
+migration:generate - This is the TypeORM command to generate a migration.
+-- - This is used to separate npm command arguments from the script arguments.
+-n CreateBusinessScheduleMigration - This specifies the name of the migration you are creating.
+-d src/shared/database/data-source.ts - This specifies the data source file for TypeORM.
+
+
+npm run typeorm:js -- migration:run -d src/shared/database/data-source.ts

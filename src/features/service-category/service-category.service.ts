@@ -1,10 +1,10 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { BusinessCategoryService } from '../business-category/business-category.service';
 import { CreateServiceCategoryDto } from './dto/create-service-category.dto';
 import { UpdateServiceCategoryDto } from './dto/update-service-category.dto';
-import { Repository } from 'typeorm';
 import { ServiceCategory } from './entities/service-category.entity';
-import { InjectRepository } from '@nestjs/typeorm';
-import { BusinessCategoryService } from '../business-category/business-category.service';
 
 @Injectable()
 export class ServiceCategoryService {
@@ -39,8 +39,10 @@ export class ServiceCategoryService {
     });
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} serviceCategory`;
+  async findOneById(id: number) {
+    return await this.serviceCategoryRepository.findOne({
+      where: { id },
+    });
   }
 
   update(id: number, updateServiceCategoryDto: UpdateServiceCategoryDto) {

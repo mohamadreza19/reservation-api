@@ -42,6 +42,15 @@ export class SwaggerConfig {
         },
         'business',
       )
+      .addBearerAuth(
+        {
+          type: 'http',
+          scheme: 'bearer',
+          bearerFormat: 'JWT',
+          description: 'JWT Authorization for customer',
+        },
+        'customer',
+      )
       .build();
   }
 }

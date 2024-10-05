@@ -1,13 +1,11 @@
-import { BusinessCategory } from 'src/features/business-category/entities/business-category.entity';
-
 import { Employee } from 'src/features/employee/entities/employee.entity';
 import { ServiceProfile } from 'src/features/service-profile/entities/service-profile.entity';
 
+import { Appointment } from 'src/features/appointment/entities/appointment.entity';
 import {
   Column,
   Entity,
   JoinColumn,
-  ManyToOne,
   OneToMany,
   OneToOne,
   PrimaryGeneratedColumn,
@@ -35,16 +33,14 @@ export class Business {
   })
   subDomainName: string;
 
-  @ManyToOne(
-    () => BusinessCategory,
-    (businessCategory: BusinessCategory) => businessCategory.businesses,
-  )
-  businessCategory: BusinessCategory;
+  @Column({
+    nullable: true,
+  })
+  businessCategoryId: number;
 
   @OneToOne(() => BusinessSchedule, {
-    cascade: true,
     onDelete: 'CASCADE',
-    onUpdate: 'CASCADE',
+    cascade: true,
     eager: true,
   })
   @JoinColumn() // This decorator tells TypeORM to create a foreign key in the Business table
@@ -56,6 +52,14 @@ export class Business {
   )
   serviceProfiles: ServiceProfile[];
 
-  @OneToMany(() => Employee, (employee: Employee) => employee.business)
+  @OneToMany(() => Employee, (employee: Employee) => employee.business, {
+    onDelete: 'CASCADE',
+  })
   employees: Employee[];
+
+  @OneToMany(
+    () => Appointment,
+    (appointment: Appointment) => appointment.business,
+  )
+  appointments: Appointment[];
 }

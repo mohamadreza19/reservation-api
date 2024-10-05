@@ -6,7 +6,6 @@ import {
   Entity,
   ManyToOne,
   OneToMany,
-  PrimaryColumnCannotBeNullableError,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 
@@ -15,7 +14,9 @@ export class Employee {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @ManyToOne(() => Business, (business: Business) => business.employees)
+  @ManyToOne(() => Business, (business: Business) => business.employees, {
+    onDelete: 'CASCADE',
+  })
   business: Business;
 
   @OneToMany(

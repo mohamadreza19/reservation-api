@@ -1,12 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import {
-  IsArray,
-  IsDateString,
-  IsNumber,
-  IsPositive,
-  IsString,
-  Min,
-} from 'class-validator';
+import { IsArray, IsNumber, IsPositive, IsString, Min } from 'class-validator';
 
 export class CreateServiceProfileDto {
   @ApiProperty()
@@ -30,10 +23,7 @@ export class CreateServiceProfileDto {
   deposit: number;
 
   @ApiProperty()
-  @IsDateString()
-  startDate: Date;
-
-  @ApiProperty()
-  @IsDateString()
-  endDate: Date;
+  @IsNumber({})
+  @IsPositive() // Ensure service category ID is positive integer
+  serviceCategoryId: number;
 }

@@ -1,29 +1,36 @@
 import {
-  Controller,
-  Get,
-  Post,
   Body,
-  Patch,
-  Param,
+  Controller,
   Delete,
-  UseGuards,
+  Get,
+  Param,
+  Patch,
+  Post,
   Req,
+  UseGuards,
 } from '@nestjs/common';
-import { ServiceProfileService } from './service-profile.service';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { Roles } from 'src/shared/decorators/roles.decorator';
+import { JwtAuthGuard } from 'src/shared/guards/jwt-auth-guard';
+import { RolesGuard } from 'src/shared/guards/roles.guard';
+import { UserRole } from 'src/shared/types/user-role.enum';
+import {
+  isCustomerPayload,
+  UserSerializeRequest,
+} from 'src/shared/types/user-serialize-request.interface';
 import { CreateServiceProfileDto } from './dto/create-service-profile.dto';
 import { UpdateServiceProfileDto } from './dto/update-service-profile.dto';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import { JwtAuthGuard } from 'src/shared/guards/jwt-auth-guard';
-import { UserSerializeRequest } from 'src/shared/types/user-serialize-request.interface';
+import { ServiceProfileService } from './service-profile.service';
 
 @ApiTags('ServiceProfile-V1')
 @Controller('service-profile/v1')
+@UseGuards(JwtAuthGuard, RolesGuard)
 export class ServiceProfileController {
   constructor(private readonly serviceProfileService: ServiceProfileService) {}
 
-  @ApiBearerAuth('business')
-  @UseGuards(JwtAuthGuard)
   @Post()
+  @Roles(UserRole.Business)
+  @ApiBearerAuth(UserRole.Business)
   create(
     @Req() req: UserSerializeRequest,
     @Body() createServiceProfileDto: CreateServiceProfileDto,
@@ -32,8 +39,20 @@ export class ServiceProfileController {
   }
 
   @Get()
-  findAll() {
-    return this.serviceProfileService.findAll();
+  @Roles(UserRole.Business, UserRole.Customer)
+  @ApiBearerAuth(UserRole.Business)
+  @ApiBearerAuth(UserRole.Customer)
+  findAll(@Req() req: UserSerializeRequest) {
+    switch (req.user.role) {
+      case UserRole.Customer:
+        return (
+          isCustomerPayload(req.user) &&
+          this.serviceProfileService.findAllByBusinessId(req.user.businessId)
+        );
+
+      case UserRole.Business:
+        return this.serviceProfileService.findAllByBusinessId(req.user.userId);
+    }
   }
 
   @Get(':id')
@@ -42,6 +61,8 @@ export class ServiceProfileController {
   }
 
   @Patch(':id')
+  @Roles(UserRole.Business)
+  @ApiBearerAuth(UserRole.Business)
   update(
     @Param('id') id: string,
     @Body() updateServiceProfileDto: UpdateServiceProfileDto,

@@ -12,20 +12,21 @@ import { VerifyOtpDto } from 'src/shared/dto/verify-otp';
 import { AuthService } from 'src/shared/services/auth.service';
 import { CreateBusinessDto } from './dto/create-business.dto';
 
+import moment from 'moment';
 import { UserRole } from 'src/shared/types/user-role.enum';
 import { BusinessCategoryService } from '../business-category/business-category.service';
-import { BusinesScheduleService } from './business-schedule/busines-schedule.service';
 import { UpdateBusinessScheduleDto } from './business-schedule/dto/update-business-schedule.dto';
 import { BusinessSchedule } from './business-schedule/entities/business-schedule.entity';
 import { UpdateBusinessDto } from './dto/update-business.dto';
+import { TimeSlotsService } from './time-slots/time-slots.service';
 
 @Injectable()
 export class BusinessService {
   constructor(
     @InjectRepository(Business)
     private businessRepository: Repository<Business>,
-    private businesScheduleService: BusinesScheduleService,
     private businessCategoryService: BusinessCategoryService,
+    private timeSlotsService: TimeSlotsService,
     private readonly AuthService: AuthService,
   ) {}
 
@@ -66,14 +67,12 @@ export class BusinessService {
     return { ...tokens, isNew };
   }
   async create(createBusinessDto: CreateBusinessDto) {
-    const businessSchedule =
-      await this.businesScheduleService.createInitalInstance();
-
+    const businessSchedule = new BusinessSchedule();
     const business = this.businessRepository.create({
       ...createBusinessDto,
-      businessSchedule,
+      businessSchedule: businessSchedule,
     });
-    return await this.businessRepository.save(business);
+    return await this.businessRepository.save(business, {});
   }
   async update(updateBusinessDto: UpdateBusinessDto, userId: number) {
     return await this.businessRepository.update(
@@ -87,10 +86,13 @@ export class BusinessService {
     updateBusinessScheduleDto: UpdateBusinessScheduleDto,
     businessId: number,
   ) {
-    return await this.businesScheduleService.updateBusinessSchedule(
-      updateBusinessScheduleDto,
-      businessId,
-    );
+    const busines = await this.findOneById(businessId);
+
+    busines.businessSchedule = {
+      ...busines.businessSchedule,
+      ...updateBusinessScheduleDto,
+    };
+    return await this.businessRepository.save(busines);
   }
 
   async findOneByPhoneNumber(phoneNumber: string) {
@@ -102,47 +104,17 @@ export class BusinessService {
     return result;
   }
   async findOneById(id: number) {
-    const business = await this.businessRepository.findOne({
+    return await this.businessRepository.findOne({
       where: {
         id,
       },
     });
-
-    return business;
   }
 
-  private async updateRelations(
-    business: Business,
-    updateBusinessDto: UpdateBusinessDto,
-  ) {
-    // به‌روزرسانی رابطه BusinessCategory
-    if (updateBusinessDto.businessCategoryId === 0)
-      throw new NotFoundException('Business category not found');
-
-    if (updateBusinessDto.businessCategoryId) {
-      const businessCategory = await this.businessCategoryService.findOneById(
-        updateBusinessDto.businessCategoryId,
-      );
-
-      if (!businessCategory) {
-        throw new NotFoundException('Business category not found');
-      }
-      business.businessCategory = businessCategory;
-    }
-
-    // به‌روزرسانی رابطه‌های دیگر (مثال: employees)
-    // if (updateBusinessDto.employeeIds) {
-    //   const employees = await this.employeeService.findByIds(updateBusinessDto.employeeIds);
-    //   business.employees = employees;
-    // }
-
-    // // به‌روزرسانی رابطه‌های دیگر (مثال: serviceProfiles)
-    // if (updateBusinessDto.serviceProfileIds) {
-    //   const serviceProfiles = await this.serviceProfileService.findByIds(updateBusinessDto.serviceProfileIds);
-    //   business.serviceProfiles = serviceProfiles;
-  }
   async deleteBusinessWithSchedule(businessId: number) {
     // Using Transaction
+
+    // One To One Problem
     return await this.businessRepository.manager.transaction(
       async (transactionalEntityManager: EntityManager) => {
         // Find the Business and its associated BusinessSchedule
@@ -157,6 +129,8 @@ export class BusinessService {
 
         // Manually delete the BusinessSchedule first
         if (business.businessSchedule) {
+          // const employees = business.employees
+          await transactionalEntityManager.delete(Business, business.id);
           await transactionalEntityManager.delete(
             BusinessSchedule,
             business.businessSchedule.id,
@@ -164,12 +138,49 @@ export class BusinessService {
         }
 
         // Now delete the Business
-        await transactionalEntityManager.delete(Business, business.id);
 
         return {
           message: 'Business and associated schedule deleted successfully',
         };
       },
     );
+  }
+
+  async generateTimeSlots(businessId: number) {
+    const business = await this.findOneById(businessId);
+    const date = new Date();
+    if (!business.businessSchedule) {
+      throw new NotFoundException('BusinessSchedule is null');
+    }
+    return this.timeSlotsService.generateTimeSlots(
+      business.businessSchedule,
+      date,
+    );
+  }
+  async generateTimeSlots2(
+    businessId: number,
+    weekStartDate: string | undefined,
+  ) {
+    const business = await this.findOneById(businessId);
+
+    const date = weekStartDate
+      ? moment(weekStartDate).toDate()
+      : moment().toDate();
+
+    if (!business) {
+      throw new NotFoundException('Business Not Found');
+    }
+
+    return this.timeSlotsService.generateJalalianWeeklyTimeSlots(
+      business.businessSchedule,
+      date,
+    );
+  }
+  async findBySubDomainName(subDomainName: string) {
+    return await this.businessRepository.findOne({
+      where: {
+        subDomainName,
+      },
+    });
   }
 }

@@ -1,6 +1,6 @@
+import { Appointment } from 'src/features/appointment/entities/appointment.entity';
 import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { Transaction } from '../../transaction/entities/transaction.entity';
-import { UserRole } from 'src/shared/types/user-role.enum';
 
 @Entity()
 export class Customer {
@@ -13,6 +13,11 @@ export class Customer {
   @Column()
   name: string;
 
+  @OneToMany(
+    () => Appointment,
+    (appointment: Appointment) => appointment.customer,
+  )
+  appointments: Appointment[];
   @OneToMany(
     () => Transaction,
     (transaction: Transaction) => transaction.customer,

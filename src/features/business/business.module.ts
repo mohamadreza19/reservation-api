@@ -1,4 +1,4 @@
-import { Global, Module } from '@nestjs/common';
+import { forwardRef, Global, Module } from '@nestjs/common';
 import { BusinessController } from './business.controller';
 import { BusinessService } from './business.service';
 
@@ -11,16 +11,27 @@ import { BusinesScheduleService } from './business-schedule/busines-schedule.ser
 import { BusinessScheduleController } from './business-schedule/business-schedule.controller';
 import { BusinessSchedule } from './business-schedule/entities/business-schedule.entity';
 import { Business } from './entities/business.entity';
+import { TimeSlotsController } from './time-slots/time-slots.controller';
+import { TimeSlotsService } from './time-slots/time-slots.service';
 
 @Global()
 @Module({
-  controllers: [BusinessController, BusinessScheduleController],
-  providers: [BusinessService, BusinesScheduleService, AuthService],
+  controllers: [
+    BusinessController,
+    BusinessScheduleController,
+    TimeSlotsController,
+  ],
+  providers: [
+    BusinessService,
+    BusinesScheduleService,
+    TimeSlotsService,
+    AuthService,
+  ],
   imports: [
     CacheManagerModule,
     TypeOrmModule.forFeature([Business, BusinessSchedule]),
     BusinessCategoryModule,
-    CustomerModule,
+    forwardRef(() => CustomerModule),
   ],
   exports: [BusinessService],
 })

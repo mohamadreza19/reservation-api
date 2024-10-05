@@ -1,9 +1,8 @@
 import { PartialType } from '@nestjs/mapped-types';
-import { IsString, IsNotEmpty } from 'class-validator';
+import { ApiProperty } from '@nestjs/swagger';
+import { IsNotEmpty, IsString } from 'class-validator';
 import { IsPhoneNumberCustom } from 'src/shared/validators/phone-number.validator';
 import { LoginDto } from './login.dto';
-import { ApiProperty } from '@nestjs/swagger';
-import { CopyApiProperty } from 'src/shared/decorators/copy-api-property.decorator';
 
 export class VerifyOtpDto extends PartialType(LoginDto) {
   @ApiProperty({

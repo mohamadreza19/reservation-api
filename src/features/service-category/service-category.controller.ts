@@ -1,16 +1,16 @@
 import {
-  Controller,
-  Get,
-  Post,
   Body,
-  Patch,
-  Param,
+  Controller,
   Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
 } from '@nestjs/common';
-import { ServiceCategoryService } from './service-category.service';
+import { ApiTags } from '@nestjs/swagger';
 import { CreateServiceCategoryDto } from './dto/create-service-category.dto';
 import { UpdateServiceCategoryDto } from './dto/update-service-category.dto';
-import { ApiTags } from '@nestjs/swagger';
+import { ServiceCategoryService } from './service-category.service';
 
 @ApiTags('ServiceCategory')
 @Controller('service-category')
@@ -34,8 +34,8 @@ export class ServiceCategoryController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.serviceCategoryService.findOne(+id);
+  findOne(@Param('id') id: number) {
+    return this.serviceCategoryService.findOneById(+id);
   }
 
   @Patch(':id')

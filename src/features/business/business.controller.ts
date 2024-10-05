@@ -4,8 +4,8 @@ import {
   Delete,
   Get,
   Param,
+  Patch,
   Post,
-  Put,
   Req,
   UseGuards,
 } from '@nestjs/common';
@@ -40,10 +40,11 @@ export class BusinessController {
 
     return data;
   }
+
+  @Patch(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.Business)
   @ApiBearerAuth(UserRole.Business)
-  @Put(':id')
   async update(
     @Req() request: UserSerializeRequest,
     @Param('id') id: number,
@@ -54,10 +55,10 @@ export class BusinessController {
       request.user.userId,
     );
   }
+  @Get('profile')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.Business)
   @ApiBearerAuth(UserRole.Business)
-  @Get('profile')
   async getBusinessProflie(@Req() req: UserSerializeRequest) {
     return this.businessService.findOneById(req.user.userId);
   }

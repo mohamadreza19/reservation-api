@@ -5,3 +5,6 @@ export interface UserPayload {
 
   role: UserRole;
 }
+export interface CustomerPayload extends UserPayload {
+  businessId: number;
+}

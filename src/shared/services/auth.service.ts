@@ -2,7 +2,7 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { OtpService } from '../cache-manager/otp.service';
-import { UserPayload } from '../types/user-payload.interface';
+import { CustomerPayload, UserPayload } from '../types/user-payload.interface';
 
 @Injectable()
 export class AuthService {
@@ -25,7 +25,7 @@ export class AuthService {
 
   // Generate tokens after OTP verification
   async generateTokens(
-    payload: UserPayload,
+    payload: UserPayload | CustomerPayload,
   ): Promise<{ accessToken: string; refreshToken: string }> {
     const accessToken = this.jwtService.sign(payload, { expiresIn: '2h' });
     const refreshToken = this.jwtService.sign(payload, {

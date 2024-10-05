@@ -1,16 +1,16 @@
 import {
-  Injectable,
   CanActivate,
   ExecutionContext,
+  Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Request } from 'express';
-import { UserSerializeRequest } from '../types/user-serialize-request.interface';
-import { CustomerService } from 'src/features/customer/customer.service';
 import { BusinessService } from 'src/features/business/business.service';
-import { UserPayload } from '../types/user-payload.interface';
+import { CustomerService } from 'src/features/customer/customer.service';
+import { CustomerPayload, UserPayload } from '../types/user-payload.interface';
 import { UserRole } from '../types/user-role.enum';
+import { UserSerializeRequest } from '../types/user-serialize-request.interface';
 
 @Injectable()
 export class JwtAuthGuard implements CanActivate {
@@ -32,9 +32,12 @@ export class JwtAuthGuard implements CanActivate {
 
     try {
       // Step 2: Verify and decode the JWT token
-      const payload: UserPayload = this.jwtService.verify(token, {
-        secret: process.env.JWT_SECRET, // Make sure to keep your JWT secret safe
-      });
+      const payload: UserPayload | CustomerPayload = this.jwtService.verify(
+        token,
+        {
+          secret: process.env.JWT_SECRET, // Make sure to keep your JWT secret safe
+        },
+      );
 
       switch (payload.role) {
         case UserRole.Customer:

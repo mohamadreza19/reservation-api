@@ -1,16 +1,12 @@
-import {
-  BadRequestException,
-  Injectable,
-  UnauthorizedException,
-} from '@nestjs/common';
-import { CreateEmployeeDto } from './dto/create-employee.dto';
-import { UpdateEmployeeDto } from './dto/update-employee.dto';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Employee } from './entities/employee.entity';
+import { UnrelatedEmployeeIdsException } from 'src/shared/exceptions/unrelated-employee-ids.exception';
+import { UserPayload } from 'src/shared/types/user-payload.interface';
 import { In, Repository } from 'typeorm';
 import { BusinessService } from '../business/business.service';
-import { UserPayload } from 'src/shared/types/user-payload.interface';
-import { UnrelatedEmployeeIdsException } from 'src/shared/exceptions/unrelated-employee-ids.exception';
+import { CreateEmployeeDto } from './dto/create-employee.dto';
+import { UpdateEmployeeDto } from './dto/update-employee.dto';
+import { Employee } from './entities/employee.entity';
 
 @Injectable()
 export class EmployeeService {
@@ -57,10 +53,10 @@ export class EmployeeService {
   ): Promise<Employee[]> {
     const employees = await this.employeeRepository.find({
       where: {
-        id: In(employeeIds),
         business: {
           id: businessId,
         },
+        id: In(employeeIds),
       },
     });
 

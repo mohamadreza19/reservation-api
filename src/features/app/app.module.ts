@@ -1,8 +1,8 @@
 import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
 import { DatabaseModule } from '../../shared/database/database.module';
 import { CustomerModule } from '../customer/customer.module';
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
 
 import { BusinessModule } from '../business/business.module';
 import { EmployeeModule } from '../employee/employee.module';
@@ -15,6 +15,7 @@ import { TransactionModule } from '../transaction/transaction.module';
 
 import { CustomJwtModule } from '../../shared/jwt/customJwt.module';
 
+import { AppointmentModule } from '../appointment/appointment.module';
 import { BusinessCategoryModule } from '../business-category/business-category.module';
 import { ServiceCategoryModule } from '../service-category/service-category.module';
 
@@ -37,6 +38,7 @@ import { ServiceCategoryModule } from '../service-category/service-category.modu
 
     BusinessCategoryModule,
     ServiceCategoryModule,
+    AppointmentModule,
   ],
   controllers: [AppController],
   providers: [AppService],

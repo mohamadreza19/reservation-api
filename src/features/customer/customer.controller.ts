@@ -1,17 +1,8 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Patch,
-  Param,
-  Delete,
-} from '@nestjs/common';
-import { CustomerService } from './customer.service';
+import { Body, Controller, Delete, Get, Param, Post } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
+import { CustomerVerifyOtp } from 'src/shared/dto/customer-verify-otp';
 import { LoginDto } from 'src/shared/dto/login.dto';
-import { VerifyOtpDto } from 'src/shared/dto/verify-otp';
-import { JwtService } from '@nestjs/jwt';
+import { CustomerService } from './customer.service';
 @ApiTags('Customer-V1')
 @Controller('customer/v1')
 export class CustomerController {
@@ -27,7 +18,7 @@ export class CustomerController {
   }
 
   @Post('verify-otp')
-  async verifyOtp(@Body() verifyOtpDto: VerifyOtpDto) {
+  async verifyOtp(@Body() verifyOtpDto: CustomerVerifyOtp) {
     return await this.customerService.verifyOtp(verifyOtpDto);
   }
 

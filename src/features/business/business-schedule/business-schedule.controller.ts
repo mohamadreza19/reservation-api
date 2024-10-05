@@ -1,13 +1,4 @@
-import {
-  Body,
-  Controller,
-  Delete,
-  Get,
-  Param,
-  Patch,
-  Req,
-  UseGuards,
-} from '@nestjs/common';
+import { Body, Controller, Patch, Req, UseGuards } from '@nestjs/common';
 
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { Roles } from 'src/shared/decorators/roles.decorator';
@@ -25,16 +16,6 @@ import { UpdateBusinessScheduleDto } from './dto/update-business-schedule.dto';
 export class BusinessScheduleController {
   constructor(private readonly businessService: BusinessService) {}
 
-  @Get()
-  findAll() {
-    // return this.businessScheduleService.findAll();
-  }
-
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    // return this.businessScheduleService.findOne(+id);
-  }
-
   @Patch()
   update(
     @Req() req: UserSerializeRequest,
@@ -44,10 +25,5 @@ export class BusinessScheduleController {
       updateBusinessScheduleDto,
       req.user.userId,
     );
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    // return this.businessScheduleService.remove(+id);
   }
 }
