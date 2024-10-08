@@ -24,11 +24,11 @@ export class TimeSlotsController {
     // return this.businessService.generateTimeSlots(req.user.userId);
     const user = req.user;
     return isCustomerPayload(user)
-      ? this.businessService.generateTimeSlots2(
+      ? this.businessService.getTimeSlotsWeeklyBasedDate(
           user.businessId,
           query.weekStartDate,
         )
-      : this.businessService.generateTimeSlots2(
+      : this.businessService.getTimeSlotsWeeklyBasedDate(
           user.userId,
           query.weekStartDate,
         );

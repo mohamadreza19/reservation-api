@@ -4,6 +4,7 @@ import { ServiceProfile } from 'src/features/service-profile/entities/service-pr
 import {
   Column,
   Entity,
+  ManyToMany,
   ManyToOne,
   OneToMany,
   PrimaryGeneratedColumn,
@@ -19,9 +20,13 @@ export class Employee {
   })
   business: Business;
 
-  @OneToMany(
+  @ManyToMany(
     () => ServiceProfile,
     (serviceProfile: ServiceProfile) => serviceProfile.employees,
+    {
+      cascade: ['remove'],
+      onDelete: 'CASCADE',
+    },
   )
   serviceProfiles: ServiceProfile[];
 

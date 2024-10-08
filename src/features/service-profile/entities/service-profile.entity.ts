@@ -31,7 +31,9 @@ export class ServiceProfile {
   @ManyToMany(
     () => Employee, // The Employee entity
     (employee: Employee) => employee.serviceProfiles,
-    {}, // The serviceProfiles field in Employee
+    {
+      onDelete: 'CASCADE',
+    }, // The serviceProfiles field in Employee
   )
   @JoinTable()
   employees: Employee[];
@@ -42,7 +44,9 @@ export class ServiceProfile {
   @OneToMany(() => Transaction, (transaction) => transaction.serviceProfile)
   transactions: Transaction[];
 
-  @ManyToOne(() => Business, (business: Business) => business.serviceProfiles)
+  @ManyToOne(() => Business, (business: Business) => business.serviceProfiles, {
+    onDelete: 'CASCADE',
+  })
   business: Business;
 
   @OneToMany(() => Appointment, (appointment) => appointment.serviceProfile)

@@ -11,7 +11,7 @@ import {
 import { BusinessSchedule } from '../business/business-schedule/entities/business-schedule.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { TimeSlot } from './entities/time-slot.entity';
-import { Repository } from 'typeorm';
+import { Between, Repository } from 'typeorm';
 
 @Injectable()
 export class TimeSlotsService {
@@ -79,6 +79,7 @@ export class TimeSlotsService {
     // Convert the working hours to moment objects for easier manipulation
     const startTime = moment(startHour, 'HH:mm');
     const endTime = moment(endHour, 'HH:mm');
+    const currentDate = moment();
 
     // const yesterday = moment().subtract(1, 'day');
     let slots: any[] = [];
@@ -101,16 +102,19 @@ export class TimeSlotsService {
         const slot = startTimeSlot.format('HH:mm');
         let isStartDayOfWeekAfterDate: boolean = true;
 
-        startDayOfWeek.date.isAfter(date)
+        console.log('startDayOfWeek', startDayOfWeek);
+
+        startDayOfWeek.date.isSameOrAfter(currentDate)
           ? (isStartDayOfWeekAfterDate = true)
           : (isStartDayOfWeekAfterDate = false);
 
-        // Add the time slot with availability set to true (means available)
+        // Add the time slot with availability set t`o true (means available)
         // if (!holidays.includes(dayOfWeek)) {
         //   slots.push([slot, true]);
         // } else {
         //   slots.push([slot, false]);
         // }
+
         const timeSlot = this.timeSlotRepository.create({
           HHMM: slot,
           date: startDayOfWeek.date.clone().format('YYYY-MM-DD'),
@@ -141,6 +145,22 @@ export class TimeSlotsService {
     //   nextWeek,
     //   weeklyTimeSlots,
     // };
+  }
+  async getTimeSlotWeekly(businessId: number, date: Date): Promise<any> {
+    const [startDayOfWeek, endDayOfWeek] =
+      this.findStartDayAndEndDayOfJalaliWeek(date);
+
+    const timeSlots = await this.timeSlotRepository
+      .createQueryBuilder('timeSlot')
+      // .select(['timeSlot.date', 'timeSlot.HHMM', 'timeSlot.available']) // Select fields without aggregation
+      .where('timeSlot.businessId = :businessId', { businessId })
+      .andWhere('timeSlot.date BETWEEN :startDate AND :endDate', {
+        startDate: startDayOfWeek.date.format('YYYY-MM-DD'),
+        endDate: endDayOfWeek.date.format('YYYY-MM-DD'),
+      })
+      .getMany(); // Get results without aggregation
+
+    return timeSlots; // Return the formatted results
   }
 
   generateGregorianWeeklyTimeSlots(

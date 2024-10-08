@@ -53,9 +53,7 @@ export class Business {
   )
   serviceProfiles: ServiceProfile[];
 
-  @OneToMany(() => Employee, (employee: Employee) => employee.business, {
-    onDelete: 'CASCADE',
-  })
+  @OneToMany(() => Employee, (employee: Employee) => employee.business)
   employees: Employee[];
 
   @OneToMany(

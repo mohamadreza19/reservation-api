@@ -13,6 +13,7 @@ export class Appointment {
 
   @ManyToOne(() => Business, (business: Business) => business, {
     nullable: false,
+    onDelete: 'CASCADE',
   })
   business: Business;
 

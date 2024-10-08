@@ -4,4 +4,4 @@
 │ │ │ ┌───────────── month (1 - 12)
 │ │ │ │ ┌───────────── day of the week (0 - 6) (0 is Sunday, 6 is Saturday)
 │ │ │ │ │
-0 0 * * 5
+0 0 * * 4

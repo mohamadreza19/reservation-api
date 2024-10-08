@@ -163,26 +163,15 @@ export class BusinessService {
       date,
     );
   }
-  async generateTimeSlots2(
+  async getTimeSlotsWeeklyBasedDate(
     businessId: number,
     weekStartDate: string | undefined,
   ) {
-    const business = await this.findOneById(businessId);
-
     const date = weekStartDate
       ? moment(weekStartDate).toDate()
       : moment().toDate();
 
-    if (!business) {
-      throw new NotFoundException('Business Not Found');
-    }
-
-    // return this.timeSlotsService.generateJalalianWeeklyTimeSlots(
-    //   business.businessSchedule,
-    //   3,
-    //   date,
-    //   () => {},
-    // );
+    return await this.timeSlotsService.getTimeSlotWeekly(businessId, date);
   }
 
   async findBySubDomainName(subDomainName: string) {
@@ -194,15 +183,20 @@ export class BusinessService {
   }
   // @Cron(CronExpression.EVERY_10_SECONDS)
   async generateTimeSlotsWeeklyForBusiness() {
+    const saturday = moment().add(1, 'days');
+
+    const nextSaturday = saturday.clone().add(7, 'days');
     const business = await this.businessRepository.find();
-    const currentDate = new Date();
-    business.forEach(async (business) => {
-      const result =
+    [saturday, nextSaturday].forEach(async (momentDate) => {
+      const date = momentDate.toDate();
+
+      business.forEach(async (business) => {
         await this.timeSlotsService.generateJalalianWeeklyTimeSlots(
           business.businessSchedule,
           business.id,
-          currentDate,
+          date,
         );
+      });
     });
   }
 }
