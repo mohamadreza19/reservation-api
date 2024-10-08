@@ -5,7 +5,9 @@ import { ValidationPipe } from '@nestjs/common';
 
 async function bootstrap() {
   const URL_Prefix = '/api';
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, {
+    logger: ['log', 'error', 'warn', 'debug', 'verbose'], // Enable logs at different levels
+  });
   app.setGlobalPrefix(URL_Prefix);
   app.enableCors({
     allowedHeaders: '*',

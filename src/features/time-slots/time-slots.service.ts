@@ -8,15 +8,25 @@ import {
   TimeSlots,
   WeeklyTimeSlots,
 } from 'src/shared/types/time-slots.interface';
-import { BusinessSchedule } from '../business-schedule/entities/business-schedule.entity';
+import { BusinessSchedule } from '../business/business-schedule/entities/business-schedule.entity';
+import { InjectRepository } from '@nestjs/typeorm';
+import { TimeSlot } from './entities/time-slot.entity';
+import { Repository } from 'typeorm';
 
 @Injectable()
 export class TimeSlotsService {
-  constructor() {
+  constructor(
+    @InjectRepository(TimeSlot)
+    private timeSlotRepository: Repository<TimeSlot>,
+  ) {
     // moment.locale('fa', fa);
     // moment.loadPersian();
   }
-  generateTimeSlots(schedule: BusinessSchedule, date: Date): string[] {
+  generateTimeSlots(
+    schedule: BusinessSchedule,
+
+    date: Date,
+  ): string[] {
     const { startHour, endHour, timeInterval, holidays } = schedule;
 
     // 1. بررسی اینکه آیا روز انتخاب‌شده تعطیل است یا خیر
@@ -43,8 +53,10 @@ export class TimeSlotsService {
   }
   async generateJalalianWeeklyTimeSlots(
     schedule: BusinessSchedule,
+    businessId: number,
     date: Date,
-  ): Promise<TimeSlots> {
+  ) {
+    // : Promise<TimeSlots>
     // Destructure the business schedule object to get relevant data
     const { startHour, endHour, timeInterval, holidays } = schedule;
 
@@ -55,21 +67,21 @@ export class TimeSlotsService {
     const [startDayOfWeek, endDayOfWeek] =
       this.findStartDayAndEndDayOfJalaliWeek(date);
 
-    const preWeek = startDayOfWeek.date
-      .clone()
-      .subtract(7, 'day')
-      .format('YYYY-MM-DD');
-    const nextWeek = endDayOfWeek.date
-      .clone()
-      .add(1, 'days')
-      .format('YYYY-MM-DD');
+    // const preWeek = startDayOfWeek.date
+    //   .clone()
+    //   .subtract(7, 'day')
+    //   .format('YYYY-MM-DD');
+    // const nextWeek = endDayOfWeek.date
+    //   .clone()
+    //   .add(1, 'days')
+    //   .format('YYYY-MM-DD');
 
     // Convert the working hours to moment objects for easier manipulation
     const startTime = moment(startHour, 'HH:mm');
     const endTime = moment(endHour, 'HH:mm');
 
-    const yesterday = moment().subtract(1, 'day');
-
+    // const yesterday = moment().subtract(1, 'day');
+    let slots: any[] = [];
     // Loop through each day of the week starting from startDayOfWeek to endDayOfWeek
     for (
       let dayOfWeek = startDayOfWeek.isoWeekday;
@@ -80,42 +92,55 @@ export class TimeSlotsService {
       // (Currently, it's set to generate slots for all days due to)
 
       // Initialize an empty array to hold time slots for the current day
-      let slots: AvailableHour[] = [];
+
       let startTimeSlot = startTime.clone(); // Start from the opening time
 
       // Generate time slots by adding timeInterval repeatedly until reaching the closing time
       while (startTimeSlot.isBefore(endTime)) {
         // Format the current time slot in 'HH:mm' format
         const slot = startTimeSlot.format('HH:mm');
+        let isStartDayOfWeekAfterDate: boolean = true;
+
+        startDayOfWeek.date.isAfter(date)
+          ? (isStartDayOfWeekAfterDate = true)
+          : (isStartDayOfWeekAfterDate = false);
 
         // Add the time slot with availability set to true (means available)
-        if (
-          !holidays.includes(dayOfWeek) &&
-          startDayOfWeek.date.isAfter(yesterday)
-        ) {
-          slots.push([slot, true]);
-        } else {
-          slots.push([slot, false]);
-        }
-
+        // if (!holidays.includes(dayOfWeek)) {
+        //   slots.push([slot, true]);
+        // } else {
+        //   slots.push([slot, false]);
+        // }
+        const timeSlot = this.timeSlotRepository.create({
+          HHMM: slot,
+          date: startDayOfWeek.date.clone().format('YYYY-MM-DD'),
+          business: { id: businessId },
+          available: !holidays.includes(dayOfWeek) && isStartDayOfWeekAfterDate, // Assume all slots are available for now
+        });
+        slots.push(timeSlot);
         // Move to the next time slot by adding the time interval (in minutes)
         startTimeSlot.add(timeInterval, 'minutes');
       }
 
       // Store the time slots for the current day in the weeklyTimeSlots object
-      weeklyTimeSlots[startDayOfWeek.date.format('YYYY-MM-DD')] = slots;
+      // weeklyTimeSlots[startDayOfWeek.date.format('YYYY-MM-DD')] = slots;
 
       // Move to the next day by adding one day to the startDayOfWeek date
       startDayOfWeek.date.add(1, 'day');
+
+      if (dayOfWeek === endDayOfWeek.isoWeekday) {
+        this.timeSlotRepository.save(slots);
+        // console.log(slots);
+      }
     }
 
     // Return the weekly time slots object containing all available time slots for the week
 
-    return {
-      preWeek,
-      nextWeek,
-      weeklyTimeSlots,
-    };
+    // return {
+    //   preWeek,
+    //   nextWeek,
+    //   weeklyTimeSlots,
+    // };
   }
 
   generateGregorianWeeklyTimeSlots(

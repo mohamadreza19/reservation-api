@@ -8,7 +8,7 @@ import {
   isCustomerPayload,
   UserSerializeRequest,
 } from 'src/shared/types/user-serialize-request.interface';
-import { BusinessService } from '../business.service';
+import { BusinessService } from '../business/business.service';
 import { GetTimeSlotDto } from './dto/get-time-slots.dto';
 
 @UseGuards(JwtAuthGuard, RolesGuard)

@@ -11,6 +11,7 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { BusinessSchedule } from '../business-schedule/entities/business-schedule.entity';
+import { TimeSlot } from '../../time-slots/entities/time-slot.entity';
 
 @Entity()
 export class Business {
@@ -62,4 +63,7 @@ export class Business {
     (appointment: Appointment) => appointment.business,
   )
   appointments: Appointment[];
+
+  @OneToMany(() => TimeSlot, (timeSlot: TimeSlot) => timeSlot.business)
+  timeSlots: TimeSlot[];
 }

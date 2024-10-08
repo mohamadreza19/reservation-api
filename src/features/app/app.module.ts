@@ -18,12 +18,15 @@ import { CustomJwtModule } from '../../shared/jwt/customJwt.module';
 import { AppointmentModule } from '../appointment/appointment.module';
 import { BusinessCategoryModule } from '../business-category/business-category.module';
 import { ServiceCategoryModule } from '../service-category/service-category.module';
+import { ScheduleModule } from '@nestjs/schedule';
+import { TimeSlotsModule } from '../time-slots/time-slots.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
     }),
+    ScheduleModule.forRoot(),
     CacheManagerModule,
     DatabaseModule,
     CustomJwtModule,
@@ -35,6 +38,7 @@ import { ServiceCategoryModule } from '../service-category/service-category.modu
     ServiceProfileModule,
 
     BusinessModule,
+    TimeSlotsModule,
 
     BusinessCategoryModule,
     ServiceCategoryModule,

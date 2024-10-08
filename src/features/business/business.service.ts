@@ -18,7 +18,8 @@ import { BusinessCategoryService } from '../business-category/business-category.
 import { UpdateBusinessScheduleDto } from './business-schedule/dto/update-business-schedule.dto';
 import { BusinessSchedule } from './business-schedule/entities/business-schedule.entity';
 import { UpdateBusinessDto } from './dto/update-business.dto';
-import { TimeSlotsService } from './time-slots/time-slots.service';
+import { TimeSlotsService } from '../time-slots/time-slots.service';
+import { Cron, CronExpression } from '@nestjs/schedule';
 
 @Injectable()
 export class BusinessService {
@@ -58,7 +59,12 @@ export class BusinessService {
       });
       isNew = true;
     }
-
+    const date = new Date();
+    await this.timeSlotsService.generateJalalianWeeklyTimeSlots(
+      business.businessSchedule,
+      business.id,
+      date,
+    );
     const tokens = await this.AuthService.generateTokens({
       userId: business.id,
 
@@ -171,16 +177,32 @@ export class BusinessService {
       throw new NotFoundException('Business Not Found');
     }
 
-    return this.timeSlotsService.generateJalalianWeeklyTimeSlots(
-      business.businessSchedule,
-      date,
-    );
+    // return this.timeSlotsService.generateJalalianWeeklyTimeSlots(
+    //   business.businessSchedule,
+    //   3,
+    //   date,
+    //   () => {},
+    // );
   }
+
   async findBySubDomainName(subDomainName: string) {
     return await this.businessRepository.findOne({
       where: {
         subDomainName,
       },
+    });
+  }
+  // @Cron(CronExpression.EVERY_10_SECONDS)
+  async generateTimeSlotsWeeklyForBusiness() {
+    const business = await this.businessRepository.find();
+    const currentDate = new Date();
+    business.forEach(async (business) => {
+      const result =
+        await this.timeSlotsService.generateJalalianWeeklyTimeSlots(
+          business.businessSchedule,
+          business.id,
+          currentDate,
+        );
     });
   }
 }

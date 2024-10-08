@@ -11,8 +11,9 @@ import { BusinesScheduleService } from './business-schedule/busines-schedule.ser
 import { BusinessScheduleController } from './business-schedule/business-schedule.controller';
 import { BusinessSchedule } from './business-schedule/entities/business-schedule.entity';
 import { Business } from './entities/business.entity';
-import { TimeSlotsController } from './time-slots/time-slots.controller';
-import { TimeSlotsService } from './time-slots/time-slots.service';
+import { TimeSlotsController } from '../time-slots/time-slots.controller';
+import { TimeSlotsService } from '../time-slots/time-slots.service';
+import { TimeSlotsModule } from '../time-slots/time-slots.module';
 
 @Global()
 @Module({
@@ -24,13 +25,14 @@ import { TimeSlotsService } from './time-slots/time-slots.service';
   providers: [
     BusinessService,
     BusinesScheduleService,
-    TimeSlotsService,
+    // TimeSlotsService,
     AuthService,
   ],
   imports: [
     CacheManagerModule,
     TypeOrmModule.forFeature([Business, BusinessSchedule]),
     BusinessCategoryModule,
+    TimeSlotsModule,
     forwardRef(() => CustomerModule),
   ],
   exports: [BusinessService],
