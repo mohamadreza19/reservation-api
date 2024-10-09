@@ -1,15 +1,24 @@
 import { Business } from 'src/features/business/entities/business.entity';
 import { Customer } from 'src/features/customer/entities/customer.entity';
 import { ServiceProfile } from 'src/features/service-profile/entities/service-profile.entity';
-import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { TimeSlot } from 'src/features/time-slots/entities/time-slot.entity';
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  OneToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 
 @Entity()
 export class Appointment {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column()
-  date: string;
+  @OneToOne(() => TimeSlot)
+  @JoinColumn()
+  timeSlot: TimeSlot;
 
   @ManyToOne(() => Business, (business: Business) => business, {
     nullable: false,

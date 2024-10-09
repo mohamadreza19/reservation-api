@@ -41,13 +41,12 @@ export class BusinessController {
     return data;
   }
 
-  @Patch(':id')
+  @Patch()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.Business)
   @ApiBearerAuth(UserRole.Business)
   async update(
     @Req() request: UserSerializeRequest,
-    @Param('id') id: number,
     @Body() updateBusinessDto: UpdateBusinessDto,
   ) {
     return await this.businessService.update(

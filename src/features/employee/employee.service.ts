@@ -28,7 +28,14 @@ export class EmployeeService {
       name: createEmployeeDto.name,
       business: business,
     });
-    return await this.employeeRepository.save(employeeInstance);
+    const createdemployee =
+      await this.employeeRepository.save(employeeInstance);
+
+    return {
+      id: createdemployee.id,
+      name: createdemployee.name,
+      businessId: createdemployee.business.id,
+    };
   }
 
   findAll() {

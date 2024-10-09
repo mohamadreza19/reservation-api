@@ -1,13 +1,12 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './features/app/app.module';
 import { SwaggerConfig } from './shared/config/SwaggerConfig';
-import { ValidationPipe } from '@nestjs/common';
+import { Logger, ValidationPipe } from '@nestjs/common';
 
 async function bootstrap() {
   const URL_Prefix = '/api';
-  const app = await NestFactory.create(AppModule, {
-    logger: ['log', 'error', 'warn', 'debug', 'verbose'], // Enable logs at different levels
-  });
+  const app = await NestFactory.create(AppModule);
+  app.useLogger(['log', 'error', 'warn', 'debug', 'verbose']);
   app.setGlobalPrefix(URL_Prefix);
   app.enableCors({
     allowedHeaders: '*',

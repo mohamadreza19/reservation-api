@@ -49,7 +49,17 @@ export class ServiceProfileService {
       deposit: createServiceProfileDto.deposit,
     });
 
-    return await this.serviceProfileRepository.save(serviceProfile);
+    const createdServiceProfile =
+      await this.serviceProfileRepository.save(serviceProfile);
+
+    return {
+      id: createdServiceProfile.id,
+      name: createdServiceProfile.name,
+      businessId: createdServiceProfile.business.id,
+      deposit: createdServiceProfile.deposit,
+      serviceCategoryId: createdServiceProfile.serviceCategory.id,
+      employees: createdServiceProfile.employees,
+    };
   }
 
   async findAllByBusinessId(businessId: number) {

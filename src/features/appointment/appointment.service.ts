@@ -7,6 +7,7 @@ import { ServiceProfileService } from '../service-profile/service-profile.servic
 import { CreateAppointmentDto } from './dto/create-appointment.dto';
 import { UpdateAppointmentDto } from './dto/update-appointment.dto';
 import { Appointment } from './entities/appointment.entity';
+import moment from 'moment';
 
 @Injectable()
 export class AppointmentService {
@@ -22,6 +23,14 @@ export class AppointmentService {
     businessId: number,
     customerId: number,
   ) {
+    const timeSlot = await this.businessService.findTimeSlotById(
+      createAppointmentDto.timeSlotId,
+    );
+
+    if (!timeSlot) {
+      throw new NotFoundException('Can not find TimeSlot');
+    }
+
     const customer = await this.customerService.findOneById(customerId);
 
     if (!customer) {
@@ -42,7 +51,6 @@ export class AppointmentService {
     if (!serviceProfile) {
       throw new NotFoundException('Can not find ServiceProfile');
     }
-    const date = `${createAppointmentDto.date}T${createAppointmentDto.hour}:00Z`;
 
     const appointment = this.appointmenRepository.create({
       business: {
@@ -52,12 +60,25 @@ export class AppointmentService {
         id: customer.id,
       },
       serviceProfile: serviceProfile,
-      date: date,
+      timeSlot: {
+        id: timeSlot.id,
+      },
       paymentStatus: 'unpaid',
       status: 'pending',
     });
 
-    return await this.appointmenRepository.save(appointment);
+    const createdAppointment =
+      await this.appointmenRepository.save(appointment);
+
+    return {
+      id: createdAppointment.id,
+      timeSlotId: createdAppointment.timeSlot.id,
+      customerId: createdAppointment.customer.id,
+      serviceProfileId: createdAppointment.serviceProfile.id,
+      businessId: createdAppointment.business.id,
+      paymentStatus: createdAppointment.paymentStatus,
+      status: createdAppointment.status,
+    };
   }
 
   findAll() {

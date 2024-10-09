@@ -1,3 +1,4 @@
+import { Exclude } from 'class-transformer';
 import { Business } from 'src/features/business/entities/business.entity';
 import { ServiceProfile } from 'src/features/service-profile/entities/service-profile.entity';
 
@@ -18,6 +19,7 @@ export class Employee {
   @ManyToOne(() => Business, (business: Business) => business.employees, {
     onDelete: 'CASCADE',
   })
+  @Exclude()
   business: Business;
 
   @ManyToMany(

@@ -150,17 +150,30 @@ export class TimeSlotsService {
     const [startDayOfWeek, endDayOfWeek] =
       this.findStartDayAndEndDayOfJalaliWeek(date);
 
+    const currentDate = moment();
+    const HHMM = moment().format('HH:mm');
+    const format = 'YYYY-MM-DD';
+
     const timeSlots = await this.timeSlotRepository
       .createQueryBuilder('timeSlot')
-      // .select(['timeSlot.date', 'timeSlot.HHMM', 'timeSlot.available']) // Select fields without aggregation
       .where('timeSlot.businessId = :businessId', { businessId })
       .andWhere('timeSlot.date BETWEEN :startDate AND :endDate', {
-        startDate: startDayOfWeek.date.format('YYYY-MM-DD'),
-        endDate: endDayOfWeek.date.format('YYYY-MM-DD'),
+        startDate: startDayOfWeek.date.isBefore(currentDate)
+          ? currentDate.format(format)
+          : startDayOfWeek.date.format(format),
+        endDate: endDayOfWeek.date.isAfter(currentDate)
+          ? endDayOfWeek.date.format(format)
+          : currentDate.format(format),
       })
+      .andWhere('timeSlot.HHMM > :HHMM', { HHMM: HHMM })
       .getMany(); // Get results without aggregation
 
     return timeSlots; // Return the formatted results
+  }
+  async findOneById(timeSlotId: number) {
+    return await this.timeSlotRepository.findOne({
+      where: { id: timeSlotId },
+    });
   }
 
   generateGregorianWeeklyTimeSlots(

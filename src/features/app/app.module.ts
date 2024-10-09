@@ -20,6 +20,7 @@ import { BusinessCategoryModule } from '../business-category/business-category.m
 import { ServiceCategoryModule } from '../service-category/service-category.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { TimeSlotsModule } from '../time-slots/time-slots.module';
+import { StorageModule } from '../storage/storage.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { TimeSlotsModule } from '../time-slots/time-slots.module';
     CacheManagerModule,
     DatabaseModule,
     CustomJwtModule,
+    StorageModule,
     //
     CustomerModule,
     TransactionModule,

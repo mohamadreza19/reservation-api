@@ -81,12 +81,12 @@ export class BusinessService {
     return await this.businessRepository.save(business, {});
   }
   async update(updateBusinessDto: UpdateBusinessDto, userId: number) {
-    return await this.businessRepository.update(
-      {
-        id: userId,
-      },
-      updateBusinessDto,
-    );
+    // return await this.businessRepository.update(
+    //   {
+    //     id: userId,
+    //   },
+    //   updateBusinessDto,
+    // );
   }
   async updateBusinessScheduleByBusinessId(
     updateBusinessScheduleDto: UpdateBusinessScheduleDto,
@@ -115,6 +115,9 @@ export class BusinessService {
         id,
       },
     });
+  }
+  async findTimeSlotById(timeSlotId: number) {
+    return await this.timeSlotsService.findOneById(timeSlotId);
   }
 
   async deleteBusinessWithSchedule(businessId: number) {
