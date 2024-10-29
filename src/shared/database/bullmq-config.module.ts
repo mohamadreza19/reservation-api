@@ -10,12 +10,11 @@ import { Redis } from 'ioredis';
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => {
-        const redisUrl = configService.get('REDIS_URL');
-
-        if (!redisUrl) {
-          throw new Error('REDIS_URL is not defined');
-        }
-        const redis = new Redis(redisUrl);
+        const port = configService.get('REDIS_PORT');
+        const redis = new Redis({
+          host: configService.get('REDIS_SERVICE_NAME'), // Render Redis service name, red-xxxxxxxxxxxxxxxxxxxx
+          port: port || 6379, // Redis port
+        });
 
         return {
           name: 'jobs',
