@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { ServiceProfileController } from './service-profile.controller';
 import { ServiceProfileService } from './service-profile.service';
 
@@ -13,8 +13,8 @@ import { ServiceProfile } from './entities/service-profile.entity';
     TypeOrmModule.forFeature([ServiceProfile]),
     //
 
-    EmployeeModule,
-    BusinessModule,
+    forwardRef(() => EmployeeModule),
+
     ServiceCategoryModule,
   ],
   controllers: [ServiceProfileController],

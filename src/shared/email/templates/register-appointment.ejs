@@ -1,0 +1,107 @@
+<html lang="fa">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>تأییدیه رزرو</title>
+  </head>
+  <body
+    style="
+      font-family: Tahoma, Arial, sans-serif;
+      direction: rtl;
+      background-color: #f7f7f7;
+      padding: 20px;
+      color: #333;
+    "
+  >
+    <div
+      style="
+        max-width: 600px;
+        margin: 0 auto;
+        background-color: #fff;
+        border-radius: 8px;
+        box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+        padding: 20px;
+      "
+    >
+      <h2 style="color: #4caf50; text-align: center">تأییدیه رزرو</h2>
+      <p style="font-size: 16px; line-height: 1.6">
+        <strong>سلام <%= name %> عزیز،</strong>
+      </p>
+      <p style="font-size: 16px; line-height: 1.6">
+        رزرو شما با موفقیت ثبت شد. جزئیات رزرو شما به شرح زیر است:
+      </p>
+      <table style="width: 100%; border-collapse: collapse; margin: 20px 0">
+        <tr>
+          <td
+            style="
+              padding: 8px;
+              border: 1px solid #ddd;
+              background-color: #f9f9f9;
+            "
+          >
+            ایمیل
+          </td>
+          <td style="padding: 8px; border: 1px solid #ddd"><%= email %></td>
+        </tr>
+        <tr>
+          <td
+            style="
+              padding: 8px;
+              border: 1px solid #ddd;
+              background-color: #f9f9f9;
+            "
+          >
+            نام
+          </td>
+          <td style="padding: 8px; border: 1px solid #ddd"><%= name %></td>
+        </tr>
+        <tr>
+          <td
+            style="
+              padding: 8px;
+              border: 1px solid #ddd;
+              background-color: #f9f9f9;
+            "
+          >
+            تاریخ رزرو
+          </td>
+          <td style="padding: 8px; border: 1px solid #ddd"><%= date %></td>
+        </tr>
+        <tr>
+          <td
+            style="
+              padding: 8px;
+              border: 1px solid #ddd;
+              background-color: #f9f9f9;
+            "
+          >
+            نام صنف
+          </td>
+          <td style="padding: 8px; border: 1px solid #ddd">
+            <%= businessName %>
+          </td>
+        </tr>
+      </table>
+      <p style="font-size: 16px; line-height: 1.6">
+        در صورت نیاز به تغییر یا لغو رزرو، لطفاً با ما تماس بگیرید.
+      </p>
+      <p style="text-align: center; margin-top: 20px">
+        <a
+          href="#"
+          style="
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #4caf50;
+            color: #fff;
+            text-decoration: none;
+            border-radius: 5px;
+          "
+          >مشاهده جزئیات</a
+        >
+      </p>
+      <p style="text-align: center; font-size: 12px; color: #777">
+        این ایمیل به صورت خودکار ارسال شده است. لطفاً به آن پاسخ ندهید.
+      </p>
+    </div>
+  </body>
+</html>

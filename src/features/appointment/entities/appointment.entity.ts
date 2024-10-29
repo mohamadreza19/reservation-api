@@ -2,6 +2,7 @@ import { Business } from 'src/features/business/entities/business.entity';
 import { Customer } from 'src/features/customer/entities/customer.entity';
 import { ServiceProfile } from 'src/features/service-profile/entities/service-profile.entity';
 import { TimeSlot } from 'src/features/time-slots/entities/time-slot.entity';
+import { AppointmentStatus } from 'src/shared/types/appointment-status.enum';
 import {
   Column,
   Entity,
@@ -42,11 +43,8 @@ export class Appointment {
 
   @Column({
     type: 'enum',
-    enum: ['pending', 'confirmed', 'cancelled'],
-    default: 'pending',
+    enum: AppointmentStatus,
+    default: AppointmentStatus.UNPAID,
   })
-  status: 'pending' | 'confirmed' | 'cancelled'; // Status of the appointment
-
-  @Column({ type: 'enum', enum: ['paid', 'unpaid'], default: 'unpaid' })
-  paymentStatus: 'paid' | 'unpaid'; // Payment status
+  status: AppointmentStatus;
 }

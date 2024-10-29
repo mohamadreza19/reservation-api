@@ -1,5 +1,6 @@
 import {
   Injectable,
+  InternalServerErrorException,
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -12,14 +13,21 @@ import { VerifyOtpDto } from 'src/shared/dto/verify-otp';
 import { AuthService } from 'src/shared/services/auth.service';
 import { CreateBusinessDto } from './dto/create-business.dto';
 
-import moment from 'moment';
+import moment from 'moment-jalaali';
 import { UserRole } from 'src/shared/types/user-role.enum';
 import { BusinessCategoryService } from '../business-category/business-category.service';
 import { UpdateBusinessScheduleDto } from './business-schedule/dto/update-business-schedule.dto';
 import { BusinessSchedule } from './business-schedule/entities/business-schedule.entity';
 import { UpdateBusinessDto } from './dto/update-business.dto';
 import { TimeSlotsService } from '../time-slots/time-slots.service';
-import { Cron, CronExpression } from '@nestjs/schedule';
+import { Cron, CronExpression, Interval } from '@nestjs/schedule';
+import _ from 'lodash';
+import {
+  findStartDayAndEndDayOfJalaaliWeek,
+  getUpdatedBusinessScheduleFlags,
+} from 'src/shared/utils';
+import { TimeSlotStatus } from 'src/shared/types/time-slot-status.enum';
+import { TimeSlot } from '../time-slots/entities/time-slot.entity';
 
 @Injectable()
 export class BusinessService {
@@ -59,11 +67,20 @@ export class BusinessService {
       });
       isNew = true;
     }
-    const date = new Date();
-    await this.timeSlotsService.generateJalalianWeeklyTimeSlots(
+    const currentDate = moment();
+    const lastTimeSlot = await this.timeSlotsService.getLastTimeSlot();
+
+    if (!lastTimeSlot) {
+      throw InternalServerErrorException;
+    }
+    const lastTimeSlotDate = moment(lastTimeSlot.date, 'YYYY-MM-DD');
+
+    await this.timeSlotsService.createWeeklyTimeSlots(
       business.businessSchedule,
       business.id,
-      date,
+      currentDate,
+      lastTimeSlotDate,
+      [],
     );
     const tokens = await this.AuthService.generateTokens({
       userId: business.id,
@@ -80,7 +97,7 @@ export class BusinessService {
     });
     return await this.businessRepository.save(business, {});
   }
-  async update(updateBusinessDto: UpdateBusinessDto, userId: number) {
+  async update(updateBusinessDto: UpdateBusinessDto, businessId: number) {
     // return await this.businessRepository.update(
     //   {
     //     id: userId,
@@ -88,17 +105,41 @@ export class BusinessService {
     //   updateBusinessDto,
     // );
   }
+  async updateTimeSlotStatusById(timeSlot: TimeSlot, status: TimeSlotStatus) {
+    return this.timeSlotsService.updateTimeSlotStatusById(timeSlot, status);
+  }
   async updateBusinessScheduleByBusinessId(
     updateBusinessScheduleDto: UpdateBusinessScheduleDto,
     businessId: number,
   ) {
-    const busines = await this.findOneById(businessId);
+    console.time('Async Process');
+    const business = await this.findOneById(businessId);
 
-    busines.businessSchedule = {
-      ...busines.businessSchedule,
-      ...updateBusinessScheduleDto,
-    };
-    return await this.businessRepository.save(busines);
+    const flags = getUpdatedBusinessScheduleFlags(
+      updateBusinessScheduleDto,
+      business.businessSchedule,
+    );
+
+    if (flags.isHolidayUpdated) {
+      await this.timeSlotsService.updateHolidays(
+        businessId,
+        updateBusinessScheduleDto.holidays,
+      );
+    }
+
+    if (flags.isTimeIntervalUpdated || flags.isWorkingHourUpdated) {
+      business.businessSchedule = {
+        ...business.businessSchedule,
+        ...updateBusinessScheduleDto,
+      };
+
+      await this.timeSlotsService.updateTimeInterval(
+        business.businessSchedule,
+        businessId,
+      );
+    }
+    console.timeEnd('Async Process');
+    return await this.businessRepository.save(business);
   }
 
   async findOneByPhoneNumber(phoneNumber: string) {
@@ -155,23 +196,12 @@ export class BusinessService {
     );
   }
 
-  async generateTimeSlots(businessId: number) {
-    const business = await this.findOneById(businessId);
-    const date = new Date();
-    if (!business.businessSchedule) {
-      throw new NotFoundException('BusinessSchedule is null');
-    }
-    return this.timeSlotsService.generateTimeSlots(
-      business.businessSchedule,
-      date,
-    );
-  }
   async getTimeSlotsWeeklyBasedDate(
     businessId: number,
     weekStartDate: string | undefined,
   ) {
     const date = weekStartDate
-      ? moment(weekStartDate).toDate()
+      ? moment.utc(weekStartDate).toDate()
       : moment().toDate();
 
     return await this.timeSlotsService.getTimeSlotWeekly(businessId, date);
@@ -184,20 +214,27 @@ export class BusinessService {
       },
     });
   }
+
+  // @Cron('0 0 0 14 * *')
+  // @Interval(1000 * 60 * 60 * 24 * 14) // 1000 ms * 60 * 60 * 24 * 14 days
+  // @Interval(1000 * 60 * 1)
   // @Cron(CronExpression.EVERY_10_SECONDS)
   async generateTimeSlotsWeeklyForBusiness() {
     const saturday = moment().add(1, 'days');
-
+    console.log('meow');
     const nextSaturday = saturday.clone().add(7, 'days');
     const business = await this.businessRepository.find();
     [saturday, nextSaturday].forEach(async (momentDate) => {
-      const date = momentDate.toDate();
+      const [startDayOfWeek, endDayOfWeek] =
+        findStartDayAndEndDayOfJalaaliWeek(momentDate);
 
       business.forEach(async (business) => {
-        await this.timeSlotsService.generateJalalianWeeklyTimeSlots(
+        await this.timeSlotsService.createWeeklyTimeSlots(
           business.businessSchedule,
           business.id,
-          date,
+          startDayOfWeek,
+          endDayOfWeek,
+          [],
         );
       });
     });

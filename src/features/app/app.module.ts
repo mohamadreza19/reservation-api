@@ -21,27 +21,31 @@ import { ServiceCategoryModule } from '../service-category/service-category.modu
 import { ScheduleModule } from '@nestjs/schedule';
 import { TimeSlotsModule } from '../time-slots/time-slots.module';
 import { StorageModule } from '../storage/storage.module';
+import { BullMQConfigModule } from 'src/shared/database/bullmq-config.module';
+import { EmailModule } from 'src/shared/email/email.module';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
     }),
+
     ScheduleModule.forRoot(),
     CacheManagerModule,
     DatabaseModule,
+    BullMQConfigModule,
     CustomJwtModule,
-    StorageModule,
+
+    // StorageModule,
+    EmailModule,
     //
     CustomerModule,
     TransactionModule,
-
     EmployeeModule,
     ServiceProfileModule,
-
     BusinessModule,
     TimeSlotsModule,
-
     BusinessCategoryModule,
     ServiceCategoryModule,
     AppointmentModule,

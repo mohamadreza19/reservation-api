@@ -1,4 +1,9 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  forwardRef,
+  Inject,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UnrelatedEmployeeIdsException } from 'src/shared/exceptions/unrelated-employee-ids.exception';
 import { UserPayload } from 'src/shared/types/user-payload.interface';
@@ -13,6 +18,7 @@ export class EmployeeService {
   constructor(
     @InjectRepository(Employee)
     private employeeRepository: Repository<Employee>,
+    @Inject(forwardRef(() => BusinessService))
     private readonly businessService: BusinessService,
   ) {}
   async create(createEmployeeDto: CreateEmployeeDto, user: UserPayload) {

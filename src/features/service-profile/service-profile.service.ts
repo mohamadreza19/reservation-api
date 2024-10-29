@@ -1,4 +1,9 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  forwardRef,
+  Inject,
+  Injectable,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UserPayload } from 'src/shared/types/user-payload.interface';
 import { Repository } from 'typeorm';
@@ -14,7 +19,8 @@ export class ServiceProfileService {
   constructor(
     @InjectRepository(ServiceProfile)
     private readonly serviceProfileRepository: Repository<ServiceProfile>,
-    private readonly businessService: BusinessService,
+
+    @Inject(forwardRef(() => EmployeeService))
     private readonly employeeService: EmployeeService,
     private readonly serviceCategoryService: ServiceCategoryService,
   ) {}

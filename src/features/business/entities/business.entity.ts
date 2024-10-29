@@ -12,6 +12,7 @@ import {
 } from 'typeorm';
 import { BusinessSchedule } from '../business-schedule/entities/business-schedule.entity';
 import { TimeSlot } from '../../time-slots/entities/time-slot.entity';
+import { Transaction } from 'src/features/transaction/entities/transaction.entity';
 
 @Entity()
 export class Business {
@@ -64,4 +65,10 @@ export class Business {
 
   @OneToMany(() => TimeSlot, (timeSlot: TimeSlot) => timeSlot.business)
   timeSlots: TimeSlot[];
+
+  @OneToMany(
+    () => Transaction,
+    (transaction: Transaction) => transaction.business,
+  )
+  transactions: Transaction[];
 }

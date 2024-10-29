@@ -32,7 +32,7 @@ import { TimeSlotsModule } from '../time-slots/time-slots.module';
     CacheManagerModule,
     TypeOrmModule.forFeature([Business, BusinessSchedule]),
     BusinessCategoryModule,
-    TimeSlotsModule,
+    forwardRef(() => TimeSlotsModule),
     forwardRef(() => CustomerModule),
   ],
   exports: [BusinessService],

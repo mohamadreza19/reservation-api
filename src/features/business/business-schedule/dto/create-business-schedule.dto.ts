@@ -18,9 +18,8 @@ export class CreateBusinessScheduleDto {
   })
   @IsArray()
   @IsNumber({}, { each: true })
-  @IsPositive({ each: true })
-  @ArrayMinSize(1) // Minimum one holiday
-  @ArrayMaxSize(7) // Maximum seven holidays (if you want to limit the array size)
+  @ArrayMinSize(0) // Minimum one holiday
+  @ArrayMaxSize(6) // Maximum seven holidays (if you want to limit the array size)
   @IsIn([0, 1, 2, 3, 4, 5, 6], { each: true }) // Ensure values are between 1 and 7
   holidays: number[]; // Array of holiday days (e.g., [0, 6])
 
@@ -47,6 +46,6 @@ export class CreateBusinessScheduleDto {
     description: 'timeInterval based minutes',
   })
   @IsNumber()
-  @Min(20) // Ensure at least a 1-minute interval
+  @Min(30) // Ensure at least a 1-minute interval
   timeInterval: number; // Interval in minutes (e.g., 30 or 60)
 }

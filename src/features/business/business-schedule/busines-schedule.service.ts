@@ -10,16 +10,4 @@ export class BusinesScheduleService {
     @InjectRepository(BusinessSchedule)
     private businessScheduleRepository: Repository<BusinessSchedule>,
   ) {}
-
-  createInstance(createBusinessScheduleDto: CreateBusinessScheduleDto) {
-    return this.businessScheduleRepository.create(createBusinessScheduleDto);
-  }
-  async createInitalInstance() {
-    return this.businessScheduleRepository.create({
-      holidays: [7],
-      startHour: '09:00',
-      endHour: '17:00',
-      timeInterval: 30,
-    });
-  }
 }

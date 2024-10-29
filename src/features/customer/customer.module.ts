@@ -16,7 +16,7 @@ import { BusinessModule } from '../business/business.module';
   imports: [
     forwardRef(() => BusinessModule),
     CacheManagerModule,
-    TransactionModule,
+
     TypeOrmModule.forFeature([Customer]),
   ],
   exports: [CustomerService],

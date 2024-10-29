@@ -1,20 +1,19 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne } from 'typeorm';
 import { ServiceProfile } from 'src/features/service-profile/entities/service-profile.entity';
 import { Customer } from 'src/features/customer/entities/customer.entity';
+import { TransactionStatus } from 'src/shared/types/transaction-status.enum';
+import { Business } from 'src/features/business/entities/business.entity';
 
 @Entity()
 export class Transaction {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column('decimal', { precision: 10, scale: 2 })
+  @Column()
   amount: number;
 
   @Column()
   paymentMethod: string;
-
-  @Column({ default: 'pending' })
-  status: string;
 
   @Column('timestamp')
   transactionDate: Date;
@@ -29,7 +28,19 @@ export class Transaction {
 
   // Many-to-one relationship with User (if applicable)
   @ManyToOne(() => Customer, (customer) => customer.transactions, {
-    nullable: false,
+    nullable: true,
   })
-  customer: Customer; // Optional: Tracks the user who made the transaction
+  customer: Customer | null; // Optional: Tracks the user who made the transaction
+
+  @ManyToOne(() => Business, (business) => business.transactions, {
+    nullable: true,
+  })
+  business: Business | null;
+
+  @Column({
+    type: 'enum',
+    enum: TransactionStatus,
+    default: TransactionStatus.PENDING,
+  })
+  status: TransactionStatus;
 }

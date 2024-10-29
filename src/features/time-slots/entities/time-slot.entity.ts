@@ -1,5 +1,6 @@
 import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { Business } from '../../business/entities/business.entity';
+import { TimeSlotStatus } from 'src/shared/types/time-slot-status.enum';
 
 @Entity()
 export class TimeSlot {
@@ -17,6 +18,10 @@ export class TimeSlot {
   })
   business: Business;
 
-  @Column({ default: false })
-  available: boolean;
+  @Column({
+    type: 'enum',
+    enum: TimeSlotStatus,
+    default: TimeSlotStatus.AVAILABLE, // Default status
+  })
+  status: TimeSlotStatus;
 }
