@@ -18,6 +18,15 @@ async function bootstrap() {
 
   // app.useGlobalPipes(new ValidationPipe());
   // await app.listen(process.env.PORT || 3000);
-  console.log('biiiiiiv');
+
+  const Redis = require('ioredis');
+
+  // Internal Redis URL, extract the details into environment variables.
+  // "redis://red-xxxxxxxxxxxxxxxxxxxx:6379"
+
+  const renderRedis = new Redis({
+    host: 'red-csgen9g8fa8c73fvqc80:6379', // Render Redis service name, red-xxxxxxxxxxxxxxxxxxxx
+    port: 6379, // Redis port
+  });
 }
 bootstrap();
