@@ -10,16 +10,17 @@ import { Redis } from 'ioredis';
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => {
+        console.log(configService.get('REDIS_URL'));
+        const redis = new Redis(configService.get('REDIS_URL'), {
+          // tls: {
+          //   rejectUnauthorized: false,
+          // },
+        });
+        console.log(redis);
         return {
           name: 'jobs',
           maxConcurrent: 1,
-          connection: {
-            // host: configService.get('REDIS_HOST'),
-            // port: configService.get('REDIS_PORT'),
-            url: configService.get('REDIS_URL'),
-            // tls: true,
-            db: 0,
-          },
+          connection: redis,
 
           //   redis: {
           //     host: configService.get('REDIS_HOST'),
