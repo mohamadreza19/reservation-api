@@ -2,6 +2,7 @@
 import { Module } from '@nestjs/common';
 import { BullModule } from '@nestjs/bullmq';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import Redis from 'ioredis';
 
 @Module({
   imports: [
@@ -9,18 +10,17 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => {
-        console.log(configService.get('REDIS_URL'));
+        const redisConnection = new Redis({
+          // Use Render Redis service name as host, red-xxxxxxxxxxxxxxxxxxxx
+          host: configService.get('REDIS_SERVICE_NAME'),
+          // Default Redis port
+          port: configService.get('REDIS_PORT') || 6379,
+        });
 
         return {
           name: 'jobs',
           maxConcurrent: 1,
-          connection: {
-            // host: configService.get('REDIS_HOST'),
-            // port: configService.get('REDIS_PORT'),
-            url: configService.get('REDIS_URL'),
-            tls: true,
-            db: 0,
-          },
+          connection: redisConnection,
 
           //   redis: {
           //     host: configService.get('REDIS_HOST'),
