@@ -5,20 +5,20 @@ import { Logger, ValidationPipe } from '@nestjs/common';
 import Redis from 'ioredis';
 
 async function bootstrap() {
-  // const URL_Prefix = '/api';
-  // const app = await NestFactory.create(AppModule);
-  // app.useLogger(['log', 'error', 'warn', 'debug', 'verbose']);
-  // app.setGlobalPrefix(URL_Prefix);
-  // app.enableCors({
-  //   allowedHeaders: '*',
-  //   origin: '*',
-  //   credentials: true,
-  // });
+  const URL_Prefix = '/api';
+  const app = await NestFactory.create(AppModule);
+  app.useLogger(['log', 'error', 'warn', 'debug', 'verbose']);
+  app.setGlobalPrefix(URL_Prefix);
+  app.enableCors({
+    allowedHeaders: '*',
+    origin: '*',
+    credentials: true,
+  });
 
-  // SwaggerConfig.configure(app, URL_Prefix);
+  SwaggerConfig.configure(app, URL_Prefix);
 
-  // app.useGlobalPipes(new ValidationPipe());
-  // await app.listen(Number(process.env.PORT) || 3000);
+  app.useGlobalPipes(new ValidationPipe());
+  await app.listen(Number(process.env.PORT) || 3000);
 
   // This will only work on Render hosted services
   // const renderRedis = new Redis({
@@ -30,16 +30,16 @@ async function bootstrap() {
   //     rejectUnauthorized: true,
   //   }, // TLS required when externally connecting to Render Redis
   // });
-  const renderRedis = new Redis({
-    host: process.env.REDIS_SERVICE_NAME, // Render Redis service name, red-xxxxxxxxxxxxxxxxxxxx
-    port: Number(process.env.REDIS_PORT) || 6379, // Redis port
-  });
+  // const renderRedis = new Redis({
+  //   host: process.env.REDIS_SERVICE_NAME, // Render Redis service name, red-xxxxxxxxxxxxxxxxxxxx
+  //   port: Number(process.env.REDIS_PORT) || 6379, // Redis port
+  // });
 
-  const data = await renderRedis.set('foo', 'bar');
+  // const data = await renderRedis.set('foo', 'bar');
 
-  setInterval(async () => {
-    console.log(data);
-    console.log(await renderRedis.get('foo'));
-  }, 2000);
+  // setInterval(async () => {
+  //   console.log(data);
+  //   console.log(await renderRedis.get('foo'));
+  // }, 2000);
 }
 bootstrap();

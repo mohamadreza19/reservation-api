@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { DatabaseModule } from '../../shared/database/database.module';
+import { DatabaseModule } from '../../shared/databases/database.module';
 import { CustomerModule } from '../customer/customer.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -21,9 +21,10 @@ import { ServiceCategoryModule } from '../service-category/service-category.modu
 import { ScheduleModule } from '@nestjs/schedule';
 import { TimeSlotsModule } from '../time-slots/time-slots.module';
 import { StorageModule } from '../storage/storage.module';
-import { BullMQConfigModule } from 'src/shared/database/bullmq-config.module';
+import { BullMQConfigModule } from 'src/shared/databases/bullmq-config.module';
 import { EmailModule } from 'src/shared/email/email.module';
 import { EventEmitterModule } from '@nestjs/event-emitter';
+import { RedisDbModule } from 'src/shared/databases/redis-db.module';
 
 @Module({
   imports: [
@@ -34,6 +35,7 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
     ScheduleModule.forRoot(),
     CacheManagerModule,
     DatabaseModule,
+    RedisDbModule,
     BullMQConfigModule,
     CustomJwtModule,
 
