@@ -41,7 +41,7 @@ async function bootstrap() {
     const date = new Date().toISOString();
     const data = await renderRedis.set(date, date);
     // console.log(data);
-    console.log(await renderRedis.get(data));
+    console.log(await renderRedis.get(date));
   }, 2000);
 }
 bootstrap();
