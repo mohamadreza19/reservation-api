@@ -12,8 +12,9 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
         name: 'jobs',
         maxConcurrent: 1,
         connection: {
-          host: configService.get('REDIS_HOST'),
-          port: configService.get('REDIS_PORT'),
+          // host: configService.get('REDIS_HOST'),
+          // port: configService.get('REDIS_PORT'),
+          url: configService.get('REDIS_URL'),
 
           db: 0,
         },
