@@ -8,22 +8,26 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
     BullModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
-      useFactory: (configService: ConfigService) => ({
-        name: 'jobs',
-        maxConcurrent: 1,
-        connection: {
-          // host: configService.get('REDIS_HOST'),
-          // port: configService.get('REDIS_PORT'),
-          url: configService.get('REDIS_URL'),
+      useFactory: (configService: ConfigService) => {
+        console.log(configService.get('REDIS_URL'));
 
-          db: 0,
-        },
+        return {
+          name: 'jobs',
+          maxConcurrent: 1,
+          connection: {
+            // host: configService.get('REDIS_HOST'),
+            // port: configService.get('REDIS_PORT'),
+            url: configService.get('REDIS_URL'),
 
-        //   redis: {
-        //     host: configService.get('REDIS_HOST'),
-        //     port: configService.get('REDIS_PORT'),
-        //   },
-      }),
+            db: 0,
+          },
+
+          //   redis: {
+          //     host: configService.get('REDIS_HOST'),
+          //     port: configService.get('REDIS_PORT'),
+          //   },
+        };
+      },
     }),
   ],
 })
