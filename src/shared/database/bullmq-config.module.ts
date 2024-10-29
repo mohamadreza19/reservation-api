@@ -10,16 +10,16 @@ import { Redis } from 'ioredis';
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => {
-        console.log(configService.get('REDIS_URL'));
-        const redis = new Redis(configService.get('REDIS_URL'), {
-          // tls: {
-          //   rejectUnauthorized: false,
-          // },
-        });
-        console.log(redis);
+        const redisUrl = configService.get('REDIS_URL');
+
+        if (!redisUrl) {
+          throw new Error('REDIS_URL is not defined');
+        }
+        const redis = new Redis(redisUrl);
+
         return {
           name: 'jobs',
-          maxConcurrent: 1,
+
           connection: redis,
 
           //   redis: {
