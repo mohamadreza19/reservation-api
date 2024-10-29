@@ -14,7 +14,7 @@ import { Redis } from 'ioredis';
         const { REDIS_SERVICE_NAME, REDIS_PORT } = process.env;
         const renderRedis = new Redis({
           // Use Render Redis service name as host, red-xxxxxxxxxxxxxxxxxxxx
-          host: REDIS_SERVICE_NAME,
+          username: REDIS_SERVICE_NAME,
           // Default Redis port
           port: Number(REDIS_PORT) || 6379,
         });
