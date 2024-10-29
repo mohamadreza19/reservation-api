@@ -8,13 +8,8 @@ import { redisClient } from './redis-db.module';
 
 @Module({
   imports: [
-    BullModule.forRootAsync({
-      imports: [RedisModule],
-      useFactory: () => {
-        return {
-          connection: redisClient,
-        };
-      },
+    BullModule.forRoot({
+      connection: redisClient,
     }),
   ],
 })
