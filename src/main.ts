@@ -25,7 +25,7 @@ async function bootstrap() {
   // "redis://red-xxxxxxxxxxxxxxxxxxxx:6379"
 
   const renderRedis = new Redis({
-    host: 'red-csgen9g8fa8c73fvqc80:6379', // Render Redis service name, red-xxxxxxxxxxxxxxxxxxxx
+    host: 'red-csgen9g8fa8c73fvqc80', // Render Redis service name, red-xxxxxxxxxxxxxxxxxxxx
     port: 6379, // Redis port
   });
   console.log(renderRedis);
