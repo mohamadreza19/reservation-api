@@ -11,15 +11,18 @@ import { Redis } from 'ioredis';
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => {
         const port = configService.get('REDIS_PORT');
-        const redis = new Redis({
-          host: configService.get('REDIS_SERVICE_NAME'), // Render Redis service name, red-xxxxxxxxxxxxxxxxxxxx
-          port: port || 6379, // Redis port
+        const { REDIS_SERVICE_NAME, REDIS_PORT } = process.env;
+        const renderRedis = new Redis({
+          // Use Render Redis service name as host, red-xxxxxxxxxxxxxxxxxxxx
+          host: REDIS_SERVICE_NAME,
+          // Default Redis port
+          port: Number(REDIS_PORT) || 6379,
         });
 
         return {
           name: 'jobs',
 
-          connection: redis,
+          connection: renderRedis,
 
           //   redis: {
           //     host: configService.get('REDIS_HOST'),

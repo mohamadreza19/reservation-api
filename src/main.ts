@@ -18,26 +18,13 @@ async function bootstrap() {
   SwaggerConfig.configure(app, URL_Prefix);
 
   app.useGlobalPipes(new ValidationPipe());
-  await app.listen(process.env.PORT || 3000);
+  await app.listen(Number(process.env.PORT) || 3000);
 
-  const { REDIS_SERVICE_NAME, REDIS_PORT } = process.env;
+
 
   // This will only work on Render hosted services
-  const renderRedis = new Redis({
-    // Use Render Redis service name as host, red-xxxxxxxxxxxxxxxxxxxx
-    host: REDIS_SERVICE_NAME,
-    // Default Redis port
-    port: Number(REDIS_PORT) || 6379,
-  });
+ 
 
-  console.log('Connected to Render Redis! 🚀');
-
-  renderRedis.set('animal', 'mouse');
-
-  renderRedis.get('animal').then((result) => {
-    console.log(`Result for key animal: ${result}`); // Prints "mouse"
-  });
-
-  renderRedis.del('animal');
+  
 }
 bootstrap();
