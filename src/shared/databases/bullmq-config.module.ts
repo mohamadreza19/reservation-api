@@ -4,11 +4,11 @@ import { BullModule } from '@nestjs/bullmq';
 
 @Module({
   imports: [
-    BullModule.forRootAsync({
-      useFactory: (redis) => ({
-        connection: redis, // Use the injected redis client
-      }),
-      inject: ['REDIS_CLIENT'], // Inject the redis client created in redis-db.module
+    BullModule.forRoot({
+      connection: {
+        host: process.env.REDIS_SERVICE_NAME, // host or REDIS_URL parsed for hostname and port
+        port: Number(process.env.REDIS_PORT) || 6379,
+      },
     }),
   ],
 })
