@@ -1,15 +1,14 @@
-// app.module.ts
-import { Module } from '@nestjs/common';
+// bullmq-config.module.ts
+import { Module, Inject } from '@nestjs/common';
 import { BullModule } from '@nestjs/bullmq';
-import { ConfigModule, ConfigService } from '@nestjs/config';
-import { Redis } from 'ioredis';
-import { RedisModule, RedisModuleOptions } from 'nestjs-redis';
-import { redisClient } from './redis-db.module';
 
 @Module({
   imports: [
-    BullModule.forRoot({
-      connection: redisClient,
+    BullModule.forRootAsync({
+      useFactory: (redis) => ({
+        connection: redis, // Use the injected redis client
+      }),
+      inject: ['REDIS_CLIENT'], // Inject the redis client created in redis-db.module
     }),
   ],
 })

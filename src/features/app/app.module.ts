@@ -24,14 +24,14 @@ import { StorageModule } from '../storage/storage.module';
 import { BullMQConfigModule } from 'src/shared/databases/bullmq-config.module';
 import { EmailModule } from 'src/shared/email/email.module';
 import { EventEmitterModule } from '@nestjs/event-emitter';
-
+import { RedisDbModule } from 'src/shared/databases/redis-db.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
     }),
-
+    RedisDbModule,
     ScheduleModule.forRoot(),
     CacheManagerModule,
     DatabaseModule,
