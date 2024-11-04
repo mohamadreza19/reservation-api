@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="fa">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>کد تایید</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #f4f4f4;
+        margin: 0;
+        padding: 0;
+        direction: rtl;
+        text-align: center;
+      }
+      .container {
+        max-width: 500px;
+        margin: 0 auto;
+        background-color: #ffffff;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      }
+      h2 {
+        color: #333;
+      }
+      .otp-code {
+        font-size: 1.5rem;
+        color: #4caf50;
+        font-weight: bold;
+        letter-spacing: 3px;
+        margin: 20px 0;
+      }
+      p {
+        color: #555;
+        line-height: 1.6;
+      }
+      .footer {
+        font-size: 0.8rem;
+        color: #888;
+        margin-top: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h2>کد تایید شما</h2>
+      <p>با سلام،</p>
+      <p>کد تایید شما برای ورود به سیستم به شرح زیر می‌باشد:</p>
+      <div class="otp-code"><%= otp %></div>
+      <p>لطفاً این کد را ظرف مدت ۱۰ دقیقه در سیستم وارد کنید.</p>
+      <p>اگر شما درخواست این کد را نکرده‌اید، این ایمیل را نادیده بگیرید.</p>
+      <div class="footer">با احترام،<br />تیم پشتیبانی</div>
+    </div>
+  </body>
+</html>

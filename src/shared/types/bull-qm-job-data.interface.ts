@@ -1,3 +1,3 @@
 export interface BullQmJobData {
-  type: 'register-appointment' | 'appointment-reminder';
+  type: 'appointment-register' | 'appointment-reminder' | 'auth-sendotp';
 }

@@ -4,6 +4,7 @@ import { UpdateTransactionDto } from './dto/update-transaction.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Transaction } from './entities/transaction.entity';
 import { Repository } from 'typeorm';
+import moment from 'moment';
 
 @Injectable()
 export class TransactionService {
@@ -13,6 +14,13 @@ export class TransactionService {
   ) {}
   initiate(createTransactionDto: CreateTransactionDto) {
     return 'This action adds a new transaction';
+  }
+  initiateCustomerTransaction(createTransactionDto: CreateTransactionDto) {
+    const date = moment().format('YYYY-MM-DD');
+    const tranaction = this.transactionRepository.create({
+      transactionDate: date,
+      amount: 0,
+    });
   }
 
   findAll() {

@@ -10,7 +10,7 @@ import { Business } from './entities/business.entity';
 
 import { LoginDto } from 'src/shared/dto/login.dto';
 import { VerifyOtpDto } from 'src/shared/dto/verify-otp';
-import { AuthService } from 'src/shared/services/auth.service';
+
 import { CreateBusinessDto } from './dto/create-business.dto';
 
 import moment from 'moment-jalaali';
@@ -28,6 +28,7 @@ import {
 } from 'src/shared/utils';
 import { TimeSlotStatus } from 'src/shared/types/time-slot-status.enum';
 import { TimeSlot } from '../time-slots/entities/time-slot.entity';
+import { AuthService } from 'src/shared/modules/auth/auth.service';
 
 @Injectable()
 export class BusinessService {
@@ -40,7 +41,7 @@ export class BusinessService {
   ) {}
 
   async Login(loginDto: LoginDto) {
-    const otp = await this.AuthService.generateOtp(loginDto.phoneNumber);
+    const otp = await this.AuthService.generateOtpForEmail(loginDto.email);
 
     return otp;
   }
@@ -49,7 +50,7 @@ export class BusinessService {
     let isNew: boolean = false;
     let business: Business;
     const isValid = await this.AuthService.verifyOtp(
-      verifyOtp.phoneNumber,
+      verifyOtp.email,
       verifyOtp.otp,
     );
 
@@ -58,12 +59,12 @@ export class BusinessService {
     }
     // Issue JWT Token after successful OTP verification
 
-    business = await this.findOneByPhoneNumber(verifyOtp.phoneNumber);
+    business = await this.findOneByPhoneNumber(verifyOtp.email);
 
     if (!business) {
       business = await this.create({
-        name: verifyOtp.phoneNumber,
-        phoneNumber: verifyOtp.phoneNumber,
+        name: verifyOtp.email,
+        phoneNumber: verifyOtp.email,
       });
       isNew = true;
     }

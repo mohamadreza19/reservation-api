@@ -8,8 +8,7 @@ import { EmailModule } from 'src/shared/email/email.module';
 @Module({
   imports: [
     BullModule.registerQueue({
-      name: QUEUE_NOTIFICATION, // Queue registration for BullMQ
-      connection: {},
+      name: QUEUE_NOTIFICATION,
     }),
     EmailModule,
   ],

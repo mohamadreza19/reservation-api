@@ -12,9 +12,10 @@ import { Customer } from './entities/customer.entity';
 
 import { CustomerVerifyOtp } from 'src/shared/dto/customer-verify-otp';
 import { LoginDto } from 'src/shared/dto/login.dto';
-import { AuthService } from 'src/shared/services/auth.service';
+
 import { UserRole } from 'src/shared/types/user-role.enum';
 import { BusinessService } from '../business/business.service';
+import { AuthService } from 'src/shared/modules/auth/auth.service';
 
 @Injectable()
 export class CustomerService {
@@ -27,18 +28,19 @@ export class CustomerService {
   ) {}
 
   async Login(loginDto: LoginDto) {
-    return this.AuthService.generateOtp(loginDto.phoneNumber);
+    return this.AuthService.generateOtpForEmail(loginDto.email);
   }
 
   async verifyOtp(verifyOtp: CustomerVerifyOtp) {
     let isNew: boolean = false;
     let customer: Customer;
     //
-    await this.AuthService.verifyOtp(verifyOtp.phoneNumber, verifyOtp.otp);
+    await this.AuthService.verifyOtp(verifyOtp.email, verifyOtp.otp);
 
     const business = await this.businessService.findBySubDomainName(
       verifyOtp.businessSubDomainName,
     );
+    customer = await this.findOneByEmail(verifyOtp.email);
 
     if (!business) {
       throw new UnauthorizedException({
@@ -46,12 +48,12 @@ export class CustomerService {
       });
     }
 
-    customer = await this.findOneByPhoneNumber(verifyOtp.phoneNumber);
+    // customer = await this.findOneByPhoneNumber(verifyOtp.phoneNumber);
 
     if (!customer) {
       customer = await this.create({
-        name: verifyOtp.phoneNumber,
-        phoneNumber: verifyOtp.phoneNumber,
+        name: verifyOtp.email,
+        email: verifyOtp.email,
       });
 
       isNew = true;
@@ -85,6 +87,14 @@ export class CustomerService {
     const result = await this.customerRepository.findOne({
       where: {
         phoneNumber,
+      },
+    });
+    return result;
+  }
+  async findOneByEmail(email: string) {
+    const result = await this.customerRepository.findOne({
+      where: {
+        email,
       },
     });
     return result;

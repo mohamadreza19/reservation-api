@@ -7,6 +7,7 @@ import { NotificationJobNames } from './constants/notification-job-names-enum';
 import { RegisterAppointment } from './types/register-appointment.interface';
 import { JobPriority } from 'src/shared/types/job-priority.enum';
 import { AppointmentReminder } from './types/appointment-remider.interface';
+import { AuthSendOtpForEmail } from 'src/shared/types/auth-sendotp.inteface';
 
 @Injectable()
 export class NotificationQueueService {
@@ -34,7 +35,12 @@ export class NotificationQueueService {
       },
     );
   }
-
+  async sendOtpForEmail(data: AuthSendOtpForEmail) {
+    this.notificationQueue.add(NotificationJobNames.AUTH_SENDOTP, data, {
+      priority: JobPriority.PRIORITY_HIGH,
+      removeOnComplete: true,
+    });
+  }
   async getAllJob() {
     return (await this.notificationQueue.getJobs()).map((item) => {
       return item;

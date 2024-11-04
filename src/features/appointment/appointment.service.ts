@@ -22,6 +22,7 @@ import {
 } from 'src/shared/utils';
 import { TimeSlotStatus } from 'src/shared/types/time-slot-status.enum';
 import { AppointmentStatus } from 'src/shared/types/appointment-status.enum';
+import { TransactionService } from '../transaction/transaction.service';
 
 @Injectable()
 export class AppointmentService {
@@ -33,6 +34,7 @@ export class AppointmentService {
     @Inject(forwardRef(() => BusinessService))
     private readonly businessService: BusinessService,
     private readonly serviceProfileService: ServiceProfileService,
+    private readonly transactionService: TransactionService,
 
     private readonly notificationQueueService: NotificationQueueService,
   ) {}
@@ -100,7 +102,7 @@ export class AppointmentService {
       businessName: business.subDomainName,
       date: moment(dateFormat).format('jYYYY/jMM/jDD HH:mm'),
       name: customer.name,
-      type: 'register-appointment',
+      type: 'appointment-register',
     });
 
     reminders.forEach(async (reminder) => {

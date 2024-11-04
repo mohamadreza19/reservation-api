@@ -7,8 +7,17 @@ export class Customer {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column()
+  @Column({
+    unique: true,
+    nullable: true,
+  })
   phoneNumber: string;
+
+  @Column({
+    unique: true,
+    nullable: true,
+  })
+  email: string;
 
   @Column()
   name: string;

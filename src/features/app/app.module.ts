@@ -21,21 +21,21 @@ import { ServiceCategoryModule } from '../service-category/service-category.modu
 import { ScheduleModule } from '@nestjs/schedule';
 import { TimeSlotsModule } from '../time-slots/time-slots.module';
 import { StorageModule } from '../storage/storage.module';
-import { BullMQConfigModule } from 'src/shared/databases/bullmq-config.module';
+
 import { EmailModule } from 'src/shared/email/email.module';
 import { EventEmitterModule } from '@nestjs/event-emitter';
-import { RedisDbModule } from 'src/shared/databases/redis-db.module';
+import { BullQmModule } from 'src/shared/databases/bullqm.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
     }),
-    RedisDbModule,
+
     ScheduleModule.forRoot(),
     CacheManagerModule,
     DatabaseModule,
-    BullMQConfigModule,
+    BullQmModule,
     CustomJwtModule,
 
     // StorageModule,

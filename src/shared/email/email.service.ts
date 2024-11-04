@@ -3,6 +3,7 @@ import { MailerService } from '@nestjs-modules/mailer';
 import { EmailTemplateNames } from '../types/email-template-names-enum';
 import { RegisterAppointment } from '../queues/notification-queue/types/register-appointment.interface';
 import { AppointmentReminder } from '../queues/notification-queue/types/appointment-remider.interface';
+import { AuthSendOtpForEmail } from '../types/auth-sendotp.inteface';
 
 @Injectable()
 export class EmailService {
@@ -36,6 +37,14 @@ export class EmailService {
       to: data.email, // The recipient's email
       subject: 'یادآوری ملاقات', // Email subject
       template: EmailTemplateNames.APPOINTMENT_REMINDER, // The name of the template (without the .hbs extension)
+      context: data,
+    });
+  }
+  async sendOtp(data: AuthSendOtpForEmail): Promise<void> {
+    return await this.mailerService.sendMail({
+      to: data.email, // The recipient's email
+      subject: 'کد تایید',
+      template: EmailTemplateNames.AUTH_SENDOTP, // The name of the template (without the .hbs extension)
       context: data,
     });
   }

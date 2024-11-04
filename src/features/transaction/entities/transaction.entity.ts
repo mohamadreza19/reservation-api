@@ -12,8 +12,8 @@ export class Transaction {
   @Column()
   amount: number;
 
-  @Column()
-  paymentMethod: string;
+  // @Column()
+  // paymentMethod: string;
 
   @Column('timestamp')
   transactionDate: Date;
@@ -22,7 +22,7 @@ export class Transaction {
   @ManyToOne(
     () => ServiceProfile,
     (serviceProfile) => serviceProfile.transactions,
-    { nullable: false, onDelete: 'CASCADE' },
+    { nullable: false, onDelete: 'SET NULL' },
   )
   serviceProfile: ServiceProfile;
 

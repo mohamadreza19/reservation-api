@@ -4,7 +4,7 @@ import { BusinessService } from './business.service';
 
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { CacheManagerModule } from 'src/shared/cache-manager/cache-manager.module';
-import { AuthService } from 'src/shared/services/auth.service';
+
 import { BusinessCategoryModule } from '../business-category/business-category.module';
 import { CustomerModule } from '../customer/customer.module';
 import { BusinesScheduleService } from './business-schedule/busines-schedule.service';
@@ -14,6 +14,7 @@ import { Business } from './entities/business.entity';
 import { TimeSlotsController } from '../time-slots/time-slots.controller';
 import { TimeSlotsService } from '../time-slots/time-slots.service';
 import { TimeSlotsModule } from '../time-slots/time-slots.module';
+import { AuthModule } from 'src/shared/modules/auth/auth.module';
 
 @Global()
 @Module({
@@ -26,9 +27,9 @@ import { TimeSlotsModule } from '../time-slots/time-slots.module';
     BusinessService,
     BusinesScheduleService,
     // TimeSlotsService,
-    AuthService,
   ],
   imports: [
+    AuthModule,
     CacheManagerModule,
     TypeOrmModule.forFeature([Business, BusinessSchedule]),
     BusinessCategoryModule,

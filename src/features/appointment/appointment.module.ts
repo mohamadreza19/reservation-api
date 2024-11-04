@@ -26,7 +26,7 @@ import { TransactionModule } from '../transaction/transaction.module';
     NotificationQueueModule,
 
     AppointmentActionModuleModule,
-    // TransactionModule,
+    TransactionModule,
   ],
   controllers: [AppointmentController, TestController],
   providers: [AppointmentService],

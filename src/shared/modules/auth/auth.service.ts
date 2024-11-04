@@ -1,14 +1,19 @@
 // src/shared/services/shared-auth.service.ts
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { OtpService } from '../cache-manager/otp.service';
-import { CustomerPayload, UserPayload } from '../types/user-payload.interface';
+import { OtpService } from '../../cache-manager/otp.service';
+import {
+  CustomerPayload,
+  UserPayload,
+} from '../../types/user-payload.interface';
+import { NotificationQueueService } from '../../queues/notification-queue/notification-queue.service';
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly jwtService: JwtService,
     private readonly otpService: OtpService,
+    private readonly notificationQueueService: NotificationQueueService,
   ) {}
 
   // OTP verification logic
@@ -36,7 +41,17 @@ export class AuthService {
   }
 
   // Generate  OTP
-  async generateOtp(phoneNumber: string) {
+  async generateOtpForNumber(phoneNumber: string) {
     return await this.otpService.generateOtp(phoneNumber);
+  }
+  async generateOtpForEmail(email: string) {
+    const otp = await this.otpService.generateOtp(email);
+    await this.notificationQueueService.sendOtpForEmail({
+      email: email,
+      otp,
+      type: 'auth-sendotp',
+    });
+
+    return [`Otp Send to ${email}`];
   }
 }

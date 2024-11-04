@@ -6,14 +6,15 @@ import { CustomerController } from './customer.controller';
 import { CustomerService } from './customer.service';
 import { Customer } from './entities/customer.entity';
 
-import { AuthService } from 'src/shared/services/auth.service';
 import { BusinessModule } from '../business/business.module';
+import { AuthModule } from 'src/shared/modules/auth/auth.module';
 
 @Global()
 @Module({
   controllers: [CustomerController],
-  providers: [CustomerService, AuthService],
+  providers: [CustomerService],
   imports: [
+    AuthModule,
     forwardRef(() => BusinessModule),
     CacheManagerModule,
 

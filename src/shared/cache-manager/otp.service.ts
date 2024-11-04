@@ -6,19 +6,19 @@ import { Cache } from 'cache-manager';
 export class OtpService {
   constructor(@Inject(CACHE_MANAGER) private cacheManager: Cache) {}
 
-  async generateOtp(phoneNumber: string): Promise<string> {
+  async generateOtp(key: string): Promise<string> {
     const EXPIRE_TIME = 4 * 60 * 1000;
-    const otp = this.codeGenerator();
+    let otp = this.codeGenerator();
 
-    await this.cacheManager.set(phoneNumber, otp, EXPIRE_TIME); // Expires in 4 minutes
+    await this.cacheManager.set(key, otp, EXPIRE_TIME); // Expires in 4 minutes
     return otp;
   }
 
-  async validateOtp(phoneNumber: string, otp: string): Promise<boolean> {
-    const storedOtp = await this.cacheManager.get(phoneNumber);
+  async validateOtp(key: string, otp: string): Promise<boolean> {
+    const storedOtp = await this.cacheManager.get(key);
 
     if (storedOtp === otp) {
-      await this.cacheManager.del(phoneNumber); // Delete OTP after successful validation
+      await this.cacheManager.del(key); // Delete OTP after successful validation
       return true;
     }
     return false;
