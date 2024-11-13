@@ -4,6 +4,7 @@ import { BullModule } from '@nestjs/bullmq';
 import { QUEUE_NOTIFICATION } from './constants/notification-queue.constants';
 import { NotificationProcessor } from './notification-queue.processor';
 import { EmailModule } from 'src/shared/email/email.module';
+import { SmsService } from 'src/shared/services/sms.service';
 
 @Module({
   imports: [
@@ -12,7 +13,7 @@ import { EmailModule } from 'src/shared/email/email.module';
     }),
     EmailModule,
   ],
-  providers: [NotificationQueueService, NotificationProcessor],
+  providers: [NotificationQueueService, NotificationProcessor, SmsService],
   exports: [NotificationQueueService],
 })
 export class NotificationQueueModule {}

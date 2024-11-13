@@ -7,10 +7,14 @@ import { RegisterAppointment } from './types/register-appointment.interface';
 import { AppointmentReminder } from './types/appointment-remider.interface';
 import { BullQmJobData } from 'src/shared/types/bull-qm-job-data.interface';
 import { AuthSendOtpForEmail } from 'src/shared/types/auth-sendotp.inteface';
+import { SmsService } from 'src/shared/services/sms.service';
 
 @Processor(QUEUE_NOTIFICATION)
 export class NotificationProcessor extends WorkerHost {
-  constructor(private readonly emailService: EmailService) {
+  constructor(
+    private readonly emailService: EmailService,
+    private readonly smsService: SmsService,
+  ) {
     super();
   }
   async process(job: Job<any, any, string>): Promise<any> {

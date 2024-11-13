@@ -11,7 +11,7 @@ export class TimeSlot {
   HHMM: string;
 
   @Column()
-  date: string;
+  date: string; // YYYY-MM-DD
 
   @ManyToOne(() => Business, (business: Business) => business.timeSlots, {
     onDelete: 'CASCADE',
