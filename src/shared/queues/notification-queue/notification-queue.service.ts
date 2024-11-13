@@ -1,13 +1,13 @@
 import { InjectQueue } from '@nestjs/bullmq';
 import { Injectable } from '@nestjs/common';
-import { QUEUE_NOTIFICATION } from './constants/notification-queue.constants';
 import { Queue } from 'bullmq';
+import { QUEUE_NOTIFICATION } from './constants/notification-queue.constants';
 
-import { NotificationJobNames } from './constants/notification-job-names-enum';
-import { RegisterAppointment } from './types/register-appointment.interface';
-import { JobPriority } from 'src/shared/types/job-priority.enum';
-import { AppointmentReminder } from './types/appointment-remider.interface';
 import { AuthSendOtpForEmail } from 'src/shared/types/auth-sendotp.inteface';
+import { JobPriority } from 'src/shared/types/job-priority.enum';
+import { NotificationJobNames } from './constants/notification-job-names-enum';
+import { AppointmentReminder } from './types/appointment-remider.interface';
+import { RegisterAppointment } from './types/register-appointment.interface';
 
 @Injectable()
 export class NotificationQueueService {
