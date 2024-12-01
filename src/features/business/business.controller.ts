@@ -12,6 +12,7 @@ import {
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { Roles } from 'src/shared/decorators/roles.decorator';
 import { LoginDto } from 'src/shared/dto/login.dto';
+import { RefreshTokenDto } from 'src/shared/dto/refresh-token.dto';
 import { VerifyOtpDto } from 'src/shared/dto/verify-otp';
 import { JwtAuthGuard } from 'src/shared/guards/jwt-auth-guard';
 import { RolesGuard } from 'src/shared/guards/roles.guard';
@@ -28,10 +29,21 @@ export class BusinessController {
   getAll() {
     return 'sdad';
   }
+  @Get('/by-sub-domain-name/:subDomaNname')
+  async getByDomanName(@Param('subDomaNname') subDomanName: string) {
+    return this.businessService.findOneBySubDomanName(subDomanName);
+  }
 
   @Post('login')
   async login(@Body() loginDto: LoginDto) {
     return await this.businessService.Login(loginDto);
+  }
+
+  @Post('refresh-token')
+  async refreshToken(@Body() refreshTokenDto: RefreshTokenDto) {
+    const data = await this.businessService.refreshToken(refreshTokenDto);
+
+    return data;
   }
 
   @Post('verify-otp')

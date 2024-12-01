@@ -16,7 +16,7 @@ import { GetTimeSlotDto } from './dto/get-time-slots.dto';
 @ApiTags('Business-V1')
 @ApiBearerAuth(UserRole.Customer)
 @ApiBearerAuth(UserRole.Business)
-@Controller('business/time-slots')
+@Controller('business/v1/time-slots')
 export class TimeSlotsController {
   constructor(private readonly businessService: BusinessService) {}
   @Get()
@@ -24,13 +24,7 @@ export class TimeSlotsController {
     // return this.businessService.generateTimeSlots(req.user.userId);
     const user = req.user;
     return isCustomerPayload(user)
-      ? this.businessService.getTimeSlotsWeeklyBasedDate(
-          user.businessId,
-          query.weekStartDate,
-        )
-      : this.businessService.getTimeSlotsWeeklyBasedDate(
-          user.userId,
-          query.weekStartDate,
-        );
+      ? this.businessService.getTimeSlots(user.businessId, query)
+      : this.businessService.getTimeSlots(user.userId, query);
   }
 }

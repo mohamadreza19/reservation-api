@@ -7,6 +7,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   Req,
   UseGuards,
 } from '@nestjs/common';
@@ -21,11 +22,13 @@ import {
 } from 'src/shared/types/user-serialize-request.interface';
 import { AppointmentService } from './appointment.service';
 import { CreateAppointmentDto } from './dto/create-appointment.dto';
+import { GetQueryAppointmentsDto } from './dto/get-query-appointment.dto';
 import { UpdateAppointmentDto } from './dto/update-appointment.dto';
 
-@Roles(UserRole.Customer)
+@Roles(UserRole.Customer, UserRole.Business)
 @UseGuards(JwtAuthGuard, RolesGuard)
 @ApiBearerAuth(UserRole.Customer)
+@ApiBearerAuth(UserRole.Business)
 @ApiTags('Appointment-V1')
 @Controller('appointment/v1')
 export class AppointmentController {
@@ -48,8 +51,11 @@ export class AppointmentController {
   }
 
   @Get()
-  findAll() {
-    return this.appointmentService.findAll();
+  async findAll(
+    @Req() req: UserSerializeRequest,
+    @Query() query: GetQueryAppointmentsDto,
+  ) {
+    return await this.appointmentService._findAppointment(req.user, query);
   }
 
   @Get(':id')

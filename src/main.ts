@@ -1,7 +1,7 @@
+import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './features/app/app.module';
 import { SwaggerConfig } from './shared/config/SwaggerConfig';
-import { Logger, ValidationPipe } from '@nestjs/common';
 
 async function bootstrap() {
   const URL_Prefix = '/api';

@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Injectable,
   InternalServerErrorException,
   NotFoundException,
@@ -14,21 +15,21 @@ import { VerifyOtpDto } from 'src/shared/dto/verify-otp';
 import { CreateBusinessDto } from './dto/create-business.dto';
 
 import moment from 'moment-jalaali';
+import { RefreshTokenDto } from 'src/shared/dto/refresh-token.dto';
+import { AuthService } from 'src/shared/modules/auth/auth.service';
+import { TimeSlotStatus } from 'src/shared/types/time-slot-status.enum';
 import { UserRole } from 'src/shared/types/user-role.enum';
-import { BusinessCategoryService } from '../business-category/business-category.service';
-import { UpdateBusinessScheduleDto } from './business-schedule/dto/update-business-schedule.dto';
-import { BusinessSchedule } from './business-schedule/entities/business-schedule.entity';
-import { UpdateBusinessDto } from './dto/update-business.dto';
-import { TimeSlotsService } from '../time-slots/time-slots.service';
-import { Cron, CronExpression, Interval } from '@nestjs/schedule';
-import _ from 'lodash';
 import {
   findStartDayAndEndDayOfJalaaliWeek,
   getUpdatedBusinessScheduleFlags,
 } from 'src/shared/utils';
-import { TimeSlotStatus } from 'src/shared/types/time-slot-status.enum';
+import { BusinessCategoryService } from '../business-category/business-category.service';
+import { GetTimeSlotDto } from '../time-slots/dto/get-time-slots.dto';
 import { TimeSlot } from '../time-slots/entities/time-slot.entity';
-import { AuthService } from 'src/shared/modules/auth/auth.service';
+import { TimeSlotsService } from '../time-slots/time-slots.service';
+import { UpdateBusinessScheduleDto } from './business-schedule/dto/update-business-schedule.dto';
+import { BusinessSchedule } from './business-schedule/entities/business-schedule.entity';
+import { UpdateBusinessDto } from './dto/update-business.dto';
 
 @Injectable()
 export class BusinessService {
@@ -41,7 +42,9 @@ export class BusinessService {
   ) {}
 
   async Login(loginDto: LoginDto) {
-    const otp = await this.AuthService.generateOtpForEmail(loginDto.email);
+    const otp = await this.AuthService.generateOtpForPhone(
+      loginDto.phoneNumber,
+    );
 
     return otp;
   }
@@ -50,7 +53,7 @@ export class BusinessService {
     let isNew: boolean = false;
     let business: Business;
     const isValid = await this.AuthService.verifyOtp(
-      verifyOtp.email,
+      verifyOtp.phoneNumber,
       verifyOtp.otp,
     );
 
@@ -59,12 +62,12 @@ export class BusinessService {
     }
     // Issue JWT Token after successful OTP verification
 
-    business = await this.findOneByPhoneNumber(verifyOtp.email);
+    business = await this.findOneByPhoneNumber(verifyOtp.phoneNumber);
 
     if (!business) {
       business = await this.create({
-        name: verifyOtp.email,
-        phoneNumber: verifyOtp.email,
+        name: verifyOtp.phoneNumber,
+        phoneNumber: verifyOtp.phoneNumber,
       });
       isNew = true;
     }
@@ -90,6 +93,23 @@ export class BusinessService {
     });
     return { ...tokens, isNew };
   }
+  async refreshToken(refreshTokenDto: RefreshTokenDto) {
+    const data = await this.AuthService.verifyRefreshToken(
+      refreshTokenDto.refreshToken,
+    );
+    const business = await this.findOneById(data.userId);
+
+    if (!business) {
+      throw new BadRequestException('No longer busines exist');
+    }
+    const accessToken = await this.AuthService.generateAcessToken({
+      userId: business.id,
+      role: UserRole.Business,
+    });
+
+    return accessToken;
+  }
+
   async create(createBusinessDto: CreateBusinessDto) {
     const businessSchedule = new BusinessSchedule();
     const business = this.businessRepository.create({
@@ -99,12 +119,12 @@ export class BusinessService {
     return await this.businessRepository.save(business, {});
   }
   async update(updateBusinessDto: UpdateBusinessDto, businessId: number) {
-    // return await this.businessRepository.update(
-    //   {
-    //     id: userId,
-    //   },
-    //   updateBusinessDto,
-    // );
+    return await this.businessRepository.update(
+      {
+        id: businessId,
+      },
+      updateBusinessDto,
+    );
   }
   async updateTimeSlotStatusById(timeSlot: TimeSlot, status: TimeSlotStatus) {
     return this.timeSlotsService.updateTimeSlotStatusById(timeSlot, status);
@@ -158,6 +178,24 @@ export class BusinessService {
       },
     });
   }
+  async findOneBySubDomanName(subDomainName: string) {
+    const result = await this.businessRepository
+      .createQueryBuilder('business')
+      .where('business.subDomainName = :subDomainName', {
+        subDomainName, // Use the correct parameter name
+      })
+      .select(['business.id', 'business.name', 'business.subDomainName']) // Specify the columns to retrieve
+      .getOne();
+
+    if (!result) {
+      // Throw the exception
+      throw new NotFoundException(
+        `Business with sub-domain name '${subDomainName}' not found.`,
+      );
+    }
+
+    return result;
+  }
   async findTimeSlotById(timeSlotId: number) {
     return await this.timeSlotsService.findOneById(timeSlotId);
   }
@@ -197,15 +235,25 @@ export class BusinessService {
     );
   }
 
-  async getTimeSlotsWeeklyBasedDate(
-    businessId: number,
-    weekStartDate: string | undefined,
-  ) {
+  async getTimeSlots(businessId: number, getTimeSlotDto: GetTimeSlotDto) {
+    const { endDate, startDate, weekStartDate } = getTimeSlotDto;
+
     const date = weekStartDate
       ? moment.utc(weekStartDate).toDate()
       : moment().toDate();
-
     return await this.timeSlotsService.getTimeSlotWeekly(businessId, date);
+
+    // if (startDate && !endDate)
+    //   return new BadRequestException('endDate was not Found');
+
+    // if (!startDate && endDate)
+    //   return new BadRequestException('startDate was not Found');
+
+    // return this.timeSlotsService.getTimeSlotByRange(
+    //   businessId,
+    //   startDate,
+    //   endDate,
+    // );
   }
 
   async findBySubDomainName(subDomainName: string) {
@@ -222,7 +270,7 @@ export class BusinessService {
   // @Cron(CronExpression.EVERY_10_SECONDS)
   async generateTimeSlotsWeeklyForBusiness() {
     const saturday = moment().add(1, 'days');
-    console.log('meow');
+
     const nextSaturday = saturday.clone().add(7, 'days');
     const business = await this.businessRepository.find();
     [saturday, nextSaturday].forEach(async (momentDate) => {

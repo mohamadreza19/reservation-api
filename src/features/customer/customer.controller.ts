@@ -2,6 +2,7 @@ import { Body, Controller, Delete, Get, Param, Post } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { CustomerVerifyOtp } from 'src/shared/dto/customer-verify-otp';
 import { LoginDto } from 'src/shared/dto/login.dto';
+import { RefreshTokenDto } from 'src/shared/dto/refresh-token.dto';
 import { CustomerService } from './customer.service';
 @ApiTags('Customer-V1')
 @Controller('customer/v1')
@@ -21,7 +22,12 @@ export class CustomerController {
   async verifyOtp(@Body() verifyOtpDto: CustomerVerifyOtp) {
     return await this.customerService.verifyOtp(verifyOtpDto);
   }
+  @Post('refresh-token')
+  async refreshToken(@Body() refreshTokenDto: RefreshTokenDto) {
+    const data = await this.customerService.refreshToken(refreshTokenDto);
 
+    return data;
+  }
   @Get()
   findAll() {
     return this.customerService.findAll();

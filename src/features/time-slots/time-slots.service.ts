@@ -1,25 +1,15 @@
-import {
-  forwardRef,
-  Inject,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import moment, { Moment } from 'moment-jalaali';
 // import fa from 'moment/src/fa';
+import { InjectRepository } from '@nestjs/typeorm';
 import { CustomJalaliDate } from 'src/shared/types/custom-jalali-date.interface';
 import { JalaliWeek } from 'src/shared/types/jalali-week.enum';
-import {
-  AvailableHour,
-  TimeSlots,
-  WeeklyTimeSlots,
-} from 'src/shared/types/time-slots.interface';
-import { BusinessSchedule } from '../business/business-schedule/entities/business-schedule.entity';
-import { InjectRepository } from '@nestjs/typeorm';
-import { TimeSlot } from './entities/time-slot.entity';
-import { Between, Repository } from 'typeorm';
 import { TimeSlotStatus } from 'src/shared/types/time-slot-status.enum';
-import { AppointmentService } from '../appointment/appointment.service';
 import { findJalaaliDayNumber } from 'src/shared/utils';
+import { Repository } from 'typeorm';
+import { AppointmentService } from '../appointment/appointment.service';
+import { BusinessSchedule } from '../business/business-schedule/entities/business-schedule.entity';
+import { TimeSlot } from './entities/time-slot.entity';
 
 @Injectable()
 export class TimeSlotsService {
@@ -58,9 +48,6 @@ export class TimeSlotsService {
 
       // Skip the day if it's in the excludedDates array
       if (excludedDates.includes(currentDayFormatted)) {
-        console.log(
-          `Skipping date: ${currentDayFormatted} as it's in the excludedDates`,
-        );
         startDayOfWeek.add(1, 'day'); // Move to the next day
         continue;
       }

@@ -1,22 +1,22 @@
 import { PartialType } from '@nestjs/mapped-types';
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEmail, IsNotEmpty, IsString } from 'class-validator';
+import { IsNotEmpty, IsString } from 'class-validator';
 import { IsPhoneNumberCustom } from 'src/shared/validators/phone-number.validator';
 import { LoginDto } from './login.dto';
 
 export class CustomerVerifyOtp extends PartialType(LoginDto) {
-  // @ApiProperty({
-  //   example: '9012446913',
-  // })
-  // @IsPhoneNumberCustom({ message: 'Phone number must be exactly 10 digits.' })
-  // phoneNumber: string;
-
   @ApiProperty({
-    example: 'test@email.com',
+    example: '9012446913',
   })
-  @IsEmail()
-  @IsNotEmpty()
-  email: string;
+  @IsPhoneNumberCustom({ message: 'Phone number must be exactly 10 digits.' })
+  phoneNumber: string;
+
+  // @ApiProperty({
+  //   example: 'test@email.com',
+  // })
+  // @IsEmail()
+  // @IsNotEmpty()
+  // email: string;
 
   @ApiProperty({
     example: '11111',

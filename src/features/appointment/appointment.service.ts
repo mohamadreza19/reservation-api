@@ -5,6 +5,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import moment, { Moment } from 'moment-jalaali';
 import { Repository } from 'typeorm';
 import { BusinessService } from '../business/business.service';
 import { CustomerService } from '../customer/customer.service';
@@ -12,17 +13,23 @@ import { ServiceProfileService } from '../service-profile/service-profile.servic
 import { CreateAppointmentDto } from './dto/create-appointment.dto';
 import { UpdateAppointmentDto } from './dto/update-appointment.dto';
 import { Appointment } from './entities/appointment.entity';
-import moment, { Moment } from 'moment-jalaali';
 
 import { NotificationQueueService } from 'src/shared/queues/notification-queue/notification-queue.service';
 
+import { AppointmentFilter } from 'src/shared/types/appointment-filter.eum';
+import { AppointmentStatus } from 'src/shared/types/appointment-status.enum';
+import { TimeSlotStatus } from 'src/shared/types/time-slot-status.enum';
+import {
+  CustomerPayload,
+  UserPayload,
+} from 'src/shared/types/user-payload.interface';
+import { isCustomerPayload } from 'src/shared/types/user-serialize-request.interface';
 import {
   calculateReminderDelays,
   formatTimeSlotToDate,
 } from 'src/shared/utils';
-import { TimeSlotStatus } from 'src/shared/types/time-slot-status.enum';
-import { AppointmentStatus } from 'src/shared/types/appointment-status.enum';
 import { TransactionService } from '../transaction/transaction.service';
+import { GetQueryAppointmentsDto } from './dto/get-query-appointment.dto';
 
 @Injectable()
 export class AppointmentService {
@@ -208,6 +215,67 @@ export class AppointmentService {
 
     return appointments;
   }
+  async _findAppointment(
+    user: UserPayload | CustomerPayload,
+    getQueryAppointmentsDto: GetQueryAppointmentsDto,
+  ) {
+    return isCustomerPayload(user)
+      ? () => {}
+      : this.findBusinessAppointment(user.userId, getQueryAppointmentsDto);
+  }
+  async findBusinessAppointment(
+    businessId: number,
+    getQueryAppointmentsDto: GetQueryAppointmentsDto,
+  ) {
+    const { endDate, startDate, search, status } = getQueryAppointmentsDto;
+
+    const queryBuilder = this.appointmentRepository
+      .createQueryBuilder('appointment')
+      .leftJoinAndSelect('appointment.timeSlot', 'timeSlot')
+      .leftJoinAndSelect('appointment.customer', 'customer')
+      .leftJoinAndSelect('appointment.serviceProfile', 'serviceProfile')
+      .where('appointment.businessId = :businessId', { businessId }); // Filter by businessId
+
+    if (status !== AppointmentFilter.ALL) {
+      queryBuilder.andWhere('appointment.status = :status', { status });
+    }
+
+    // Filter by startDate and endDate
+    if (startDate && endDate) {
+      queryBuilder.andWhere('timeSlot.date BETWEEN :startDate AND :endDate', {
+        startDate: moment(startDate).toISOString(),
+        endDate: moment(endDate).toISOString(),
+      });
+    } else if (startDate) {
+      queryBuilder.andWhere('timeSlot.date > :startDate', {
+        startDate: moment(startDate).toISOString(),
+      });
+    } else if (endDate) {
+      queryBuilder.andWhere('timeSlot.date < :endDate', {
+        endDate: moment(endDate).toISOString(),
+      });
+    }
+
+    // Add search condition
+    if (search) {
+      queryBuilder.andWhere(
+        '(LOWER(customer.name) ILIKE :search OR LOWER(customer.phoneNumber) ILIKE :search OR LOWER(serviceProfile.name) ILIKE :search)',
+        { search: `%${search.toLowerCase()}%` },
+      );
+    }
+
+    // Ensure appointments have time slots
+    // queryBuilder.andWhere('appointment.timeSlotId IS NOT NULL');
+
+    // Order by date
+    queryBuilder.orderBy('timeSlot.date', 'ASC');
+
+    // Execute and return results
+    const re = await queryBuilder.getMany();
+    console.log(re);
+    return re;
+  }
+
   update(id: number, updateAppointmentDto: UpdateAppointmentDto) {
     return `This action updates a #${id} appointment`;
   }

@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   forwardRef,
   Inject,
   Injectable,
@@ -13,9 +14,10 @@ import { Customer } from './entities/customer.entity';
 import { CustomerVerifyOtp } from 'src/shared/dto/customer-verify-otp';
 import { LoginDto } from 'src/shared/dto/login.dto';
 
+import { RefreshTokenDto } from 'src/shared/dto/refresh-token.dto';
+import { AuthService } from 'src/shared/modules/auth/auth.service';
 import { UserRole } from 'src/shared/types/user-role.enum';
 import { BusinessService } from '../business/business.service';
-import { AuthService } from 'src/shared/modules/auth/auth.service';
 
 @Injectable()
 export class CustomerService {
@@ -28,19 +30,19 @@ export class CustomerService {
   ) {}
 
   async Login(loginDto: LoginDto) {
-    return this.AuthService.generateOtpForEmail(loginDto.email);
+    return this.AuthService.generateOtpForPhone(loginDto.phoneNumber);
   }
 
   async verifyOtp(verifyOtp: CustomerVerifyOtp) {
     let isNew: boolean = false;
     let customer: Customer;
     //
-    await this.AuthService.verifyOtp(verifyOtp.email, verifyOtp.otp);
+    await this.AuthService.verifyOtp(verifyOtp.phoneNumber, verifyOtp.otp);
 
     const business = await this.businessService.findBySubDomainName(
       verifyOtp.businessSubDomainName,
     );
-    customer = await this.findOneByEmail(verifyOtp.email);
+    customer = await this.findOneByPhoneNumber(verifyOtp.phoneNumber);
 
     if (!business) {
       throw new UnauthorizedException({
@@ -52,8 +54,8 @@ export class CustomerService {
 
     if (!customer) {
       customer = await this.create({
-        name: verifyOtp.email,
-        email: verifyOtp.email,
+        name: verifyOtp.phoneNumber,
+        phoneNumber: verifyOtp.phoneNumber,
       });
 
       isNew = true;
@@ -66,6 +68,23 @@ export class CustomerService {
     });
     return { ...tokens, isNew };
   }
+  async refreshToken(refreshTokenDto: RefreshTokenDto) {
+    const data = await this.AuthService.verifyRefreshToken(
+      refreshTokenDto.refreshToken,
+    );
+    const business = await this.findOneById(data.userId);
+
+    if (!business) {
+      throw new BadRequestException('No longer customer exist');
+    }
+    const accessToken = await this.AuthService.generateAcessToken({
+      userId: business.id,
+      role: UserRole.Business,
+    });
+
+    return accessToken;
+  }
+
   async create(createCustomerDto: CreateCustomerDto) {
     const customer = this.customerRepository.create(createCustomerDto);
     return await this.customerRepository.save(customer);
