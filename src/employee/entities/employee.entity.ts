@@ -17,8 +17,8 @@ export class Employee {
   @Column()
   fullName: string;
 
-  @Column()
-  specialization: string;
+  @Column({ nullable: true })
+  specialization?: string;
 
   @ManyToOne(() => Business, (business) => business.employees)
   business: Business;

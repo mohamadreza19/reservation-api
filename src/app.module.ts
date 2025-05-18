@@ -8,10 +8,21 @@ import { AppointmentModule } from './appointment/appointment.module';
 import { EmployeeModule } from './employee/employee.module';
 import { ServiceModule } from './service/service.module';
 import { ReminderModule } from './reminder/reminder.module';
-import { ReminderModule } from './reminder/reminder.module';
+import { ConfigModule } from '@nestjs/config';
 
 @Module({
-  imports: [DatabaseModule, CustomerModule, BusinessModule, AppointmentModule, EmployeeModule, ServiceModule, ReminderModule],
+  imports: [
+    ConfigModule.forRoot({
+      isGlobal: true, // allows access to env vars throughout the app
+    }),
+    DatabaseModule,
+    CustomerModule,
+    BusinessModule,
+    AppointmentModule,
+    EmployeeModule,
+    ServiceModule,
+    ReminderModule,
+  ],
   controllers: [AppController],
   providers: [AppService],
 })
