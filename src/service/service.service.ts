@@ -17,8 +17,8 @@ export class ServiceService {
   constructor(
     @InjectRepository(Service)
     private readonly serviceRepo: Repository<Service>,
-    @InjectRepository(Business)
-    private readonly businessRepo: Repository<Business>,
+    // @InjectRepository(Business)
+    // private readonly businessRepo: Repository<Business>,
   ) {
     this.queryService = new QueryService(serviceRepo);
   }
@@ -32,17 +32,17 @@ export class ServiceService {
     const service = this.serviceRepo.create(createServiceDto);
 
     // Handle business association if provided
-    if (createServiceDto.businessId) {
-      const business = await this.businessRepo.findOne({
-        where: { id: createServiceDto.businessId },
-      });
-      if (!business) {
-        throw new NotFoundException(
-          `Business with ID ${createServiceDto.businessId} not found`,
-        );
-      }
-      service.business = business;
-    }
+    // if (createServiceDto.businessId) {
+    //   const business = await this.businessRepo.findOne({
+    //     where: { id: createServiceDto.businessId },
+    //   });
+    //   if (!business) {
+    //     throw new NotFoundException(
+    //       `Business with ID ${createServiceDto.businessId} not found`,
+    //     );
+    //   }
+    //   service.business = business;
+    // }
 
     // Handle parent service
     if (createServiceDto.parentId) {
@@ -135,17 +135,17 @@ export class ServiceService {
     }
 
     // Handle business update
-    if (updateServiceDto.businessId) {
-      const business = await this.businessRepo.findOne({
-        where: { id: updateServiceDto.businessId },
-      });
-      if (!business) {
-        throw new NotFoundException(
-          `Business with ID ${updateServiceDto.businessId} not found`,
-        );
-      }
-      service.business = business;
-    }
+    // if (updateServiceDto.businessId) {
+    //   const business = await this.businessRepo.findOne({
+    //     where: { id: updateServiceDto.businessId },
+    //   });
+    //   if (!business) {
+    //     throw new NotFoundException(
+    //       `Business with ID ${updateServiceDto.businessId} not found`,
+    //     );
+    //   }
+    //   service.business = business;
+    // }
 
     // Handle parent update
     if (updateServiceDto.parentId !== undefined) {

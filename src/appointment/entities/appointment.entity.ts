@@ -9,7 +9,7 @@ import {
 } from 'typeorm';
 import { Customer } from '../../customer/entities/customer.entity';
 import { Employee } from '../../employee/entities/employee.entity';
-import { SubService } from '../../service/entities/sub-service.entity';
+
 import { Reminder } from '../../reminder/entities/reminder.entity';
 
 @Entity()
@@ -28,9 +28,6 @@ export class Appointment {
 
   @ManyToOne(() => Employee, (employee) => employee.appointments)
   employee: Employee;
-
-  @ManyToOne(() => SubService, (subService) => subService.appointments)
-  subService: SubService;
 
   @OneToOne(() => Reminder, (reminder) => reminder.appointment, {
     cascade: true,

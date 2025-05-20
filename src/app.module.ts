@@ -9,11 +9,14 @@ import { EmployeeModule } from './employee/employee.module';
 import { ServiceModule } from './service/service.module';
 import { ReminderModule } from './reminder/reminder.module';
 import { ConfigModule } from '@nestjs/config';
+import { UserModule } from './user/user.module';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true, // allows access to env vars throughout the app
+      envFilePath: '.env',
     }),
     DatabaseModule,
     CustomerModule,
@@ -22,6 +25,8 @@ import { ConfigModule } from '@nestjs/config';
     EmployeeModule,
     ServiceModule,
     ReminderModule,
+    UserModule,
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [AppService],

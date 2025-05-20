@@ -4,11 +4,12 @@ import { faker } from '@faker-js/faker';
 import { Business } from '../business/entities/business.entity';
 import { Employee } from '../employee/entities/employee.entity';
 import { Service } from '../service/entities/service.entity';
-import { SubService } from '../service/entities/sub-service.entity';
+
 import { Appointment } from '../appointment/entities/appointment.entity';
 import { Customer } from '../customer/entities/customer.entity';
 import { Reminder } from '../reminder/entities/reminder.entity';
 import { generatePersianPhoneNumber } from '../common/utils/generate-persian-phone';
+import { User } from '../user/entities/user.entity';
 
 dotenv.config();
 
@@ -26,10 +27,10 @@ async function seed() {
       Business,
       Employee,
       Service,
-      SubService,
       Appointment,
       Customer,
       Reminder,
+      User,
     ],
     ssl: {
       rejectUnauthorized: false,
@@ -42,76 +43,64 @@ async function seed() {
     await dataSource.initialize();
     console.log('Database connected');
 
+    const userRepo = dataSource.getRepository(User);
     const businessRepo = dataSource.getRepository(Business);
     const employeeRepo = dataSource.getRepository(Employee);
     const serviceRepo = dataSource.getRepository(Service);
-    const subServiceRepo = dataSource.getRepository(SubService);
+    // const subServiceRepo = dataSource.getRepository(SubService);
     const customerRepo = dataSource.getRepository(Customer);
     const appointmentRepo = dataSource.getRepository(Appointment);
     const reminderRepo = dataSource.getRepository(Reminder);
 
     // Clear data
-    await reminderRepo.delete({});
-    await appointmentRepo.delete({});
-    await subServiceRepo.delete({});
-    await serviceRepo.delete({});
-    await employeeRepo.delete({});
-    await customerRepo.delete({});
-    await businessRepo.delete({});
+    // await reminderRepo.delete({});
+    // await appointmentRepo.delete({});
+    // // await subServiceRepo.delete({});
+    // await serviceRepo.delete({});
+    // await employeeRepo.delete({});
+    // await customerRepo.delete({});
+    // await businessRepo.delete({});
 
-    // Create a business
-    const business = await businessRepo.save({
-      name: 'سالن زیبایی لاکچری',
-      address: 'تهران، خیابان ولیعصر، پلاک ۱۲۳',
-      phone: generatePersianPhoneNumber(false),
+    //
+    await userRepo.save({
+      phoneNumber: '+989032446913',
+      password: '1234',
     });
 
+    // Create a business
+    // const business = await businessRepo.save({
+    //   name: 'سالن زیبایی لاکچری',
+    //   address: 'تهران، خیابان ولیعصر، پلاک ۱۲۳',
+    //   phone: generatePersianPhoneNumber(false),
+    // });
+
     // Employees
-    const employees = await employeeRepo.save(
-      Array.from({ length: 3 }).map(() => ({
-        fullName: faker.person.fullName(), // ✅ Fix
-        specialization: faker.person.jobTitle(), // ✅ Fix
-        business,
-      })),
-    );
+    // const employees = await employeeRepo.save(
+    //   Array.from({ length: 3 }).map(() => ({
+    //     fullName: faker.person.fullName(), // ✅ Fix
+    //     specialization: faker.person.jobTitle(), // ✅ Fix
+    //     business,
+    //   })),
+    // );
 
     // Services with sub-services
-    const services = await Promise.all(
-      ['خدمات مو', 'خدمات ناخن', 'ماساژ'].map((serviceName) =>
-        serviceRepo.save({
-          name: serviceName,
-          description: faker.lorem.sentence(),
-          business,
-        }),
-      ),
-    );
-
-    const subServices: SubService[] = [];
-    for (const service of services) {
-      const subs = await subServiceRepo.save([
-        {
-          name: `${service.name} سطح ۱`,
-          price: faker.number.int({ min: 100000, max: 300000 }),
-          durationMinutes: 30,
-          service,
-        },
-        {
-          name: `${service.name} سطح ۲`,
-          price: faker.number.int({ min: 200000, max: 500000 }),
-          durationMinutes: 60,
-          service,
-        },
-      ]);
-      subServices.push(...subs);
-    }
+    // const services = await Promise.all(
+    //   ['خدمات مو', 'خدمات ناخن', 'ماساژ'].map((serviceName) =>
+    //     serviceRepo.save({
+    //       name: serviceName,
+    //       description: faker.lorem.sentence(),
+    //       business,
+    //     }),
+    //   ),
+    // );
 
     // Customers
-    const customers = await customerRepo.save(
-      Array.from({ length: 5 }).map(() => ({
-        fullName: faker.person.fullName(),
-        phone: generatePersianPhoneNumber(false),
-      })),
-    );
+    // const customers = await customerRepo.save(
+    //   Array.from({ length: 5 }).map(() => ({
+    //     fullName: faker.person.fullName(),
+    //     phone: generatePersianPhoneNumber(false),
+    //   })),
+    // );
 
     // Appointments
     // const appointments: Appointment[] = [];
