@@ -6,6 +6,9 @@ import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { UserModule } from '../user/user.module';
 import { BusinessModule } from '../business/business.module';
+import { APP_GUARD } from '@nestjs/core';
+import { PermissionsGuard } from 'src/common/guards/permissions.guard';
+import { JwtStrategy } from './strategies/jwt.strategy';
 
 @Module({
   imports: [
@@ -22,6 +25,13 @@ import { BusinessModule } from '../business/business.module';
     BusinessModule,
   ],
   controllers: [AuthController],
-  providers: [AuthService],
+  providers: [
+    AuthService,
+    JwtStrategy,
+    // {
+    //   provide: APP_GUARD,
+    //   useClass: PermissionsGuard,
+    // },
+  ],
 })
 export class AuthModule {}

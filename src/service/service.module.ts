@@ -9,5 +9,6 @@ import { BusinessModule } from 'src/business/business.module';
   imports: [TypeOrmModule.forFeature([Service]), BusinessModule],
   controllers: [ServiceController],
   providers: [ServiceService],
+  exports: [ServiceService],
 })
 export class ServiceModule {}

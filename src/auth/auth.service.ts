@@ -14,11 +14,12 @@ import { UserService } from 'src/user/user.service';
 import { OtpResponseDto } from './dto/otp-response.dto';
 import { VerifyOtpResponseDto } from './dto/verify-otp-response.dto';
 import { VerifyOtpDto } from './dto/verify-otp.dto';
+import { Payload } from 'src/common/models/auth';
 
 @Injectable()
 export class AuthService {
   constructor(
-    private readonly userService: UserService,
+    public readonly userService: UserService,
     private readonly jwtService: JwtService,
     private readonly businessService: BusinessService,
   ) {}
@@ -51,11 +52,8 @@ export class AuthService {
   }
 
   async login(user: User): Promise<VerifyOtpResponseDto> {
-    const payload = {
-      phoneNumber: user.phoneNumber,
-      sub: user.id,
-      role: user.role,
-      businessId: user.business?.id || null,
+    const payload: Payload = {
+      userId: user.id,
     };
 
     return {
@@ -98,7 +96,8 @@ export class AuthService {
     }
 
     // Clear OTP after successful verification
-    // await this.userService.clearOTP(user.id);
+
+    await this.userService.clearOTP(user.id);
 
     return this.login(user);
   }

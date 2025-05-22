@@ -21,14 +21,14 @@ import { VerifyOtpDto } from './dto/verify-otp.dto';
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
-  @Post('login')
-  async login(@Body() loginDto: LoginDto) {
-    const { user } = await this.authService.validateUser(
-      loginDto.phoneNumber,
-      loginDto.password,
-    );
-    return this.authService.login(user);
-  }
+  // @Post('login')
+  // async login(@Body() loginDto: LoginDto) {
+  //   const { user } = await this.authService.validateUser(
+  //     loginDto.phoneNumber,
+  //     loginDto.password,
+  //   );
+  //   return this.authService.login(user);
+  // }
 
   @Post('send-otp')
   async sendOTP(@Body() otpRequest: OtpRequestDto) {
@@ -38,21 +38,6 @@ export class AuthController {
   @Post('verify-otp')
   async verifyOTP(@Body() verifyOtpDto: VerifyOtpDto) {
     return this.authService.verifyOTP(verifyOtpDto);
-  }
-
-  @Post('register/employee')
-  @UseGuards(RolesGuard)
-  @Roles(Role.BUSINESS_ADMIN, Role.SUPER_ADMIN)
-  async registerEmployee(@Body() registerDto: any) {
-    return this.authService.registerEmployee(
-      registerDto.phoneNumber,
-      registerDto.password,
-      registerDto.firstName,
-      registerDto.lastName,
-      registerDto.position,
-      registerDto.businessId,
-      registerDto.adminId,
-    );
   }
 
   // @Get('initiate-verification/:phoneNumber')

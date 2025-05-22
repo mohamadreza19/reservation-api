@@ -11,7 +11,7 @@ async function bootstrap() {
     version: '1.0',
     tag: 'reservations',
     bearerAuth: true,
-    path: 'docs', // Custom path for Swagger UI
+    path: 'docs', // Custom path for Swagger UI,
   });
   await app.listen(process.env.PORT ?? 3030);
 }

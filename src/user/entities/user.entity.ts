@@ -31,30 +31,13 @@ export class User {
   lastName: string;
 
   // Business relationship (for employees)
-  @ManyToOne(() => Business, (business) => business.employees, {
+  @OneToOne(() => Business, (business) => business.userInfo, {
     nullable: true,
   })
   business: Business | null;
 
-  // Customer-specific fields
-  @Column({ nullable: true })
-  loyaltyPoints: number;
-
-  // Employee-specific fields
-  @Column({ nullable: true })
-  position: string;
-
   @Column({ default: false })
   isVerified: boolean;
-
-  @Column({ nullable: true, select: false })
-  verificationCode: string;
-
-  @Column({ nullable: true, select: false })
-  verificationCodeExpires: Date;
-
-  @OneToMany(() => Employee, (employee) => employee.user)
-  employee: Employee[];
 
   // user.entity.ts
   @Column({ nullable: true, select: false })

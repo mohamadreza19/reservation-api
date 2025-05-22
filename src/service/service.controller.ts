@@ -10,12 +10,21 @@ import {
   HttpCode,
 } from '@nestjs/common';
 import { ServiceService } from './service.service';
-import { CreateServiceDto } from './dto/create-service.dto';
-import { UpdateServiceDto } from './dto/update-service.dto';
-import { ApiTags, ApiOperation, ApiResponse, ApiQuery } from '@nestjs/swagger';
+
+import { ApiTags, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
+import { AuthWithRoles } from 'src/common/decorators/auth.decorator';
+import { Role } from 'src/common/enums/role.enum';
+import { AuthUser } from 'src/common/decorators/business.decorators';
+import { User } from 'src/user/entities/user.entity';
+import {
+  CreateServiceDto,
+  FindServicesDto,
+  UpdateServiceDto,
+} from './dto/service.dto';
 
 @ApiTags('services')
 @Controller('services')
+@AuthWithRoles([Role.BUSINESS_ADMIN])
 export class ServiceController {
   constructor(private readonly serviceService: ServiceService) {}
 
@@ -29,52 +38,15 @@ export class ServiceController {
     status: 404,
     description: 'Parent service or business not found',
   })
-  create(@Body() createServiceDto: CreateServiceDto) {
-    return this.serviceService.create(createServiceDto);
+  create(@Body() createServiceDto: CreateServiceDto, @AuthUser() user: User) {
+    return this.serviceService.create(createServiceDto, user);
   }
 
   @Get()
   @ApiOperation({ summary: 'Get all services with pagination and filtering' })
-  @ApiQuery({ name: 'page', required: false, type: Number })
-  @ApiQuery({ name: 'limit', required: false, type: Number })
-  @ApiQuery({ name: 'sort', required: false, type: String })
-  @ApiQuery({ name: 'businessId', required: false, type: String })
-  @ApiQuery({ name: 'parentId', required: false, type: String })
-  @ApiQuery({ name: 'isSystemService', required: false, type: Boolean })
-  @ApiQuery({ name: 'rootOnly', required: false, type: Boolean })
   @ApiResponse({ status: 200, description: 'Services retrieved successfully' })
-  findAll(
-    @Query('page') page?: number,
-    @Query('limit') limit?: number,
-    @Query('sort') sort?: string,
-    @Query('businessId') businessId?: string,
-    @Query('parentId') parentId?: string,
-    @Query('isSystemService') isSystemService?: boolean,
-    @Query('rootOnly') rootOnly?: boolean,
-  ) {
-    const filters: Record<string, any> = {};
-    if (businessId) filters.businessId = businessId;
-    if (parentId) filters.parentId = parentId;
-    if (isSystemService !== undefined)
-      filters.isSystemService = isSystemService === true;
-    if (rootOnly !== undefined) filters.rootOnly = rootOnly === true;
-
-    return this.serviceService.findAll({
-      page,
-      limit,
-      sort,
-      filters,
-    });
-  }
-
-  @Get('system')
-  @ApiOperation({ summary: 'Get all system services' })
-  @ApiResponse({
-    status: 200,
-    description: 'System services retrieved successfully',
-  })
-  findSystemServices() {
-    return this.serviceService.findSystemServices();
+  findAll(@Query() dto: FindServicesDto) {
+    return this.serviceService.findAll(dto);
   }
 
   @Get('business/:businessId')
@@ -85,7 +57,7 @@ export class ServiceController {
   })
   @ApiResponse({ status: 404, description: 'Business not found' })
   findByBusiness(@Param('businessId') businessId: string) {
-    return this.serviceService.findByBusiness(businessId);
+    // return this.serviceService.findByBusiness(businessId);
   }
 
   @Get(':id')
@@ -105,8 +77,12 @@ export class ServiceController {
     status: 404,
     description: 'Service, parent or business not found',
   })
-  update(@Param('id') id: string, @Body() updateServiceDto: UpdateServiceDto) {
-    return this.serviceService.update(id, updateServiceDto);
+  update(
+    @Param('id') id: string,
+    @Body() updateServiceDto: UpdateServiceDto,
+    @AuthUser() user: User,
+  ) {
+    // return this.serviceService.update(id, updateServiceDto, user);
   }
 
   @Delete(':id')
@@ -114,23 +90,24 @@ export class ServiceController {
   @ApiResponse({ status: 200, description: 'Service deleted successfully' })
   @ApiResponse({ status: 403, description: 'Forbidden' })
   @ApiResponse({ status: 404, description: 'Service not found' })
-  remove(@Param('id') id: string) {
-    return this.serviceService.remove(id);
+  remove(@Param('id') id: string, @AuthUser() user: User) {
+    // return this.serviceService.remove(id, user);
   }
 
-  @Get(':id/children')
-  @ApiOperation({ summary: 'Get child services of a service' })
-  @ApiResponse({
-    status: 200,
-    description: 'Child services retrieved successfully',
-  })
-  @ApiResponse({ status: 404, description: 'Parent service not found' })
-  async findChildren(@Param('id') id: string) {
-    // Verify parent exists
-    await this.serviceService.findOne(id);
-    return this.serviceService.findAll({
-      filters: { parentId: id },
-      relations: ['business'],
-    });
-  }
+  // @Get(':id/children')
+  // @ApiOperation({ summary: 'Get child services of a service' })
+  // @ApiResponse({
+  //   status: 200,
+  //   description: 'Child services retrieved successfully',
+  // })
+  // @ApiResponse({ status: 404, description: 'Parent service not found' })
+  // async findChildren(@Param('id') id: string) {
+  //   await this.serviceService.findOne(id);
+  //   return this.serviceService.findAll({
+  //     businessId: undefined,
+  //     parentId: id,
+  //     isSystemService: undefined,
+  //     rootOnly: undefined,
+  //   });
+  // }
 }

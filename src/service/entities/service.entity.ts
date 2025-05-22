@@ -6,8 +6,10 @@ import {
   ManyToOne,
   OneToMany,
   JoinColumn,
+  OneToOne,
 } from 'typeorm';
 import { Business } from '../../business/entities/business.entity';
+import { Price } from 'src/price/entities/price.entity';
 
 @Entity()
 export class Service {
@@ -37,6 +39,8 @@ export class Service {
   @JoinColumn({ name: 'parent_id' })
   parent: Service | null;
 
-  @Column({ nullable: true, name: 'parent_id' })
-  parentId: string | null;
+  @OneToOne(() => Price, (price) => price.service, {
+    nullable: true, // Allow null for system services
+  })
+  price: Price | null;
 }

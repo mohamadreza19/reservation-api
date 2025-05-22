@@ -51,6 +51,12 @@ export class UserService {
     return this.findOne(id);
   }
 
+  async updateRole(id: string, role: Role) {
+    await this.userRepository.update(id, {
+      role,
+    });
+  }
+
   async remove(id: string): Promise<void> {
     await this.userRepository.delete(id);
   }

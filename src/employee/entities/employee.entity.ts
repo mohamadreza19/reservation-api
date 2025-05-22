@@ -1,10 +1,10 @@
-// employee.entity.ts
 import {
   Entity,
   PrimaryGeneratedColumn,
   Column,
   ManyToOne,
   OneToMany,
+  OneToOne,
   JoinColumn,
 } from 'typeorm';
 import { Business } from '../../business/entities/business.entity';
@@ -19,9 +19,6 @@ export class Employee {
   @Column()
   fullName: string;
 
-  @Column({ nullable: true })
-  specialization: string;
-
   @ManyToOne(() => Business, (business) => business.employees)
   @JoinColumn()
   business: Business;
@@ -29,11 +26,7 @@ export class Employee {
   @OneToMany(() => Appointment, (appointment) => appointment.employee)
   appointments: Appointment[];
 
-  // Link to the authentication system
-  @ManyToOne(() => User, (user) => user.employee, {
-    nullable: true,
-    onDelete: 'CASCADE',
-  })
+  @OneToOne(() => User, { nullable: true, onDelete: 'CASCADE' })
   @JoinColumn()
-  user: User;
+  userInfo: User | null;
 }

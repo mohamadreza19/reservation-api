@@ -1,4 +1,3 @@
-// src/swagger/swagger.factory.ts
 import {
   DocumentBuilder,
   SwaggerCustomOptions,
@@ -34,6 +33,10 @@ export class SwaggerFactory {
           type: 'http',
           scheme: 'bearer',
           bearerFormat: 'JWT',
+          name: 'Authorization',
+          in: 'header',
+          description:
+            'Enter JWT token in the format: Bearer <token>. Use the /auth/login endpoint to generate a token.',
         },
         'JWT-auth',
       );
