@@ -26,16 +26,19 @@ export class RolesGuard implements CanActivate {
     if (!user || !user.role) {
       throw new ForbiddenException('Access denied');
     }
+    // console.log(requiredRoles);
+    // console.log(user);
+    // if(requiredRoles.includes(user.role)){}
 
     const hasRole = requiredRoles.some((role) => user.role === role);
 
     // Additional business-specific checks
-    if (user.role === Role.EMPLOYEE || user.role === Role.BUSINESS_ADMIN) {
-      const businessId = context.switchToHttp().getRequest().params.businessId;
-      if (businessId && user.business?.id !== businessId) {
-        throw new ForbiddenException('Not authorized for this business');
-      }
-    }
+    // if (user.role === Role.EMPLOYEE || user.role === Role.BUSINESS_ADMIN) {
+    //   const businessId = context.switchToHttp().getRequest().params.businessId;
+    //   if (businessId && user.business?.id !== businessId) {
+    //     throw new ForbiddenException('Not authorized for this business');
+    //   }
+    // }
 
     if (!hasRole) {
       throw new ForbiddenException('Insufficient permissions');

@@ -1,5 +1,6 @@
 // src/auth/dto/verify-otp-response.dto.ts
 import { ApiProperty } from '@nestjs/swagger';
+import { Role } from 'src/common/enums/role.enum';
 
 export class VerifyOtpResponseDto {
   @ApiProperty({
@@ -8,4 +9,12 @@ export class VerifyOtpResponseDto {
     required: false,
   })
   access_token?: string;
+
+  @ApiProperty()
+  isNew: boolean;
+  @ApiProperty({
+    type: 'string',
+    enum: Role,
+  })
+  role: Role;
 }

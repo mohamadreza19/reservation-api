@@ -5,9 +5,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { Reminder } from './entities/reminder.entity';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([Reminder]), // <--- This registers the repository provider here
-  ],
+  imports: [TypeOrmModule.forFeature([Reminder])],
   controllers: [ReminderController],
   providers: [ReminderService],
 })

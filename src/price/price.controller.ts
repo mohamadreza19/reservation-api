@@ -22,36 +22,36 @@ import { Role } from 'src/common/enums/role.enum';
 export class PriceController {
   constructor(private readonly priceService: PriceService) {}
 
-  @Post()
-  @HttpCode(201)
-  @ApiOperation({ summary: 'Create a price for a non-system service' })
-  @ApiResponse({ status: 201, description: 'Price created successfully' })
-  create(@Body() createPriceDto: CreatePriceDto, @AuthUser() user: User) {
-    return this.priceService.create(createPriceDto, user);
-  }
+  // @Post()
+  // @HttpCode(201)
+  // @ApiOperation({ summary: 'Create a price for a non-system service' })
+  // @ApiResponse({ status: 201, description: 'Price created successfully' })
+  // create(@Body() createPriceDto: CreatePriceDto, @AuthUser() user: User) {
+  //   return this.priceService.create(createPriceDto, user);
+  // }
 
-  @Get('service/:serviceId')
-  @ApiOperation({ summary: 'Get the price for a service' })
-  @ApiResponse({ status: 200, description: 'Price retrieved successfully' })
-  findByService(@Param('serviceId') serviceId: string, @AuthUser() user: User) {
-    return this.priceService.findByService(serviceId, user);
-  }
+  // @Get('service/:serviceId')
+  // @ApiOperation({ summary: 'Get the price for a service' })
+  // @ApiResponse({ status: 200, description: 'Price retrieved successfully' })
+  // findByService(@Param('serviceId') serviceId: string, @AuthUser() user: User) {
+  //   return this.priceService.findByService(serviceId, user);
+  // }
 
-  @Patch(':id')
-  @ApiOperation({ summary: 'Update a price' })
-  @ApiResponse({ status: 200, description: 'Price updated successfully' })
-  update(
-    @Param('id') id: string,
-    @Body() updatePriceDto: UpdatePriceDto,
-    @AuthUser() user: User,
-  ) {
-    return this.priceService.update(id, updatePriceDto, user);
-  }
+  // @Patch(':id')
+  // @ApiOperation({ summary: 'Update a price' })
+  // @ApiResponse({ status: 200, description: 'Price updated successfully' })
+  // update(
+  //   @Param('id') id: string,
+  //   @Body() updatePriceDto: UpdatePriceDto,
+  //   @AuthUser() user: User,
+  // ) {
+  //   return this.priceService.update(id, updatePriceDto, user);
+  // }
 
-  @Delete(':id')
-  @ApiOperation({ summary: 'Delete a price' })
-  @ApiResponse({ status: 200, description: 'Price deleted successfully' })
-  remove(@Param('id') id: string, @AuthUser() user: User) {
-    return this.priceService.remove(id, user);
-  }
+  // @Delete(':id')
+  // @ApiOperation({ summary: 'Delete a price' })
+  // @ApiResponse({ status: 200, description: 'Price deleted successfully' })
+  // remove(@Param('id') id: string, @AuthUser() user: User) {
+  //   return this.priceService.remove(id, user);
+  // }
 }

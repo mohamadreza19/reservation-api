@@ -13,13 +13,16 @@ import { QueryService } from 'src/common/services/query.service';
 import { Business } from '../business/entities/business.entity';
 import {
   CreateServiceDto,
+  FindServiceByBusiness,
   FindServicesDto,
+  UpdateServiceArgsDto,
   UpdateServiceDto,
 } from './dto/service.dto';
 import { PaginatedResult } from 'src/common/models/model';
 import { User } from 'src/user/entities/user.entity';
 import { Role } from 'src/common/enums/role.enum';
 import { BusinessService } from 'src/business/business.service';
+import { PriceService } from 'src/price/price.service';
 
 @Injectable()
 export class ServiceService {
@@ -29,6 +32,7 @@ export class ServiceService {
     @InjectRepository(Service)
     private readonly serviceRepo: Repository<Service>,
     private businessService: BusinessService,
+    private priceService: PriceService,
     // @InjectRepository(Business)
     // private readonly businessRepo: Repository<Business>,
   ) {
@@ -45,22 +49,8 @@ export class ServiceService {
     if (!business) {
       throw new ForbiddenException('problem with business');
     }
-    const service = this.serviceRepo.create({ ...createServiceDto, business });
-
-    // Handle business association if provided
-    // if (createServiceDto.businessId) {
-    //   const business = await this.businessRepo.findOne({
-    //     where: { id: createServiceDto.businessId },
-    //   });
-    //   if (!business) {
-    //     throw new NotFoundException(
-    //       `Business with ID ${createServiceDto.businessId} not found`,
-    //     );
-    //   }
-    //   service.business = business;
-    // }
-
-    // Handle parent service
+    const service = this.serviceRepo.create({ ...createServiceDto });
+    service.business = business;
 
     // Validate name uniqueness for non-system services within the business
     if (!createServiceDto.isSystemService) {
@@ -102,54 +92,104 @@ export class ServiceService {
       );
     }
 
-    return this.serviceRepo.save(service);
+    return await this.serviceRepo.save(service);
   }
 
-  async findAll(dto: FindServicesDto): Promise<PaginatedResult<Service>> {
+  async findAll(
+    user: User,
+    dto: FindServicesDto,
+  ): Promise<PaginatedResult<Service>> {
     const {
       page,
       limit,
-      // sort,
-      // businessId,
-      // parentId,
+
       isSystemService,
-      // rootOnly,
     } = dto;
     const filters = { isSystemService };
 
-    this.logger.debug(
-      `Processing findAll with filters: ${JSON.stringify(filters)}`,
-    );
+    const [services, count] = await this.serviceRepo.findAndCount({
+      where: {
+        isSystemService: true,
+      },
+      select: {
+        id: true,
+        name: true,
+        icon: true,
+        isSystemService: true,
+      },
+    });
 
-    return this.queryService.findAll(
-      {
+    return {
+      data: services,
+      page: 1,
+      limit: 9999,
+      total: count,
+    };
+  }
+
+  async findSystemServices(
+    businessId: string | null,
+    query: FindServiceByBusiness,
+  ) {
+    const page = 1;
+    const limit = 999;
+    const skip = (page - 1) * limit;
+
+    const qb = this.serviceRepo
+      .createQueryBuilder('service')
+      .leftJoinAndSelect('service.price', 'price'); // ✅ always join price
+    const { isSystemService, parentId } = query;
+    // .where('service.isSystemService = :isSystem', { isSystem: true });
+
+    // Filter for system services
+
+    if (isSystemService) {
+      qb.where('service.isSystemService = :isSystem', { isSystem: true });
+
+      // If businessId is provided, find system services that have children services belonging to the business
+      if (businessId) {
+        qb.innerJoin(
+          'service.children',
+          'childService',
+          'childService.businessId = :businessId',
+          { businessId },
+        );
+      }
+      const [data, total] = await qb.getManyAndCount();
+
+      return {
+        data,
+        total,
         page,
         limit,
-        sort: '',
-        filters,
-        relations: ['parent', 'children'],
-      },
-      (filters) => {
-        const where: FindOptionsWhere<Service> = {};
-        // console.log('filters', Boolean(filters.isSystemService));
-        // if (filters.businessId) {
-        //   where.business = { id: filters.businessId };
-        // }
+      };
+    }
+    if (parentId && businessId) {
+      // Filter for non-system services with specific parentId and businessId
+      qb.where('service.businessId = :businessId', { businessId }).andWhere(
+        'service.parentId = :parentId',
+        { parentId },
+      );
+    } else if (businessId) {
+      // Filter for non-system services with specific businessId
+      qb.where('service.businessId = :businessId', { businessId });
+    }
 
-        if (filters.isSystemService !== undefined) {
-          where.isSystemService = filters.isSystemService;
-        }
+    qb.skip(skip).take(limit);
 
-        // if (filters.parentId) {
-        //   where.parent = { id: filters.parentId };
-        // } else if (filters.rootOnly !== undefined && filters.rootOnly) {
-        //   where.parent = null as any;
-        // }
+    // // Optional: Filter by businessId if provided
+    // if (businessId) {
+    //   qb.andWhere('service.businessId = :businessId', { businessId });
+    // }
 
-        this.logger.debug(`Generated where clause: ${JSON.stringify(where)}`);
-        return where;
-      },
-    );
+    const [data, total] = await qb.getManyAndCount();
+
+    return {
+      data,
+      total,
+      page,
+      limit,
+    };
   }
 
   async findOne(id: string) {
@@ -163,11 +203,21 @@ export class ServiceService {
     return service;
   }
 
-  async update(id: string, updateServiceDto: UpdateServiceDto) {
+  async update(id: string, updateDto: UpdateServiceDto, user: User) {
+    const business = await this.businessService.findByUserId(user.id);
     const service = await this.serviceRepo.findOne({
-      where: { id },
-      relations: ['business', 'parent'],
+      where: {
+        id,
+        business: {
+          id: business.id,
+        },
+        parent: {
+          id: updateDto.parentId,
+        },
+      },
+      relations: ['price'],
     });
+
     if (!service) {
       throw new NotFoundException(`Service with ID ${id} not found`);
     }
@@ -177,67 +227,33 @@ export class ServiceService {
       throw new ForbiddenException('System services cannot be modified');
     }
 
-    // Handle business update
-    // if (updateServiceDto.businessId) {
-    //   const business = await this.businessRepo.findOne({
-    //     where: { id: updateServiceDto.businessId },
-    //   });
-    //   if (!business) {
-    //     throw new NotFoundException(
-    //       `Business with ID ${updateServiceDto.businessId} not found`,
-    //     );
-    //   }
-    //   service.business = business;
-    // }
-
-    // Handle parent update
-    if (updateServiceDto.parentId !== undefined) {
-      if (updateServiceDto.parentId) {
-        const parent = await this.serviceRepo.findOne({
-          where: { id: updateServiceDto.parentId },
-        });
-        if (!parent) {
-          throw new NotFoundException(
-            `Parent service with ID ${updateServiceDto.parentId} not found`,
-          );
-        }
-        if (!parent.isSystemService) {
-          throw new ForbiddenException(
-            'Can only assign system services as parent',
-          );
-        }
-        service.parent = parent;
-      } else {
-        throw new ForbiddenException(
-          'All non-system services must have a parent',
+    if (updateDto.price) {
+      if (!service.price) {
+        await this.priceService.create(
+          {
+            amount: updateDto.price.amount,
+          },
+          service,
         );
+      } else {
+        service.price.amount = updateDto.price.amount;
       }
     }
 
-    // Update other fields
-    Object.assign(service, updateServiceDto);
-    return this.serviceRepo.save(service);
+    return await this.serviceRepo.save(service);
   }
 
-  async remove(id: string) {
+  async remove(id: string, user: User) {
+    const business = await this.businessService.findByUserId(user.id);
     const service = await this.serviceRepo.findOne({
-      where: { id },
-      relations: ['children'],
+      where: {
+        business,
+        id: id,
+      },
     });
     if (!service) {
-      throw new NotFoundException(`Service with ID ${id} not found`);
+      throw new NotFoundException();
     }
-
-    // Prevent removing system services
-    if (service.isSystemService) {
-      throw new ForbiddenException('System services cannot be removed');
-    }
-
-    // Check if service has children
-    if (service.children && service.children.length > 0) {
-      throw new ForbiddenException('Cannot delete service with child services');
-    }
-
     return this.serviceRepo.remove(service);
   }
 }

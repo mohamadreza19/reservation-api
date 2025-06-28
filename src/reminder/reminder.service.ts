@@ -1,14 +1,18 @@
 import { Injectable } from '@nestjs/common';
 import { CreateReminderDto } from './dto/create-reminder.dto';
 import { UpdateReminderDto } from './dto/update-reminder.dto';
+import { ReminderRedisService } from 'src/redis/services/reminder-redis.service';
 
 @Injectable()
 export class ReminderService {
+  constructor() {}
   create(createReminderDto: CreateReminderDto) {
+    // this.reminderRedisService.set('test', 'lala');
     return 'This action adds a new reminder';
   }
 
   findAll() {
+    // return this.reminderRedisService.get('test');
     return `This action returns all reminder`;
   }
 
@@ -21,6 +25,6 @@ export class ReminderService {
   }
 
   remove(id: number) {
-    return `This action removes a #${id} reminder`;
+    // return this.reminderRedisService.del('test');
   }
 }

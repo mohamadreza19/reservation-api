@@ -7,11 +7,17 @@ import {
   OneToMany,
   JoinColumn,
   OneToOne,
+  ManyToMany,
+  Tree,
+  TreeParent,
+  TreeChildren,
 } from 'typeorm';
 import { Business } from '../../business/entities/business.entity';
 import { Price } from 'src/price/entities/price.entity';
+import { Appointment } from 'src/appointment/entities/appointment.entity';
 
 @Entity()
+@Tree('closure-table')
 export class Service {
   @PrimaryGeneratedColumn('uuid')
   id: string;
@@ -25,22 +31,29 @@ export class Service {
   @Column({ default: false })
   isSystemService: boolean; // Marks constant/main services
 
+  @Column({ nullable: true }) // Add icon field to store file path
+  icon: string;
+
   @ManyToOne(() => Business, (business) => business.services, {
     nullable: true, // Constant services won't belong to a business
   })
   business: Business | null;
 
-  @OneToMany(() => Service, (service) => service.parent)
+  @TreeChildren()
   children: Service[];
 
   @ManyToOne(() => Service, (service) => service.children, {
     onDelete: 'CASCADE',
   })
-  @JoinColumn({ name: 'parent_id' })
+  @TreeParent()
   parent: Service | null;
 
   @OneToOne(() => Price, (price) => price.service, {
     nullable: true, // Allow null for system services
+    cascade: true,
   })
   price: Price | null;
+
+  @OneToMany(() => Appointment, (appointment) => appointment.service)
+  appointment: Appointment[];
 }

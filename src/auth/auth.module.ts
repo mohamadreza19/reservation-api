@@ -6,9 +6,9 @@ import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { UserModule } from '../user/user.module';
 import { BusinessModule } from '../business/business.module';
-import { APP_GUARD } from '@nestjs/core';
-import { PermissionsGuard } from 'src/common/guards/permissions.guard';
+
 import { JwtStrategy } from './strategies/jwt.strategy';
+import { CustomerModule } from 'src/customer/customer.module';
 
 @Module({
   imports: [
@@ -17,12 +17,13 @@ import { JwtStrategy } from './strategies/jwt.strategy';
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => ({
         secret: configService.get<string>('JWT_SECRET', 'fallback-secret-key'),
-        signOptions: { expiresIn: '60m' },
+        signOptions: { expiresIn: '4h' },
       }),
       inject: [ConfigService],
     }),
     UserModule,
     BusinessModule,
+    CustomerModule,
   ],
   controllers: [AuthController],
   providers: [

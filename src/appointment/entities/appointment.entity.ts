@@ -2,36 +2,58 @@
 import {
   Entity,
   PrimaryGeneratedColumn,
-  Column,
   ManyToOne,
   OneToOne,
   JoinColumn,
+  Column,
 } from 'typeorm';
 import { Customer } from '../../customer/entities/customer.entity';
-import { Employee } from '../../employee/entities/employee.entity';
 
-import { Reminder } from '../../reminder/entities/reminder.entity';
+import { Service } from 'src/service/entities/service.entity';
+import { Timeslot } from 'src/time-slot/entities/time-slot.entity';
+import { Business } from 'src/business/entities/business.entity';
+import { ApiProperty } from '@nestjs/swagger';
+import { ServiceDto } from 'src/service/dto/service.dto';
+import { TimeslotByDateDto } from 'src/time-slot/dto/time-slot-dto';
+import { BusinessProfileDto } from 'src/business/dto/business.dto';
+import { AppointmentStatus } from '../constants/const';
 
 @Entity()
 export class Appointment {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column('timestamptz')
-  startTime: Date;
-
-  @Column('timestamptz')
-  endTime: Date;
-
+  @ApiProperty({
+    type: () => Customer,
+  })
   @ManyToOne(() => Customer, (customer) => customer.appointments)
   customer: Customer;
 
-  @ManyToOne(() => Employee, (employee) => employee.appointments)
-  employee: Employee;
-
-  @OneToOne(() => Reminder, (reminder) => reminder.appointment, {
-    cascade: true,
+  @ApiProperty({
+    type: () => ServiceDto,
   })
+  @ManyToOne(() => Service, (service) => service.appointment, {
+    onDelete: 'CASCADE',
+    // cascade: true,
+  })
+  service: Service;
+
+  @ApiProperty({
+    type: () => TimeslotByDateDto,
+  })
+  @OneToOne(() => Timeslot, (timeslot) => timeslot.appointment)
   @JoinColumn()
-  reminder: Reminder;
+  timeslot: Timeslot;
+
+  @ApiProperty({
+    type: () => BusinessProfileDto,
+  })
+  @ManyToOne(() => Business, (customer) => customer.appointments)
+  business: Business;
+
+  @Column({
+    enum: AppointmentStatus,
+    default: AppointmentStatus.InProcess,
+  })
+  status: AppointmentStatus;
 }

@@ -5,27 +5,32 @@ import {
   Column,
   OneToMany,
   ManyToMany,
+  OneToOne,
+  JoinColumn,
 } from 'typeorm';
 import { Appointment } from '../../appointment/entities/appointment.entity';
-import { Business } from 'src/business/entities/business.entity';
+
+import { User } from 'src/user/entities/user.entity';
+import { ApiProperty } from '@nestjs/swagger';
+import { CreateUserDto } from 'src/user/dto/user.dto';
 
 @Entity()
 export class Customer {
+  @ApiProperty({ example: 'uuid-value' })
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column()
-  fullName: string;
-
-  @Column({ unique: true })
-  phone: string;
-
-  @Column({ nullable: true })
-  email: string;
+  @ApiProperty({
+    type: () => CreateUserDto,
+    description: 'User info associated with the customer',
+  })
+  @OneToOne(() => User, (user) => user.customer)
+  @JoinColumn()
+  userInfo: User;
 
   @OneToMany(() => Appointment, (appointment) => appointment.customer)
   appointments: Appointment[];
 
-  @ManyToMany(() => Business, (business) => business.customers)
-  businesses: Business[];
+  // @ManyToMany(() => Business, (business) => business.customers)
+  // businesses: Business[];
 }

@@ -16,6 +16,8 @@ import { Roles } from 'src/common/decorators/roles.decorator';
 import { Role } from 'src/common/enums/role.enum';
 import { OtpRequestDto } from './dto/otp-request.dto';
 import { VerifyOtpDto } from './dto/verify-otp.dto';
+import { ApiResponse } from '@nestjs/swagger';
+import { VerifyOtpResponseDto } from './dto/verify-otp-response.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -36,6 +38,11 @@ export class AuthController {
   }
 
   @Post('verify-otp')
+  @ApiResponse({
+    status: 200,
+    description: 'OTP verified successfully, returns access token',
+    type: VerifyOtpResponseDto,
+  })
   async verifyOTP(@Body() verifyOtpDto: VerifyOtpDto) {
     return this.authService.verifyOTP(verifyOtpDto);
   }

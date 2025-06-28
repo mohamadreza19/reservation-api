@@ -15,6 +15,7 @@ import { OtpResponseDto } from './dto/otp-response.dto';
 import { VerifyOtpResponseDto } from './dto/verify-otp-response.dto';
 import { VerifyOtpDto } from './dto/verify-otp.dto';
 import { Payload } from 'src/common/models/auth';
+import { CustomerService } from 'src/customer/customer.service';
 
 @Injectable()
 export class AuthService {
@@ -22,6 +23,7 @@ export class AuthService {
     public readonly userService: UserService,
     private readonly jwtService: JwtService,
     private readonly businessService: BusinessService,
+    private readonly customerService: CustomerService,
   ) {}
 
   async validateUser(
@@ -42,8 +44,8 @@ export class AuthService {
         phoneNumber,
         password: hashedPassword,
         role: Role.CUSTOMER,
-        isVerified: false,
       });
+
       return { user: newUser };
     }
 
@@ -58,14 +60,37 @@ export class AuthService {
 
     return {
       access_token: this.jwtService.sign(payload),
+      isNew: user.isNew,
+      role: user.role,
     };
   }
 
   async generateAndSendOTP(phoneNumber: string): Promise<OtpResponseDto> {
+    let user = await this.userService.findByPhoneNumber(phoneNumber);
+    if (user) {
+      user.isNew = false;
+      this.userService.updateUserInstance(user);
+    }
+
+    if (!user) {
+      // Create a temporary unverified user for OTP
+
+      user = await this.userService.create({
+        phoneNumber,
+        role: Role.CUSTOMER,
+        userName: phoneNumber,
+      });
+      await this.customerService.createByUserId(user.id);
+    }
+
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     const expires = new Date(Date.now() + 15 * 60 * 1000);
+    console.log(user);
+    user.otpCode = otp;
+    user.otpExpires = expires;
 
-    await this.userService.updateOrCreateOTP(phoneNumber, otp, expires);
+    await this.userService.updateUserInstance(user);
+    // await this.userService.updateOrCreateOTP(phoneNumber, otp, expires);
 
     return {
       success: true,
@@ -100,32 +125,5 @@ export class AuthService {
     await this.userService.clearOTP(user.id);
 
     return this.login(user);
-  }
-
-  async registerEmployee(
-    phoneNumber: string,
-    password: string,
-    firstName: string,
-    lastName: string,
-    position: string,
-    businessId: string,
-    adminId: string,
-  ) {
-    // Verify admin has permission
-    // const admin = await this.userService.findOne(adminId);
-    // if (![Role.SUPER_ADMIN, Role.BUSINESS_ADMIN].includes(admin.role)) {
-    //   throw new UnauthorizedException('Only admins can register employees');
-    // }
-    // const business = await this.businessService.findOne(businessId);
-    // const hashedPassword = await bcrypt.hash(password, 10);
-    // return this.userService.create({
-    //   phoneNumber,
-    //   password: hashedPassword,
-    //   firstName,
-    //   lastName,
-    //   position,
-    //   role: Role.EMPLOYEE,
-    //   business,
-    // });
   }
 }

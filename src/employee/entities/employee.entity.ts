@@ -23,8 +23,8 @@ export class Employee {
   @JoinColumn()
   business: Business;
 
-  @OneToMany(() => Appointment, (appointment) => appointment.employee)
-  appointments: Appointment[];
+  // @OneToMany(() => Appointment, (appointment) => appointment.employee)
+  // appointments: Appointment[];
 
   @OneToOne(() => User, { nullable: true, onDelete: 'CASCADE' })
   @JoinColumn()

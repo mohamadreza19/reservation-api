@@ -1,3 +1,4 @@
+import { ApiProperty } from '@nestjs/swagger';
 import { Service } from 'src/service/entities/service.entity';
 import {
   Entity,
@@ -9,15 +10,23 @@ import {
 
 @Entity()
 export class Price {
+  @ApiProperty({
+    description: 'Unique identifier for the price',
+    type: 'string',
+  })
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ type: 'integer' })
-  amount: number;
+  @ApiProperty({
+    description: 'Price',
+    type: 'string',
+  })
+  @Column()
+  amount: string;
 
   @OneToOne(() => Service, (service) => service.price, {
-    onDelete: 'CASCADE', // Delete price if service is deleted
+    onDelete: 'CASCADE',
   })
-  @JoinColumn({ name: 'service_id' })
+  @JoinColumn({ name: 'serviceId' })
   service: Service;
 }

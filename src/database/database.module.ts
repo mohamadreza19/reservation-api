@@ -7,9 +7,6 @@ import { createDatabaseConfig } from './factories/database.factory';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({
-      isGlobal: true, // allows access to env vars throughout the app
-    }),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -17,9 +14,9 @@ import { createDatabaseConfig } from './factories/database.factory';
         type: 'postgres',
         url: configService.get<string>('DATABASE_URL'),
         // entities: [join(__dirname, '../**/*.entity{.ts,.js}')],
-        ssl: {
-          rejectUnauthorized: false, // Needed for Render
-        },
+        // ssl: {
+        //   rejectUnauthorized: false, // Needed for Render
+        // },
 
         autoLoadEntities: true,
         synchronize: true, // Use migrations instead in production

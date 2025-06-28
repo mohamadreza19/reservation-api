@@ -9,11 +9,15 @@ import {
 import { Business } from '../../business/entities/business.entity';
 import { Role } from '../../common/enums/role.enum';
 import { Employee } from '../../employee/entities/employee.entity';
+import { Customer } from 'src/customer/entities/customer.entity';
 
 @Entity()
 export class User {
   @PrimaryGeneratedColumn('uuid')
   id: string;
+
+  @Column({ nullable: true })
+  userName: string;
 
   @Column({ unique: true, nullable: false })
   phoneNumber: string;
@@ -36,8 +40,10 @@ export class User {
   })
   business: Business | null;
 
-  @Column({ default: false })
-  isVerified: boolean;
+  @OneToOne(() => Customer, (customer) => customer.userInfo, {
+    nullable: true,
+  })
+  customer: Customer | null;
 
   // user.entity.ts
   @Column({ nullable: true, select: false })
@@ -45,4 +51,9 @@ export class User {
 
   @Column({ nullable: true })
   otpExpires: Date;
+  @Column({ default: true })
+  isNew: boolean;
+
+  @Column({ nullable: true })
+  avatarPath: string;
 }

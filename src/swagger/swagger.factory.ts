@@ -6,6 +6,9 @@ import {
 } from '@nestjs/swagger';
 import { INestApplication } from '@nestjs/common';
 
+import * as fs from 'fs/promises';
+import { SwaggerUiOptions } from '@nestjs/swagger/dist/interfaces/swagger-ui-options.interface';
+
 export class SwaggerFactory {
   static setup(
     app: INestApplication,
@@ -64,6 +67,40 @@ export class SwaggerFactory {
       documentOptions,
     );
 
+    // Write the Swagger JSON to a file
+    fs.writeFile('swagger.json', JSON.stringify(document, null, 2));
+
     SwaggerModule.setup(config.path || 'api', app, document, customOptions);
+  }
+  static generateSwaggerJson(
+    app: INestApplication,
+    options: SwaggerUiOptions,
+  ): void {
+    const { title, description, version, tag, bearerAuth } = options;
+
+    const config = new DocumentBuilder()
+      .setTitle(title)
+      .setDescription(description)
+      .setVersion(version)
+      .addTag(tag);
+
+    if (bearerAuth) {
+      config.addBearerAuth(
+        {
+          type: 'http',
+          scheme: 'bearer',
+          bearerFormat: 'JWT',
+          name: 'Authorization',
+          in: 'header',
+          description: 'Enter JWT token in the format: Bearer <token>',
+        },
+        'JWT-auth',
+      );
+    }
+
+    const document = SwaggerModule.createDocument(app, config.build());
+
+    // Save the document to swagger.json
+    fs.writeFile('./swagger.json', JSON.stringify(document, null, 2));
   }
 }

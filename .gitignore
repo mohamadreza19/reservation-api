@@ -41,6 +41,10 @@ lerna-debug.log*
 .env.test.local
 .env.production.local
 .env.local
+# swagger.json
+
+swagger.json
+
 
 # temp directory
 .temp

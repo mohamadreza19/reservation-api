@@ -13,6 +13,6 @@ export class Reminder {
   @Column({ default: false })
   sent: boolean;
 
-  @OneToOne(() => Appointment, (appointment) => appointment.reminder)
-  appointment: Appointment;
+  // @OneToOne(() => Appointment, (appointment) => appointment.reminder)
+  // appointment: Appointment;
 }

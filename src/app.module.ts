@@ -12,6 +12,12 @@ import { ConfigModule } from '@nestjs/config';
 import { UserModule } from './user/user.module';
 import { AuthModule } from './auth/auth.module';
 import { PriceModule } from './price/price.module';
+import { ScheduleModule } from './schedule/schedule.module';
+
+import { RedisModule } from './redis/redis.module';
+import { TimeslotModule } from './time-slot/time-slot.module';
+import { SwaggerModule } from './swagger/swagger.module';
+import { FileModule } from './file/file.module';
 
 @Module({
   imports: [
@@ -19,6 +25,7 @@ import { PriceModule } from './price/price.module';
       isGlobal: true, // allows access to env vars throughout the app
       envFilePath: '.env',
     }),
+    FileModule.forRoot(),
     DatabaseModule,
     CustomerModule,
     BusinessModule,
@@ -29,6 +36,11 @@ import { PriceModule } from './price/price.module';
     UserModule,
     AuthModule,
     PriceModule,
+    ScheduleModule,
+    TimeslotModule,
+    SwaggerModule,
+
+    // RedisModule,
   ],
   controllers: [AppController],
   providers: [AppService],

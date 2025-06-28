@@ -1,26 +1,224 @@
-import { Injectable } from '@nestjs/common';
-import { CreateAppointmentDto } from './dto/create-appointment.dto';
-import { UpdateAppointmentDto } from './dto/update-appointment.dto';
+// appointment.service.ts
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
+import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
+import { DataSource, InsertResult, Repository } from 'typeorm';
+import { Appointment } from './entities/appointment.entity';
+
+import { Timeslot } from '../time-slot/entities/time-slot.entity';
+import { Customer } from '../customer/entities/customer.entity';
+import { Service } from '../service/entities/service.entity';
+import { User } from '../user/entities/user.entity';
+import { Role } from '../common/enums/role.enum';
+import {
+  CreateAppointmentDto,
+  // UpdateAppointmentDto,
+} from './dto/appointment.dto';
+import { TimeslotService } from 'src/time-slot/time-slot.service';
+import { CustomerService } from 'src/customer/customer.service';
+import { ServiceService } from 'src/service/service.service';
+import { Business } from 'src/business/entities/business.entity';
+import { BusinessService } from 'src/business/business.service';
+import { AvailableDateRangeDto } from 'src/time-slot/dto/time-slot-dto';
+import * as moment from 'moment';
+import { GetEntityByDateByDate } from 'src/common/dto/query.dto';
 
 @Injectable()
 export class AppointmentService {
-  create(createAppointmentDto: CreateAppointmentDto) {
-    return 'This action adds a new appointment';
+  constructor(
+    @InjectRepository(Appointment)
+    private readonly appointmentRepo: Repository<Appointment>,
+    private readonly timeslotService: TimeslotService,
+    private readonly customerService: CustomerService,
+    private readonly serviceService: ServiceService,
+    private readonly businessService: BusinessService,
+    @InjectDataSource() private readonly dataSource: DataSource,
+  ) {}
+
+  async create(createAppointmentDto: CreateAppointmentDto, user: User) {
+    // Fetch related entities
+    let business: Business | null;
+    let customer: Customer | null;
+    let service: Service | null;
+    let timeslot: Timeslot | null;
+    let appointmentInstance: Appointment | null;
+
+    customer = await this.customerService.findByUserId(user.id);
+
+    if (!customer) {
+      throw new NotFoundException(`Customer not found`);
+    }
+
+    service = await this.serviceService.findOne(createAppointmentDto.serviceId);
+    if (!service) {
+      throw new NotFoundException(
+        `Service with ID ${createAppointmentDto.serviceId} not found`,
+      );
+    }
+
+    business = await this.businessService.findOne(service.business?.id as any);
+
+    if (!business) throw BadRequestException;
+
+    timeslot = await this.timeslotService.findOneById(
+      createAppointmentDto.timeslotId,
+    );
+
+    if (!timeslot) {
+      throw new NotFoundException(
+        `Timeslot with ID ${createAppointmentDto.timeslotId} not found`,
+      );
+    }
+    if (!timeslot.isAvailable) {
+      throw new BadRequestException('Selected timeslot is not available');
+    }
+
+    appointmentInstance = this.appointmentRepo.create({
+      customer,
+      service,
+      timeslot,
+      business,
+    });
+    return await this.dataSource.transaction(async (manager) => {
+      // Step 1: Save the appointment
+
+      const appointment = manager.create(Appointment, appointmentInstance);
+      await manager.save(appointment);
+
+      // Step 2: Set timeslot availability to false
+      if (appointment.timeslot) {
+        await manager.update(Timeslot, appointment.timeslot.id, {
+          isAvailable: false,
+        });
+      }
+
+      return appointment;
+    });
   }
 
-  findAll() {
-    return `This action returns all appointment`;
+  async getAll(query: AvailableDateRangeDto, user: User) {
+    if (user.role === Role.BUSINESS_ADMIN) {
+      const business = await this.businessService.findByUserId(user.id);
+
+      if (!business) throw BadRequestException;
+
+      const buildQuery = this.buildAppointmentQuery({
+        businessId: business.id,
+        query: query,
+      });
+
+      return buildQuery.getMany();
+    }
+    if (user.role === Role.CUSTOMER) {
+      const customer = await this.customerService.findByUserId(user.id);
+
+      if (!customer) throw BadRequestException;
+      const buildQuery = this.buildAppointmentQuery({
+        customerId: customer.id,
+        query: query,
+      });
+
+      return buildQuery.getMany();
+    }
+  }
+  buildAppointmentQuery(options: {
+    businessId?: string;
+    customerId?: string;
+    query?: AvailableDateRangeDto; // e.g. '2025-06-27'
+  }) {
+    const qb = this.appointmentRepo.createQueryBuilder('appointment');
+
+    qb.innerJoin('appointment.timeslot', 'timeslot')
+      .innerJoin('appointment.service', 'service')
+      .innerJoin('service.price', 'price')
+      .innerJoin('appointment.customer', 'customer')
+      .innerJoin('customer.userInfo', 'userInfo')
+      .select([
+        'appointment.id',
+        'appointment.status',
+        'timeslot',
+        // 'service.id',
+        'service.name',
+        'price.amount',
+      ]);
+
+    if (options.businessId) {
+      qb.andWhere('appointment.businessId = :businessId', {
+        businessId: options.businessId,
+      });
+      qb.addSelect([
+        'customer.id',
+        'userInfo.id',
+        'userInfo.userName',
+        'userInfo.phoneNumber',
+      ]);
+    }
+
+    if (options.customerId) {
+      qb.andWhere('appointment.customerId = :customerId', {
+        customerId: options.customerId,
+      });
+      qb.innerJoin('appointment.business', 'business');
+      qb.addSelect([
+        // 'business.id',
+        'business.name',
+      ]);
+    }
+
+    if (options.query?.date) {
+      qb.andWhere('timeslot.date = :date', { date: options.query.date });
+    }
+    qb.orderBy('timeslot.date', 'DESC').addOrderBy(
+      'timeslot.startTime',
+      'DESC',
+    );
+
+    return qb;
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} appointment`;
+  async getAvailableDateRange(user: User) {
+    if (user.role == Role.CUSTOMER) {
+      const cus = await this.customerService.findByUserId(user.id);
+      if (!cus) {
+        throw new NotFoundException('Customer not found for this user');
+      }
+      return dateRangeQueryBuilderBasedRole(this.appointmentRepo, cus);
+    }
+    if (user.role == Role.BUSINESS_ADMIN) {
+      const bus = await this.businessService.findByUserId(user.id);
+      if (!bus) {
+        throw new NotFoundException('Business not found for this user');
+      }
+      return dateRangeQueryBuilderBasedRole(this.appointmentRepo, bus);
+    }
+  }
+}
+
+function dateRangeQueryBuilderBasedRole(
+  rep: Repository<Appointment>,
+  user: Business | Customer,
+) {
+  const query = rep
+    .createQueryBuilder('appointment')
+    .innerJoin('appointment.timeslot', 'timeslot')
+    .select('DISTINCT timeslot.date', 'date')
+    // .where('timeslot.date')
+    .orderBy('timeslot.date', 'ASC');
+
+  if (user instanceof Business) {
+    query.andWhere('appointment.businessId = :businessId', {
+      businessId: user.id,
+    });
   }
 
-  update(id: number, updateAppointmentDto: UpdateAppointmentDto) {
-    return `This action updates a #${id} appointment`;
+  if (user instanceof Customer) {
+    query.andWhere('appointment.customerId = :customerId', {
+      customerId: user.id,
+    });
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} appointment`;
-  }
+  return query.getRawMany();
 }

@@ -1,12 +1,23 @@
-import { ApiProperty, ApiPropertyOptional, PartialType } from '@nestjs/swagger';
+import {
+  ApiParam,
+  ApiProperty,
+  ApiPropertyOptional,
+  PartialType,
+} from '@nestjs/swagger';
 import {
   IsOptional,
   IsNumber,
   IsString,
   IsBoolean,
   IsUUID,
+  ValidateNested,
+  isUUID,
 } from 'class-validator';
 import { Type } from 'class-transformer';
+import { Price } from 'src/price/entities/price.entity';
+import { User } from 'src/user/entities/user.entity';
+import { ToBoolean } from 'src/common/decorators/to-boolean';
+import { CreatePriceDto } from 'src/price/dto/price-dto';
 
 export class CreateServiceDto {
   @ApiProperty({
@@ -55,6 +66,12 @@ export class CreateServiceDto {
   @IsBoolean()
   @IsOptional()
   isSystemService?: boolean = false;
+
+  @ApiPropertyOptional({
+    type: CreatePriceDto,
+  })
+  @IsOptional()
+  price: CreatePriceDto;
 }
 export class UpdateServiceDto extends PartialType(CreateServiceDto) {}
 export class FindServicesDto {
@@ -76,46 +93,91 @@ export class FindServicesDto {
   @IsNumber()
   limit?: number;
 
-  // @ApiPropertyOptional({
-  //   description: 'Sort field and direction (e.g., "name:ASC,createdAt:DESC")',
-  //   example: 'name:ASC',
-  // })
-  // @IsOptional()
-  // @IsString()
-  // sort?: string;
-
-  // @ApiPropertyOptional({
-  //   description: 'Filter by business ID',
-  //   example: 'uuid-of-business',
-  // })
-  // @IsOptional()
-  // @IsUUID()
-  // businessId?: string;
-
-  // @ApiPropertyOptional({
-  //   description: 'Filter by parent service ID',
-  //   example: 'uuid-of-parent-service',
-  // })
-  // @IsOptional()
-  // @IsUUID()
-  // parentId?: string;
-
   @ApiPropertyOptional({
     description:
       'Filter by system services (true) or non-system services (false)',
     example: true,
   })
   @IsOptional()
-  @Type(() => Boolean)
-  @IsBoolean()
+  @ToBoolean()
   isSystemService?: boolean;
+}
 
-  // @ApiPropertyOptional({
-  //   description: 'Filter to include only root services (no parent)',
-  //   example: true,
-  // })
-  // @IsOptional()
-  // @Type(() => Boolean)
-  // @IsBoolean()
-  // rootOnly?: boolean;
+export class ServiceDto {
+  @ApiProperty()
+  id: string;
+
+  @ApiProperty()
+  name: string;
+
+  @ApiProperty()
+  icon?: string;
+
+  @ApiPropertyOptional()
+  description?: string;
+
+  @ApiProperty()
+  isSystemService: boolean;
+
+  @ApiPropertyOptional({ type: () => Price })
+  price: Price;
+
+  @ApiPropertyOptional({ type: () => [ServiceDto] })
+  @Type(() => ServiceDto)
+  children?: ServiceDto[];
+}
+export class PaginatedServiceDto {
+  @ApiProperty({ type: [ServiceDto] })
+  data: ServiceDto[];
+
+  @ApiProperty()
+  total: number;
+
+  @ApiProperty()
+  page: number;
+
+  @ApiProperty()
+  limit: number;
+}
+
+export class UpdateServiceArgsDto {
+  @ApiProperty({ description: 'ID of the service to update' })
+  @IsString()
+  id: string;
+
+  @ApiProperty({
+    type: UpdateServiceDto,
+    description: 'Service data to update',
+  })
+  @ValidateNested()
+  @Type(() => UpdateServiceDto)
+  data: UpdateServiceDto;
+
+  @ApiProperty({ description: 'User performing the update' })
+  @ValidateNested()
+  @Type(() => User)
+  user: User;
+
+  @ApiProperty({ description: 'Uploaded icon file', required: false })
+  file?: Express.Multer.File;
+}
+
+export class FindServiceByBusiness {
+  @ApiPropertyOptional({
+    description: 'ID of the parent service',
+    example: 'uuid',
+  })
+  @IsOptional()
+  @IsString()
+  @IsUUID()
+  parentId?: string;
+
+  @ApiPropertyOptional({
+    description: 'Flag to filter system services',
+    example: true,
+    type: 'boolean',
+  })
+  @IsOptional()
+  @ToBoolean()
+  isSystemService?: boolean;
 }
