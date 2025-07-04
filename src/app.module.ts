@@ -31,7 +31,7 @@ import { BullModule } from '@nestjs/bull';
     CustomerModule,
     BusinessModule,
     AppointmentModule,
-    EmployeeModule,
+    // EmployeeModule,
     ServiceModule,
     ReminderModule,
     UserModule,
