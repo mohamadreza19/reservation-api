@@ -8,7 +8,7 @@ import {
 } from 'typeorm';
 import { Business } from '../../business/entities/business.entity';
 import { Role } from '../../common/enums/role.enum';
-import { Employee } from '../../employee/entities/employee.entity';
+
 import { Customer } from 'src/customer/entities/customer.entity';
 
 @Entity()

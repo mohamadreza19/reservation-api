@@ -5,7 +5,7 @@ import { DatabaseModule } from './database/database.module';
 import { CustomerModule } from './customer/customer.module';
 import { BusinessModule } from './business/business.module';
 import { AppointmentModule } from './appointment/appointment.module';
-import { EmployeeModule } from './employee/employee.module';
+
 import { ServiceModule } from './service/service.module';
 import { ReminderModule } from './reminder/reminder.module';
 import { ConfigModule } from '@nestjs/config';
