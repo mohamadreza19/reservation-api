@@ -17,7 +17,7 @@ import { Service } from '../service/entities/service.entity';
 import { Appointment } from '../appointment/entities/appointment.entity';
 import { Day, persianDayOrder } from 'src/common/enums/day.enum';
 import * as moment from 'moment-jalaali';
-// moment.loadPersian();
+moment.loadPersian();
 
 import { User } from '../user/entities/user.entity';
 import { BusinessService } from '../business/business.service';
@@ -36,6 +36,7 @@ import {
 } from './dto/time-slot-dto';
 import { QueryService } from 'src/common/services/query.service';
 import { Business } from 'src/business/entities/business.entity';
+import { TimeSlotStatus } from 'src/common/enums/time-slot-status.enum';
 
 @Injectable()
 export class TimeslotService {
@@ -83,8 +84,10 @@ export class TimeslotService {
     const DayToGenerate = 12;
     for (let i = 1; i <= DayToGenerate; i++) {
       const date = today.clone().add(i, 'days');
+
       const dayOfWeek = date.format('dddd').toLocaleLowerCase(); // e.g., 'saturday'
 
+      // console.log([persianDayOrder[s.day]);
       const schedule = dayMap.get(dayOfWeek);
       if (!schedule) {
         continue; // Should not happen due to 7-day validation
@@ -124,7 +127,10 @@ export class TimeslotService {
         date: date.format('YYYY-MM-DD'), // e.g., '2025-05-24'
         startTime: start.format('HH:mm'), // e.g., '09:00'
         endTime: slotEnd.format('HH:mm'), // e.g., '09:30'
-        isAvailable: schedule.isOpen,
+        // isAvailable: schedule.isOpen,
+        status: schedule.isOpen
+          ? TimeSlotStatus.IDLE
+          : TimeSlotStatus.UN_AVAILABLE,
         business,
       });
 
@@ -171,10 +177,10 @@ export class TimeslotService {
       existing.startTime = updateDto.startTime;
     if (updateDto.endTime !== undefined) existing.endTime = updateDto.endTime;
     if (updateDto.isAvailable !== undefined)
-      existing.isAvailable = updateDto.isAvailable;
+      // existing.isAvailable = updateDto.isAvailable;
 
-    // Save the updated entity
-    return this.timeslotRepo.save(existing);
+      // Save the updated entity
+      return this.timeslotRepo.save(existing);
   }
 
   async getAvailableDateRange(
@@ -191,8 +197,8 @@ export class TimeslotService {
       .createQueryBuilder('timeslot')
       .select('DISTINCT timeslot.date', 'date')
       .where('timeslot.businessId = :businessId', { businessId: business.id })
-      .where('timeslot.isAvailable = :isAvailable', {
-        isAvailable,
+      .where('timeslot.status = :status', {
+        status: TimeSlotStatus.IDLE,
       })
       .andWhere('timeslot.date > :now', { now })
       .orderBy('timeslot.date', 'ASC');
@@ -244,7 +250,8 @@ export class TimeslotService {
           id: business.id,
         },
         date: queryDate.format('YYYY-MM-DD'),
-        isAvailable: true,
+        // isAvailable: true,
+        status: query.status || TimeSlotStatus.IDLE,
       },
       select: {
         id: true,
@@ -256,8 +263,6 @@ export class TimeslotService {
         startTime: 'ASC',
       },
     });
-
-    return;
   }
 
   async getStatus(user: User): Promise<GetStatusResDto> {

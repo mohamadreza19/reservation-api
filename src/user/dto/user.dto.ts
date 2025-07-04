@@ -38,6 +38,15 @@ export class CreateUserDto {
   role?: Role;
 
   @ApiProperty({
+    description: 'userName',
+    example: 'userName',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  userName?: string;
+
+  @ApiProperty({
     description: 'First name of the user',
     example: 'Ali',
     required: false,

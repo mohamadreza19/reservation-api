@@ -123,7 +123,7 @@ export class ServiceController {
     @Body() updateServiceDto: UpdateServiceDto,
     @AuthUser() user: User,
   ) {
-    return this.serviceService.update(id, updateServiceDto, user);
+    // return this.serviceService.update(id, updateServiceDto, user);
   }
 
   @Delete(':id')

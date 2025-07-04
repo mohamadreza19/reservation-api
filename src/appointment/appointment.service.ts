@@ -23,8 +23,11 @@ import { ServiceService } from 'src/service/service.service';
 import { Business } from 'src/business/entities/business.entity';
 import { BusinessService } from 'src/business/business.service';
 import { AvailableDateRangeDto } from 'src/time-slot/dto/time-slot-dto';
-import * as moment from 'moment';
-import { GetEntityByDateByDate } from 'src/common/dto/query.dto';
+
+import { TimeSlotStatus } from 'src/common/enums/time-slot-status.enum';
+import { ReminderService } from 'src/reminder/reminder.service';
+import { REMINDER_MINUTES_BEFORE } from '../common/constants/reminder.config';
+import { TimeUtil } from '../common/utils/time.util';
 
 @Injectable()
 export class AppointmentService {
@@ -35,6 +38,7 @@ export class AppointmentService {
     private readonly customerService: CustomerService,
     private readonly serviceService: ServiceService,
     private readonly businessService: BusinessService,
+    private readonly reminder: ReminderService,
     @InjectDataSource() private readonly dataSource: DataSource,
   ) {}
 
@@ -72,7 +76,7 @@ export class AppointmentService {
         `Timeslot with ID ${createAppointmentDto.timeslotId} not found`,
       );
     }
-    if (!timeslot.isAvailable) {
+    if (timeslot.status !== TimeSlotStatus.IDLE) {
       throw new BadRequestException('Selected timeslot is not available');
     }
 
@@ -91,14 +95,38 @@ export class AppointmentService {
       // Step 2: Set timeslot availability to false
       if (appointment.timeslot) {
         await manager.update(Timeslot, appointment.timeslot.id, {
-          isAvailable: false,
+          status: TimeSlotStatus.BOOKED,
         });
+      }
+
+      // Step 3: Schedule reminders
+      const { date, startTime } = timeslot;
+      const appointmentDateTime = TimeUtil.createAppointmentDateTime(
+        date,
+        startTime,
+      );
+      for (const minutesBefore of REMINDER_MINUTES_BEFORE) {
+        const { delay } = TimeUtil.calculateReminderTime(
+          appointmentDateTime,
+          minutesBefore,
+        );
+        if (TimeUtil.shouldScheduleReminder(delay)) {
+          console.log(REMINDER_MINUTES_BEFORE);
+          await this.reminder.scheduleReminder(
+            user.id,
+            appointment.id,
+
+            delay,
+          );
+        }
       }
 
       return appointment;
     });
   }
-
+  async trigger() {
+    this.reminder.scheduleReminder('qwe', 'appointmentId', 1000);
+  }
   async getAll(query: AvailableDateRangeDto, user: User) {
     if (user.role === Role.BUSINESS_ADMIN) {
       const business = await this.businessService.findByUserId(user.id);
@@ -114,7 +142,6 @@ export class AppointmentService {
     }
     if (user.role === Role.CUSTOMER) {
       const customer = await this.customerService.findByUserId(user.id);
-
       if (!customer) throw BadRequestException;
       const buildQuery = this.buildAppointmentQuery({
         customerId: customer.id,

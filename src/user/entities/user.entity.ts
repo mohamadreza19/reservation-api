@@ -28,11 +28,11 @@ export class User {
   @Column({ type: 'enum', enum: Role, default: Role.CUSTOMER })
   role: Role;
 
-  @Column({ nullable: true })
-  firstName: string;
+  // @Column({ nullable: true })
+  // firstName: string;
 
-  @Column({ nullable: true })
-  lastName: string;
+  // @Column({ nullable: true })
+  // lastName: string;
 
   // Business relationship (for employees)
   @OneToOne(() => Business, (business) => business.userInfo, {

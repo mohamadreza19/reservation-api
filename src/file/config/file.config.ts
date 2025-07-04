@@ -1,5 +1,6 @@
 export enum StorageProfile {
   ICONS = 'icons',
+  SERVICE_ICONS = 'service-icons',
   BUSINESS_ASSETS = 'business-assets',
   USER_PROFILES = 'user-profiles',
   DEFAULT = 'default',
@@ -20,6 +21,11 @@ export interface FileServiceConfig {
 export const defaultFileServiceConfig: FileServiceConfig = {
   basePath: './uploads',
   profiles: {
+    [StorageProfile.SERVICE_ICONS]: {
+      allowedTypes: /jpeg|jpg|png|svg/,
+      maxFileSize: 2 * 1024 * 1024, // 2MB
+      destination: 'service-icons',
+    },
     [StorageProfile.ICONS]: {
       allowedTypes: /jpeg|jpg|png|svg/,
       maxFileSize: 2 * 1024 * 1024, // 2MB

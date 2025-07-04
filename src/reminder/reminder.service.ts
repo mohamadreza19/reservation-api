@@ -1,30 +1,26 @@
 import { Injectable } from '@nestjs/common';
-import { CreateReminderDto } from './dto/create-reminder.dto';
-import { UpdateReminderDto } from './dto/update-reminder.dto';
-import { ReminderRedisService } from 'src/redis/services/reminder-redis.service';
+import { InjectQueue } from '@nestjs/bull';
+import { Queue } from 'bull';
 
 @Injectable()
 export class ReminderService {
-  constructor() {}
-  create(createReminderDto: CreateReminderDto) {
-    // this.reminderRedisService.set('test', 'lala');
-    return 'This action adds a new reminder';
-  }
+  constructor(@InjectQueue('reminder') private reminderQueue: Queue) {}
 
-  findAll() {
-    // return this.reminderRedisService.get('test');
-    return `This action returns all reminder`;
-  }
+  async scheduleReminder(
+    userId: string,
+    appointmentId: string,
 
-  findOne(id: number) {
-    return `This action returns a #${id} reminder`;
-  }
-
-  update(id: number, updateReminderDto: UpdateReminderDto) {
-    return `This action updates a #${id} reminder`;
-  }
-
-  remove(id: number) {
-    // return this.reminderRedisService.del('test');
+    delay: number,
+  ) {
+    await this.reminderQueue.add(
+      'send-reminder',
+      { userId, appointmentId },
+      {
+        delay: delay,
+        attempts: 3, // Retry if fails
+        // backoff: 5000, // Retry after 5 seconds
+        removeOnComplete: true,
+      },
+    );
   }
 }

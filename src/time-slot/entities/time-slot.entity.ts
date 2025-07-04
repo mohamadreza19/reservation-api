@@ -10,6 +10,7 @@ import {
 import { Schedule } from 'src/schedule/entities/schedule.entity';
 import { Appointment } from 'src/appointment/entities/appointment.entity';
 import { Business } from 'src/business/entities/business.entity';
+import { TimeSlotStatus } from 'src/common/enums/time-slot-status.enum';
 
 @Entity()
 export class Timeslot {
@@ -33,8 +34,10 @@ export class Timeslot {
   @Column()
   endTime: string;
 
-  @Column()
-  isAvailable: boolean;
+  @Column({
+    enum: TimeSlotStatus,
+  })
+  status: TimeSlotStatus;
 
   @OneToOne(() => Appointment, (appointment) => appointment.timeslot)
   appointment: Appointment;

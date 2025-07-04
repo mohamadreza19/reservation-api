@@ -18,6 +18,7 @@ import { RedisModule } from './redis/redis.module';
 import { TimeslotModule } from './time-slot/time-slot.module';
 import { SwaggerModule } from './swagger/swagger.module';
 import { FileModule } from './file/file.module';
+import { BullModule } from '@nestjs/bull';
 
 @Module({
   imports: [
@@ -25,7 +26,7 @@ import { FileModule } from './file/file.module';
       isGlobal: true, // allows access to env vars throughout the app
       envFilePath: '.env',
     }),
-    FileModule.forRoot(),
+    BullModule,
     DatabaseModule,
     CustomerModule,
     BusinessModule,
@@ -40,6 +41,7 @@ import { FileModule } from './file/file.module';
     TimeslotModule,
     SwaggerModule,
 
+    FileModule,
     // RedisModule,
   ],
   controllers: [AppController],

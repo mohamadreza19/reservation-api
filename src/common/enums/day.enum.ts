@@ -9,13 +9,13 @@ export enum Day {
 }
 
 export const persianDayOrder = {
-  1: 'saturday', // شنبه
-  2: 'sunday', // یک‌شنبه
-  3: 'monday', // دوشنبه
-  4: 'tuesday', // سه‌شنبه
-  5: 'wednesday', // چهارشنبه
-  6: 'thursday', // پنج‌شنبه
-  7: 'friday', // جمعه
+  1: 'شنبه', // شنبه
+  2: 'یک‌شنبه', // یک‌شنبه
+  3: 'دوشنبه', // دوشنبه
+  4: 'سه‌شنبه', // سه‌شنبه
+  5: 'چهارشنبه', // چهارشنبه
+  6: 'پنج‌شنبه', // پنج‌شنبه
+  7: 'آدینه', // آدینه
 };
 
 export function DayValues(): number[] {

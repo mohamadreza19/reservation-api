@@ -12,36 +12,12 @@ import {
   FileServiceConfig,
   defaultFileServiceConfig,
 } from './config/file.config';
+import { ServiceModule } from 'src/service/service.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([User, Business, Service]), ConfigModule],
+  imports: [ServiceModule, ConfigModule],
   controllers: [FileController],
   providers: [FileService, DynamicEntityService],
-  exports: [FileService],
+  exports: [FileService, DynamicEntityService],
 })
-export class FileModule {
-  static forRoot(config?: Partial<FileServiceConfig>): DynamicModule {
-    return {
-      module: FileModule,
-      imports: [
-        ConfigModule,
-        TypeOrmModule.forFeature([User, Business, Service]),
-      ],
-      controllers: [FileController],
-      providers: [
-        FileService,
-        DynamicEntityService,
-        {
-          provide: 'FILE_SERVICE_CONFIG',
-          useFactory: (configService: ConfigService) => ({
-            ...defaultFileServiceConfig,
-            ...config,
-            ...configService.get<FileServiceConfig>('fileServiceConfig'),
-          }),
-          inject: [ConfigService],
-        },
-      ],
-      exports: [FileService],
-    };
-  }
-}
+export class FileModule {}

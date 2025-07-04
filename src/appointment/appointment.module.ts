@@ -7,6 +7,7 @@ import { BusinessModule } from 'src/business/business.module';
 import { CustomerModule } from 'src/customer/customer.module';
 import { ServiceModule } from 'src/service/service.module';
 import { TimeslotModule } from 'src/time-slot/time-slot.module';
+import { ReminderModule } from 'src/reminder/reminder.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { TimeslotModule } from 'src/time-slot/time-slot.module';
     CustomerModule,
     ServiceModule,
     TimeslotModule,
+    ReminderModule,
   ],
   controllers: [AppointmentController],
   providers: [AppointmentService],

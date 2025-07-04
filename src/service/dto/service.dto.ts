@@ -72,6 +72,9 @@ export class CreateServiceDto {
   })
   @IsOptional()
   price: CreatePriceDto;
+
+  @IsOptional()
+  icon: string;
 }
 export class UpdateServiceDto extends PartialType(CreateServiceDto) {}
 export class FindServicesDto {

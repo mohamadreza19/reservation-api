@@ -9,6 +9,7 @@ import { BusinessModule } from '../business/business.module';
 
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { CustomerModule } from 'src/customer/customer.module';
+import { SmsService } from 'src/common/services';
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { CustomerModule } from 'src/customer/customer.module';
   providers: [
     AuthService,
     JwtStrategy,
+    SmsService,
     // {
     //   provide: APP_GUARD,
     //   useClass: PermissionsGuard,

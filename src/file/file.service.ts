@@ -13,15 +13,18 @@ import {
   writeFileSync,
   mkdirSync,
   unlinkSync,
+  readFileSync,
 } from 'fs';
 import { StreamableFile } from '@nestjs/common';
 import { v4 as uuidv4 } from 'uuid';
+import { lookup } from 'mime-types';
 import {
   StorageProfile,
   StorageProfileConfig,
   FileServiceConfig,
   defaultFileServiceConfig,
 } from './config/file.config';
+import { GetFileStreamDto, SaveFileDto } from './dto/file.dto';
 
 @Injectable()
 export class FileService {
@@ -41,7 +44,11 @@ export class FileService {
   }
 
   // New file serving methods
-  async getFileStream(entity: string, id: string): Promise<StreamableFile> {
+  async getFileStream({
+    entity,
+    id,
+    user,
+  }: GetFileStreamDto): Promise<StreamableFile> {
     if (!this.dynamicEntity.isEntityAllowed(entity)) {
       throw new BadRequestException(
         `Entity '${entity}' is not allowed for file operations`,
@@ -57,25 +64,32 @@ export class FileService {
       );
     }
 
-    const record = await repo.findOneBy({ id });
+    const record = await repo.findOneById(id);
     if (!record || !record[fileField]) {
       throw new NotFoundException('File not found for this entity');
     }
+    const storageProfile = this.dynamicEntity.getStorageProfile(entity);
 
-    const fullPath = join(this.storagePath, record[fileField]);
+    const fullPath = join(
+      this.storagePath,
+      storageProfile.destination,
+      record[fileField],
+    );
+
     if (!existsSync(fullPath)) {
       throw new NotFoundException('File not found on disk');
     }
 
     this.logger.log(`Serving file: ${fullPath}`);
-    return new StreamableFile(createReadStream(fullPath));
+    const mimeType = lookup(record[fileField]) || 'application/octet-stream';
+
+    return new StreamableFile(createReadStream(fullPath), {
+      type: mimeType,
+      disposition: `inline; filename="${record[fileField]}"`,
+    });
   }
 
-  async saveFile(
-    entity: string,
-    id: string,
-    file: Express.Multer.File,
-  ): Promise<void> {
+  async saveFile({ entity, file, id, user }: SaveFileDto): Promise<void> {
     if (!file) {
       throw new BadRequestException('No file uploaded');
     }
@@ -95,7 +109,7 @@ export class FileService {
       );
     }
 
-    const record = await repo.findOneBy({ id });
+    const record = await repo.findByUserAccess(id, user);
     if (!record) {
       throw new NotFoundException('Entity not found');
     }
@@ -105,34 +119,26 @@ export class FileService {
       await this.deleteFile(record[fileField]);
     }
 
+    const storageProfile = this.dynamicEntity.getStorageProfile(entity);
     // Create entity folder
-    const entityFolder = join(this.storagePath, entity);
+
+    const entityFolder = join(this.storagePath, storageProfile.destination);
     mkdirSync(entityFolder, { recursive: true });
 
     // Generate unique filename
     const fileExtension = file.originalname.split('.').pop();
     const filename = `${uuidv4()}.${fileExtension}`;
-    const relativePath = `${entity}/${filename}`;
+    const relativePath = `${storageProfile.destination}/${filename}`;
     const fullPath = join(this.storagePath, relativePath);
 
     // Save file to disk
     writeFileSync(fullPath, file.buffer);
 
     // Update database record
-    record[fileField] = relativePath;
-    await repo.save(record);
+    record[fileField] = filename;
+    await repo.update(record);
 
     this.logger.log(`File saved: ${fullPath}`);
-  }
-
-  // Legacy methods (keeping for backward compatibility)
-  registerProfile(profileName: string, config: StorageProfileConfig): void {
-    if (this.config.profiles[profileName as StorageProfile]) {
-      this.logger.warn(
-        `Profile ${profileName} already exists and will be overwritten`,
-      );
-    }
-    this.config.profiles[profileName as StorageProfile] = config;
   }
 
   getFileUrl(

@@ -1,0 +1,1 @@
+export const REMINDER_MINUTES_BEFORE = [30, 60];

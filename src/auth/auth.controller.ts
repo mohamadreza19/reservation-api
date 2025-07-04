@@ -46,6 +46,15 @@ export class AuthController {
   async verifyOTP(@Body() verifyOtpDto: VerifyOtpDto) {
     return this.authService.verifyOTP(verifyOtpDto);
   }
+  @Post('admin-login')
+  @ApiResponse({
+    status: 200,
+    description: 'OTP verified successfully, returns access token',
+    type: VerifyOtpResponseDto,
+  })
+  async adminLogin(@Body() loginDto: LoginDto) {
+    return this.authService.adminLogin(loginDto);
+  }
 
   // @Get('initiate-verification/:phoneNumber')
   // async initiateVerification(@Param('phoneNumber') phoneNumber: string) {

@@ -3,7 +3,7 @@ import { ApiProperty } from '@nestjs/swagger';
 
 export class LoginDto {
   @ApiProperty({
-    example: '+989123456789',
+    example: '+989012345678',
     description: 'User phone number in international format',
     required: true,
     type: String,
@@ -12,7 +12,7 @@ export class LoginDto {
   phoneNumber: string;
 
   @ApiProperty({
-    example: 'MySecurePassword123!',
+    example: '1380',
     description: 'User password (min 8 characters)',
     required: true,
     type: String,

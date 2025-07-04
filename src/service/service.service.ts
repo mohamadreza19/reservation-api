@@ -8,7 +8,7 @@ import {
 
 import { InjectRepository } from '@nestjs/typeorm';
 import { Service } from './entities/service.entity';
-import { FindOptionsWhere, Repository } from 'typeorm';
+import { DeepPartial, FindOptionsWhere, Repository } from 'typeorm';
 import { QueryService } from 'src/common/services/query.service';
 import { Business } from '../business/entities/business.entity';
 import {
@@ -18,14 +18,22 @@ import {
   UpdateServiceArgsDto,
   UpdateServiceDto,
 } from './dto/service.dto';
-import { PaginatedResult } from 'src/common/models/model';
+import {
+  FindOneById,
+  FindByUserAccess,
+  PaginatedResult,
+  Update,
+} from 'src/common/models/model';
 import { User } from 'src/user/entities/user.entity';
 import { Role } from 'src/common/enums/role.enum';
 import { BusinessService } from 'src/business/business.service';
 import { PriceService } from 'src/price/price.service';
+import { DynamicEntityService } from '../file/dynamic-entity.service';
 
 @Injectable()
-export class ServiceService {
+export class ServiceService
+  implements FindByUserAccess<Service>, Update<Service>, FindOneById<Service>
+{
   private readonly logger = new Logger(ServiceService.name);
   queryService: QueryService<Service>;
   constructor(
@@ -33,66 +41,21 @@ export class ServiceService {
     private readonly serviceRepo: Repository<Service>,
     private businessService: BusinessService,
     private priceService: PriceService,
-    // @InjectRepository(Business)
-    // private readonly businessRepo: Repository<Business>,
   ) {
     this.queryService = new QueryService(serviceRepo);
   }
+  async findOneById(id: string): Promise<Service | null> {
+    return this.serviceRepo.findOneBy({ id });
+  }
 
-  async create(createServiceDto: CreateServiceDto, user: User) {
-    // Prevent creating new system services
-    if (user.role == Role.BUSINESS_ADMIN && createServiceDto.isSystemService) {
-      throw new ForbiddenException('Cannot create new system services');
-    }
-    const business = await this.businessService.findByUserId(user.id);
-
-    if (!business) {
-      throw new ForbiddenException('problem with business');
-    }
-    const service = this.serviceRepo.create({ ...createServiceDto });
-    service.business = business;
-
-    // Validate name uniqueness for non-system services within the business
-    if (!createServiceDto.isSystemService) {
-      const existingService = await this.serviceRepo.findOne({
-        where: {
-          name: createServiceDto.name,
-          business: { id: business.id },
-          isSystemService: false,
-        },
-      });
-      if (existingService) {
-        throw new BadRequestException(
-          `A service with name "${createServiceDto.name}" already exists for this business`,
-        );
-      }
-    }
-    if (createServiceDto.parentId) {
-      const parent = await this.serviceRepo.findOne({
-        where: { id: createServiceDto.parentId },
-      });
-      if (!parent) {
-        throw new NotFoundException(
-          `Parent service with ID ${createServiceDto.parentId} not found`,
-        );
-      }
-
-      // Verify parent is a system service
-      if (!parent.isSystemService) {
-        throw new ForbiddenException(
-          'Can only create children under system services',
-        );
-      }
-
-      service.parent = parent;
-    } else {
-      // Only system services can be root level
-      throw new ForbiddenException(
-        'All non-system services must have a parent',
-      );
+  async findByUserAccess(id: string, user: User): Promise<Service | null> {
+    if (user.role == Role.SUPER_ADMIN) {
+      return this.serviceRepo.findOneBy({ id });
+    } else if (user.role == Role.BUSINESS_ADMIN) {
+      return this.serviceRepo.findOneBy({ id, isSystemService: false });
     }
 
-    return await this.serviceRepo.save(service);
+    return null;
   }
 
   async findAll(
@@ -203,7 +166,66 @@ export class ServiceService {
     return service;
   }
 
-  async update(id: string, updateDto: UpdateServiceDto, user: User) {
+  async create(createServiceDto: CreateServiceDto, user: User) {
+    // Prevent creating new system services
+    if (user.role == Role.BUSINESS_ADMIN && createServiceDto.isSystemService) {
+      throw new ForbiddenException('Cannot create new system services');
+    }
+    const business = await this.businessService.findByUserId(user.id);
+
+    if (!business) {
+      throw new ForbiddenException('problem with business');
+    }
+    const service = this.serviceRepo.create({ ...createServiceDto });
+    service.business = business;
+
+    // Validate name uniqueness for non-system services within the business
+    if (!createServiceDto.isSystemService) {
+      const existingService = await this.serviceRepo.findOne({
+        where: {
+          name: createServiceDto.name,
+          business: { id: business.id },
+          isSystemService: false,
+        },
+      });
+      if (existingService) {
+        throw new BadRequestException(
+          `A service with name "${createServiceDto.name}" already exists for this business`,
+        );
+      }
+    }
+    if (createServiceDto.parentId) {
+      const parent = await this.serviceRepo.findOne({
+        where: { id: createServiceDto.parentId },
+      });
+      if (!parent) {
+        throw new NotFoundException(
+          `Parent service with ID ${createServiceDto.parentId} not found`,
+        );
+      }
+
+      // Verify parent is a system service
+      if (!parent.isSystemService) {
+        throw new ForbiddenException(
+          'Can only create children under system services',
+        );
+      }
+
+      service.parent = parent;
+    } else {
+      // Only system services can be root level
+      throw new ForbiddenException(
+        'All non-system services must have a parent',
+      );
+    }
+
+    return await this.serviceRepo.save(service);
+  }
+  async updateByAuthorizeUser(
+    id: string,
+    updateDto: UpdateServiceDto,
+    user: User,
+  ) {
     const business = await this.businessService.findByUserId(user.id);
     const service = await this.serviceRepo.findOne({
       where: {
@@ -241,6 +263,9 @@ export class ServiceService {
     }
 
     return await this.serviceRepo.save(service);
+  }
+  async update(entities: DeepPartial<Service>) {
+    return this.serviceRepo.save(entities);
   }
 
   async remove(id: string, user: User) {

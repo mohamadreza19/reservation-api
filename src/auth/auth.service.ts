@@ -1,6 +1,8 @@
 import {
+  BadRequestException,
   ConflictException,
   Injectable,
+  NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
@@ -16,6 +18,9 @@ import { VerifyOtpResponseDto } from './dto/verify-otp-response.dto';
 import { VerifyOtpDto } from './dto/verify-otp.dto';
 import { Payload } from 'src/common/models/auth';
 import { CustomerService } from 'src/customer/customer.service';
+import { LoginDto } from './dto/login.dto';
+import { report } from 'process';
+import { SmsService } from 'src/common/services';
 
 @Injectable()
 export class AuthService {
@@ -24,6 +29,7 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly businessService: BusinessService,
     private readonly customerService: CustomerService,
+    private readonly sms: SmsService,
   ) {}
 
   async validateUser(
@@ -85,13 +91,13 @@ export class AuthService {
 
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     const expires = new Date(Date.now() + 15 * 60 * 1000);
-    console.log(user);
+
     user.otpCode = otp;
     user.otpExpires = expires;
 
     await this.userService.updateUserInstance(user);
     // await this.userService.updateOrCreateOTP(phoneNumber, otp, expires);
-
+    this.sms.sendOtp(user.phoneNumber, otp);
     return {
       success: true,
       expiresAt: expires, // Optional: include expiration time in response
@@ -123,6 +129,18 @@ export class AuthService {
     // Clear OTP after successful verification
 
     await this.userService.clearOTP(user.id);
+
+    return this.login(user);
+  }
+
+  async adminLogin(dto: LoginDto) {
+    const user = await this.userService.findByPhoneAndPass(dto);
+
+    if (!user) throw NotFoundException;
+
+    if (user.role !== Role.SUPER_ADMIN) {
+      throw BadRequestException;
+    }
 
     return this.login(user);
   }

@@ -4,25 +4,43 @@ import { Repository } from 'typeorm';
 import { User } from '../user/entities/user.entity';
 import { Business } from '../business/entities/business.entity';
 import { Service } from '../service/entities/service.entity';
+import { Role } from 'src/common/enums/role.enum';
+import { FileModuleDependencyService } from 'src/common/models/model';
+import { ServiceService } from 'src/service/service.service';
+import { Entities } from 'src/common/enums/entities.enum';
+import {
+  defaultFileServiceConfig,
+  StorageProfile,
+  StorageProfileConfig,
+} from './config/file.config';
 
 @Injectable()
 export class DynamicEntityService {
   private allowedEntities: Record<
-    string,
-    { repo: Repository<any>; fileField: string }
+    Entities,
+    {
+      repo: FileModuleDependencyService;
+      fileField: string;
+      storageProfile: StorageProfileConfig;
+    }
   >;
 
-  constructor(
-    @InjectRepository(User) private readonly userRepo: Repository<User>,
-    @InjectRepository(Business)
-    private readonly businessRepo: Repository<Business>,
-    @InjectRepository(Service)
-    private readonly serviceRepo: Repository<Service>,
-  ) {
+  constructor(private readonly serService: ServiceService) {
     this.allowedEntities = {
-      user: { repo: this.userRepo, fileField: 'avatarPath' },
-      business: { repo: this.businessRepo, fileField: 'logoPath' },
-      service: { repo: this.serviceRepo, fileField: 'icon' },
+      // user: { repo: this.userRepo, fileField: 'avatarPath' },
+      // business: { repo: this.businessRepo, fileField: 'logoPath' },
+      business: {
+        repo: undefined as any,
+        fileField: 'logoPath',
+        storageProfile:
+          defaultFileServiceConfig.profiles[StorageProfile.BUSINESS_ASSETS],
+      },
+      service: {
+        repo: this.serService,
+        fileField: 'icon',
+        storageProfile:
+          defaultFileServiceConfig.profiles[StorageProfile.SERVICE_ICONS],
+      },
     };
   }
 
@@ -34,12 +52,20 @@ export class DynamicEntityService {
     return this.allowedEntities[entity.toLowerCase()]?.fileField ?? null;
   }
 
-  getRepository(entity: string): Repository<any> {
+  getRepository(entity: string): FileModuleDependencyService {
     const config = this.allowedEntities[entity.toLowerCase()];
     if (!config) {
       throw new Error(`Invalid entity: ${entity}`);
     }
     return config.repo;
+  }
+  getStorageProfile(entity: string): StorageProfileConfig {
+    const config = this.allowedEntities[entity.toLowerCase()];
+
+    if (!config) {
+      throw new Error(`Invalid entity: ${entity}`);
+    }
+    return config.storageProfile;
   }
 
   isEntityAllowed(entity: string): boolean {

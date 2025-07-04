@@ -8,6 +8,7 @@ import {
   IsUUID,
 } from 'class-validator';
 import { ToBoolean } from 'src/common/decorators/to-boolean';
+import { TimeSlotStatus } from 'src/common/enums/time-slot-status.enum';
 
 export class UpdateTimeslotDto {
   @IsOptional()
@@ -103,6 +104,11 @@ export class GetTimeslotsByDate {
   @ApiProperty()
   @IsDateString()
   date: string;
+  @ApiPropertyOptional({
+    enum: TimeSlotStatus,
+  })
+  @IsOptional()
+  status?: TimeSlotStatus;
 }
 
 export class GetStatusResDto {

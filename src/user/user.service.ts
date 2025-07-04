@@ -1,10 +1,11 @@
 import { Injectable } from '@nestjs/common';
-
 import { InjectRepository } from '@nestjs/typeorm';
-import { User } from './entities/user.entity';
 import { Repository } from 'typeorm';
-import { Role } from 'src/common/enums/role.enum';
 import { CreateUserDto } from './dto/user.dto';
+import { User } from './entities/user.entity';
+
+import { Role } from 'src/common/enums/role.enum';
+import { LoginDto } from 'src/auth/dto/login.dto';
 
 @Injectable()
 export class UserService {
@@ -32,36 +33,39 @@ export class UserService {
 
     return await query.getOne();
   }
-
-  async create(createUserDto: Partial<User>): Promise<User> {
+  async findByPhoneAndPass(dto: LoginDto) {
+    return this.userRepository.findOne({
+      where: {
+        phoneNumber: dto.phoneNumber,
+        password: dto.password,
+      },
+    });
+  }
+  create(createUserDto: CreateUserDto) {
     const user = this.userRepository.create(createUserDto);
-    return await this.userRepository.save(user);
+    return this.userRepository.save(user);
   }
 
-  async findAll(): Promise<User[]> {
-    return await this.userRepository.find();
+  findAll() {
+    return this.userRepository.find();
   }
 
-  async findOne(id: string): Promise<User | null> {
-    return await this.userRepository.findOne({ where: { id } });
+  findOne(id: string) {
+    return this.userRepository.findOne({ where: { id } });
   }
 
-  // async update(
-  //   id: string,
-  //   updateUserDto: UpdateCustomerDto,
-  // ): Promise<User | null> {
-  //   await this.userRepository.update(id, updateUserDto);
-  //   return this.findOne(id);
-  // }
+  update(id: string, updateUserDto: Partial<CreateUserDto>) {
+    return this.userRepository.update(id, updateUserDto);
+  }
+
+  remove(id: string) {
+    return this.userRepository.delete(id);
+  }
 
   async updateRole(id: string, role: Role) {
     await this.userRepository.update(id, {
       role,
     });
-  }
-
-  async remove(id: string): Promise<void> {
-    await this.userRepository.delete(id);
   }
 
   async _create(user: User) {

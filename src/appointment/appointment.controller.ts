@@ -61,4 +61,9 @@ export class AppointmentController {
   getAvailableDateRange(@AuthUser() user: User) {
     return this.appointmentService.getAvailableDateRange(user);
   }
+
+  @Get('lala')
+  lala() {
+    return this.appointmentService.trigger();
+  }
 }
