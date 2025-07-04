@@ -32,8 +32,8 @@ export class Business {
   @JoinColumn()
   userInfo: User;
 
-  @OneToMany(() => Employee, (employee) => employee.business)
-  employees: Employee[];
+  // @OneToMany(() => Employee, (employee) => employee.business)
+  // employees: Employee[];
 
   @OneToMany(() => Timeslot, (timeslot) => timeslot.business)
   timeslots: Timeslot[];
