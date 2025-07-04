@@ -19,9 +19,9 @@ export class Employee {
   @Column()
   fullName: string;
 
-  @ManyToOne(() => Business, (business) => business.employees)
-  @JoinColumn()
-  business: Business;
+  // @ManyToOne(() => Business, (business) => business.employees)
+  // @JoinColumn()
+  // business: Business;
 
   // @OneToMany(() => Appointment, (appointment) => appointment.employee)
   // appointments: Appointment[];
