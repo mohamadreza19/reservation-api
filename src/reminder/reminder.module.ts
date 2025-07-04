@@ -17,6 +17,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => {
         const redisUrl = configService.get<string>('REDIS_URL');
+        console.log('REDIS_URL', redisUrl);
         return {
           redis: redisUrl,
         };
