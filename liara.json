@@ -1,0 +1,8 @@
+{
+  "app": "reservation-api",
+  "port": 3030,
+  "build": {
+    "location": "iran"
+  },
+  "disks": []
+}
