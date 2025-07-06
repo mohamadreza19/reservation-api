@@ -19,7 +19,7 @@ import { createDatabaseConfig } from './factories/database.factory';
           // ssl: {
           //   rejectUnauthorized: false, // Needed for Render
           // },
-          dropSchema: true, // development mode only
+          // dropSchema: true, // development mode only
           autoLoadEntities: true,
           synchronize: true, // Use migrations instead in production
         };

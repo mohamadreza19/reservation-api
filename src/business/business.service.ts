@@ -57,17 +57,19 @@ export class BusinessService {
       });
     }
 
-    return qb
-      .leftJoinAndSelect('business.userInfo', 'user')
-      .leftJoinAndSelect('business.employees', 'employee')
-      .leftJoinAndSelect('business.services', 'service')
-      .getMany();
+    return (
+      qb
+        .leftJoinAndSelect('business.userInfo', 'user')
+        // .leftJoinAndSelect('business.employees', 'employee')
+        .leftJoinAndSelect('business.services', 'service')
+        .getMany()
+    );
   }
 
   async findOne(id: string) {
     const result = this.businessRepo.findOne({
       where: { id },
-      relations: ['userInfo', 'employees', 'services'],
+      relations: ['userInfo'],
     });
 
     return result;

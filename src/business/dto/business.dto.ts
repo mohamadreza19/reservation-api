@@ -50,3 +50,5 @@ export class BusinessProfileDto {
   @ApiProperty({ type: () => CreateUserDto })
   userInfo: CreateUserDto;
 }
+
+export class BusinessLink {}

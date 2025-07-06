@@ -49,7 +49,6 @@ export class AppointmentController {
   })
   getAll(
     @AuthUser() user: User,
-
     @Query() query: AvailableDateRangeDto,
     // @Query() query: any,
   ) {

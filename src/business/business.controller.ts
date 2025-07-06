@@ -60,9 +60,6 @@ export class BusinessController {
   @AuthWithRoles([Role.BUSINESS_ADMIN])
   @ApiOperation({ operationId: 'business_getMyLink' })
   @Get('my-link')
-  @ApiOkResponse({
-    type: 'qwer',
-  })
   getMyLink(@AuthUser() user: User) {
     return this.service.getBusinessLink(user);
   }
