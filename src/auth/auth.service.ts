@@ -21,6 +21,8 @@ import { CustomerService } from 'src/customer/customer.service';
 import { LoginDto } from './dto/login.dto';
 import { report } from 'process';
 import { SmsService } from 'src/common/services';
+import { Customer } from 'src/customer/entities/customer.entity';
+import { Business } from 'src/business/entities/business.entity';
 
 @Injectable()
 export class AuthService {
@@ -64,13 +66,10 @@ export class AuthService {
       userId: user.id,
     };
 
-    user.role == role;
-
-    await this.userService.update(user.id, { role });
     return {
       access_token: this.jwtService.sign(payload),
       isNew: user.isNew,
-      role: user.role,
+      role: role,
     };
   }
 
@@ -132,8 +131,24 @@ export class AuthService {
     if (role === Role.SUPER_ADMIN) {
       throw new BadRequestException("Admin'rule not allowed");
     }
+    let consumer: Customer | Business | null;
+
+    if (role == Role.CUSTOMER) {
+      consumer = await this.customerService.findByUserId(user.id);
+      if (!consumer) {
+        consumer = await this.customerService.create({ userInfo: user });
+      }
+    }
+    if (role == Role.BUSINESS_ADMIN) {
+      consumer = await this.businessService.findByUserId(user.id);
+      if (!consumer) {
+        consumer = await this.businessService.create(user);
+      }
+    }
 
     // Clear OTP after successful verification
+
+    await this.userService.update(user.id, { role });
 
     await this.userService.clearOTP(user.id);
 
