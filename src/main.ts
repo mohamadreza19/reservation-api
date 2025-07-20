@@ -15,9 +15,9 @@ async function bootstrap() {
     }),
   );
   app.enableCors({
-    origin: '*', // Replace with your frontend URL
+    origin: '*',
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
-    credentials: true, // Allow cookies or authentication headers
+    credentials: false, // ✅ This is valid now
     allowedHeaders: 'Content-Type,Authorization',
   });
 
