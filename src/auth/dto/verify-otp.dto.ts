@@ -1,6 +1,7 @@
 // src/auth/dto/verify-otp.dto.ts
-import { IsPhoneNumber, IsString, Length } from 'class-validator';
+import { IsEnum, IsPhoneNumber, IsString, Length } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
+import { Role } from 'src/common/enums/role.enum';
 
 export class VerifyOtpDto {
   @ApiProperty({
@@ -17,4 +18,11 @@ export class VerifyOtpDto {
   @IsString()
   @Length(6, 6, { message: 'OTP must be exactly 6 digits' })
   otp: string;
+
+  @ApiProperty({
+    enum: Role,
+    example: Role.CUSTOMER,
+  })
+  @IsEnum(Role)
+  role: Role;
 }

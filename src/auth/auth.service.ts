@@ -59,11 +59,14 @@ export class AuthService {
     throw new ConflictException('Invalid credentials');
   }
 
-  async login(user: User): Promise<VerifyOtpResponseDto> {
+  async login(user: User, role: Role): Promise<VerifyOtpResponseDto> {
     const payload: Payload = {
       userId: user.id,
     };
 
+    user.role == role;
+
+    await this.userService.update(user.id, { role });
     return {
       access_token: this.jwtService.sign(payload),
       isNew: user.isNew,
@@ -107,6 +110,7 @@ export class AuthService {
   async verifyOTP({
     otp,
     phoneNumber,
+    role,
   }: VerifyOtpDto): Promise<VerifyOtpResponseDto> {
     const user = await this.userService.findByPhoneNumber(
       phoneNumber,
@@ -125,12 +129,15 @@ export class AuthService {
     if (user.otpExpires < new Date()) {
       throw new ConflictException('OTP expired');
     }
+    if (role === Role.SUPER_ADMIN) {
+      throw new BadRequestException("Admin'rule not allowed");
+    }
 
     // Clear OTP after successful verification
 
     await this.userService.clearOTP(user.id);
 
-    return this.login(user);
+    return this.login(user, role);
   }
 
   async adminLogin(dto: LoginDto) {
@@ -142,6 +149,6 @@ export class AuthService {
       throw BadRequestException;
     }
 
-    return this.login(user);
+    return this.login(user, Role.SUPER_ADMIN);
   }
 }
