@@ -41,6 +41,7 @@ export class ScheduleService {
 
   async initiateSchedules(user: User) {
     const business = await this.businessService.findByUserId(user.id);
+    if (!business) throw new NotFoundException('Business not found');
     const existingSchedules = await this.getByBusinessId(business.id);
     if (existingSchedules.length > 0) {
       throw new BadRequestException('schedules already exist');
@@ -71,7 +72,7 @@ export class ScheduleService {
 
   async getSchedules(user: User) {
     const business = await this.businessService.findByUserId(user.id);
-
+    if (!business) throw new NotFoundException('Business not found');
     return this.scheduleRepo.find({
       where: {
         business,
@@ -99,7 +100,7 @@ export class ScheduleService {
 
   async update(id: string, user: User, updateScheduleDto: UpdateScheduleDto) {
     const business = await this.businessService.findByUserId(user.id);
-
+    if (!business) throw new NotFoundException('Business not found');
     let schedule = await this.scheduleRepo.findOne({
       where: {
         id,
@@ -155,7 +156,7 @@ export class ScheduleService {
   }
   async updateSchedulesInterval(data: UpdateIntervalForAllDto, user: User) {
     const business = await this.businessService.findByUserId(user.id);
-
+    if (!business) throw new NotFoundException('Business not found');
     // this.timeslotService.generateTimeslotsFromSchedule()
     // console.log(object);
 

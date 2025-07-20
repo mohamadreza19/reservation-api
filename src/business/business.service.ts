@@ -43,9 +43,10 @@ export class BusinessService {
 
   async update(dto: UpdateBusinessDto, user: User) {
     const business = await this.findByUserId(user.id);
-
-    await this.businessRepo.update(business.id, dto);
-    return this.findOne(business.id);
+    if (business) {
+      await this.businessRepo.update(business.id, dto);
+      return this.findOne(business.id);
+    }
   }
 
   async findAll(filter?: { address?: string }): Promise<Business[]> {
@@ -86,22 +87,20 @@ export class BusinessService {
 
     return business;
   }
-  async findByUserId(userId: string): Promise<Business> {
+  async findByUserId(userId: string): Promise<Business | null> {
     const business = await this.businessRepo.findOne({
       where: { userInfo: { id: userId } },
       relations: ['userInfo'],
     });
-
-    if (!business) {
-      throw new NotFoundException('Business not found for this user');
-    }
 
     return business;
   }
   async getBusinessLink(user: User) {
     const business = await this.findByUserId(user.id);
     const base = process.env.CUSTOMER_URL;
-    return `${base}?businessId=${business.id}`;
+    if (business) {
+      return `${base}?businessId=${business.id}`;
+    }
   }
   async findPublicProfile(id: string): Promise<PublicBusinessDto> {
     const business = await this.businessRepo.findOne({

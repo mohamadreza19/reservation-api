@@ -227,6 +227,7 @@ export class ServiceService
     user: User,
   ) {
     const business = await this.businessService.findByUserId(user.id);
+    if (!business) throw new NotFoundException('Business not found');
     const service = await this.serviceRepo.findOne({
       where: {
         id,
@@ -270,6 +271,7 @@ export class ServiceService
 
   async remove(id: string, user: User) {
     const business = await this.businessService.findByUserId(user.id);
+    if (!business) throw new NotFoundException('Business not found');
     const service = await this.serviceRepo.findOne({
       where: {
         business,

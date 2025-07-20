@@ -268,7 +268,7 @@ export class TimeslotService {
   async getStatus(user: User): Promise<GetStatusResDto> {
     const now = moment().format('YYYY-MM-DD');
     const business = await this.businessService.findByUserId(user.id);
-
+    if (!business) throw new NotFoundException('Business not found');
     const latestTimeSlot = await this.timeslotRepo.findOne({
       where: {
         business,
