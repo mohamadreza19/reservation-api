@@ -88,7 +88,7 @@ export class AuthService {
         role: Role.CUSTOMER,
         userName: phoneNumber,
       });
-      await this.customerService.createByUserId(user.id);
+      // await this.customerService.createByUserId(user.id);
     }
 
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
@@ -151,6 +151,13 @@ export class AuthService {
     await this.userService.update(user.id, { role });
 
     await this.userService.clearOTP(user.id);
+
+    const _user = await this.userService.findByPhoneNumber(
+      phoneNumber,
+      false,
+      true,
+    );
+    console.log(_user);
 
     return this.login(user, role);
   }
