@@ -152,13 +152,6 @@ export class AuthService {
 
     await this.userService.clearOTP(user.id);
 
-    const _user = await this.userService.findByPhoneNumber(
-      phoneNumber,
-      false,
-      true,
-    );
-    console.log(_user);
-
     return this.login(user, role);
   }
 
