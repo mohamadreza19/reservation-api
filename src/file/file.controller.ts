@@ -1,21 +1,14 @@
 import {
+  BadRequestException,
   Controller,
   Get,
-  Post,
   Param,
+  Post,
   Res,
   UploadedFile,
   UseInterceptors,
-  BadRequestException,
 } from '@nestjs/common';
-import { FileService } from './file.service';
-import { Response } from 'express';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { RolesGuard } from 'src/common/guards/roles.guard';
-import { Role } from 'src/common/enums/role.enum';
-import { AuthWithRoles } from 'src/common/decorators/auth.decorator';
-import { AuthUser } from 'src/common/decorators/business.decorators';
-import { User } from 'src/user/entities/user.entity';
 import {
   ApiBody,
   ApiConsumes,
@@ -23,7 +16,13 @@ import {
   ApiOperation,
   ApiParam,
 } from '@nestjs/swagger';
+import { Response } from 'express';
+import { AuthWithRoles } from 'src/common/decorators/auth.decorator';
+import { AuthUser } from 'src/common/decorators/business.decorators';
 import { Entities } from 'src/common/enums/entities.enum';
+import { Role } from 'src/common/enums/role.enum';
+import { User } from 'src/user/entities/user.entity';
+import { FileService } from './file.service';
 
 @Controller('files')
 export class FileController {

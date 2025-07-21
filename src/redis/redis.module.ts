@@ -13,14 +13,7 @@ import { ReminderRedisService } from './services/reminder-redis.service';
       provide: 'REDIS_TIMESLOT_CLIENT',
       useFactory: (configService: ConfigService) => {
         const parsed = new URL(configService.get('REDIS_URL')!);
-        return new Redis({
-          port: Number(parsed.port),
-          host: parsed.hostname,
-          username: parsed.username,
-          password: parsed.password,
-          db: 0,
-          tls: { servername: parsed.hostname },
-        });
+        return new Redis();
       },
       inject: [ConfigService],
     },

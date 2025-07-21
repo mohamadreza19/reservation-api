@@ -105,7 +105,7 @@ export class BusinessService {
       where: { id },
       select: ['id', 'name', 'address'], // Select only public fields
     });
-
+    console.log(id);
     if (!business) {
       throw new NotFoundException('Business not found');
     }

@@ -4,6 +4,7 @@ import { SwaggerFactory } from './swagger/swagger.factory';
 import { ValidationPipe } from '@nestjs/common';
 import { join } from 'path';
 import { NestExpressApplication } from '@nestjs/platform-express';
+import { AllExceptionsFilter } from './common/utils/all-exceptions.filter';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
@@ -33,6 +34,7 @@ async function bootstrap() {
     bearerAuth: true,
     path: 'docs', // Custom path for Swagger UI,
   });
+  app.useGlobalFilters(new AllExceptionsFilter());
   await app.listen(process.env.PORT ?? 3030);
 }
 bootstrap();
