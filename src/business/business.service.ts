@@ -27,19 +27,15 @@ export class BusinessService {
   ) {}
 
   async create(user: User): Promise<Business> {
-    if (user.role == Role.CUSTOMER) {
-      const business = this.businessRepo.create({
-        name: generate(),
-        userInfo: user,
-      });
+    const business = this.businessRepo.create({
+      name: generate(),
+      userInfo: user,
+    });
 
-      const result = await this.businessRepo.save(business);
-      this.userService.updateRole(user.id, Role.BUSINESS_ADMIN);
+    const result = await this.businessRepo.save(business);
+    this.userService.updateRole(user.id, Role.BUSINESS_ADMIN);
 
-      return result;
-    }
-
-    throw new BadRequestException();
+    return result;
   }
 
   async update(dto: UpdateBusinessDto, user: User) {
