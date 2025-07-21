@@ -15,6 +15,7 @@ import {
 import { UserService } from 'src/user/user.service';
 import { Role } from 'src/common/enums/role.enum';
 import shortid, { generate } from 'shortid';
+import { isUUID } from 'class-validator';
 
 // business.service.ts
 @Injectable()
@@ -103,6 +104,7 @@ export class BusinessService {
     }
   }
   async findPublicProfile(id: string): Promise<PublicBusinessDto> {
+    if (!isUUID(id)) throw BadRequestException;
     const business = await this.businessRepo.findOne({
       where: { id },
       select: ['id', 'name', 'address'], // Select only public fields

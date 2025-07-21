@@ -2,6 +2,7 @@ import {
   BadRequestException,
   ConflictException,
   Injectable,
+  InternalServerErrorException,
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -117,42 +118,47 @@ export class AuthService {
       true,
     );
 
-    if (!user || !user.otpCode || !user.otpExpires) {
-      throw new ConflictException('OTP not found or expired');
-    }
-
-    if (user.otpCode !== otp) {
-      throw new ConflictException('Invalid OTP');
-    }
-
-    if (user.otpExpires < new Date()) {
-      throw new ConflictException('OTP expired');
-    }
-    if (role === Role.SUPER_ADMIN) {
-      throw new BadRequestException("Admin'rule not allowed");
-    }
-    let consumer: Customer | Business | null;
-
-    if (role == Role.CUSTOMER) {
-      consumer = await this.customerService.findByUserId(user.id);
-      if (!consumer) {
-        consumer = await this.customerService.create({ userInfo: user });
+    try {
+      if (!user || !user.otpCode || !user.otpExpires) {
+        throw new ConflictException('OTP not found or expired');
       }
-    }
-    if (role == Role.BUSINESS_ADMIN) {
-      consumer = await this.businessService.findByUserId(user.id);
-      if (!consumer) {
-        consumer = await this.businessService.create(user);
+
+      if (user.otpCode !== otp) {
+        throw new ConflictException('Invalid OTP');
       }
+
+      if (user.otpExpires < new Date()) {
+        throw new ConflictException('OTP expired');
+      }
+      if (role === Role.SUPER_ADMIN) {
+        throw new BadRequestException("Admin'rule not allowed");
+      }
+      let consumer: Customer | Business | null;
+
+      if (role == Role.CUSTOMER) {
+        consumer = await this.customerService.findByUserId(user.id);
+        if (!consumer) {
+          consumer = await this.customerService.create({ userInfo: user });
+        }
+      }
+      if (role == Role.BUSINESS_ADMIN) {
+        consumer = await this.businessService.findByUserId(user.id);
+        if (!consumer) {
+          consumer = await this.businessService.create(user);
+        }
+      }
+
+      // Clear OTP after successful verification
+
+      await this.userService.update(user.id, { role });
+
+      await this.userService.clearOTP(user.id);
+
+      return this.login(user, role);
+    } catch (error) {
+      console.log(error);
+      throw InternalServerErrorException;
     }
-
-    // Clear OTP after successful verification
-
-    await this.userService.update(user.id, { role });
-
-    await this.userService.clearOTP(user.id);
-
-    return this.login(user, role);
   }
 
   async adminLogin(dto: LoginDto) {
