@@ -1,53 +1,34 @@
 import {
-  Controller,
-  Get,
-  Post,
   Body,
-  Patch,
-  Param,
+  Controller,
   Delete,
-  Query,
+  Get,
   HttpCode,
-  UseInterceptors,
-  UploadedFile,
+  Param,
+  Patch,
+  Post,
+  Query,
 } from '@nestjs/common';
 import { ServiceService } from './service.service';
 
 import {
-  ApiTags,
   ApiOperation,
-  ApiResponse,
-  ApiParam,
   ApiProperty,
-  ApiBody,
-  ApiConsumes,
+  ApiResponse,
+  ApiTags,
 } from '@nestjs/swagger';
 import { AuthWithRoles } from 'src/common/decorators/auth.decorator';
-import { Role } from 'src/common/enums/role.enum';
 import { AuthUser } from 'src/common/decorators/business.decorators';
+import { Role } from 'src/common/enums/role.enum';
 import { User } from 'src/user/entities/user.entity';
 import {
   CreateServiceDto,
   FindServiceByBusiness,
   FindServicesDto,
   PaginatedServiceDto,
-  ServiceDto,
+  PlanDto,
   UpdateServiceDto,
 } from './dto/service.dto';
-import { FileInterceptor } from '@nestjs/platform-express';
-import { FileService } from 'src/file/file.service';
-import { MulterConfig } from 'src/file/config/multer-config';
-import { StorageProfile } from 'src/file/config/file.config';
-
-class FileUploadDto {
-  @ApiProperty({
-    type: 'string',
-    format: 'binary',
-    description: 'Icon file for the service (JPEG, PNG, SVG)',
-    required: false,
-  })
-  icon?: any; // Swagger doesn't support Express.Multer.File directly
-}
 
 @ApiTags('services')
 @Controller('services')
@@ -78,9 +59,13 @@ export class ServiceController {
     return this.serviceService.findAll(user, dto);
   }
 
-  @Get('system')
+  @Get('plans')
+  @ApiResponse({
+    type: [PlanDto],
+  })
+  @ApiOperation({ operationId: 'services_findAllPlans' })
   get() {
-    // return this.serviceService.findSystemServices();
+    return this.serviceService.findAllPlans();
   }
 
   @Get('business/:businessId')
@@ -123,7 +108,7 @@ export class ServiceController {
     @Body() updateServiceDto: UpdateServiceDto,
     @AuthUser() user: User,
   ) {
-    // return this.serviceService.update(id, updateServiceDto, user);
+    return this.serviceService.updateById(id, updateServiceDto, user);
   }
 
   @Delete(':id')

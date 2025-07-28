@@ -5,10 +5,17 @@ import { Role } from 'src/common/enums/role.enum';
 export class VerifyOtpResponseDto {
   @ApiProperty({
     example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
-    description: 'JWT token if verification succeeds',
+    description: 'JWT access token',
     required: false,
   })
   access_token?: string;
+
+  @ApiProperty({
+    example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
+    description: 'JWT refresh token',
+    required: false,
+  })
+  refresh_token?: string;
 
   @ApiProperty()
   isNew: boolean;

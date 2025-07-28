@@ -1,0 +1,869 @@
+--
+-- PostgreSQL database dump
+--
+
+-- Dumped from database version 16.9 (Ubuntu 16.9-0ubuntu0.24.04.1)
+-- Dumped by pg_dump version 17.5
+
+SET statement_timeout = 0;
+SET lock_timeout = 0;
+SET idle_in_transaction_session_timeout = 0;
+SET transaction_timeout = 0;
+SET client_encoding = 'UTF8';
+SET standard_conforming_strings = on;
+SELECT pg_catalog.set_config('search_path', '', false);
+SET check_function_bodies = false;
+SET xmloption = content;
+SET client_min_messages = warning;
+SET row_security = off;
+
+--
+-- Name: uuid-ossp; Type: EXTENSION; Schema: -; Owner: -
+--
+
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp" WITH SCHEMA public;
+
+
+--
+-- Name: EXTENSION "uuid-ossp"; Type: COMMENT; Schema: -; Owner: 
+--
+
+COMMENT ON EXTENSION "uuid-ossp" IS 'generate universally unique identifiers (UUIDs)';
+
+
+--
+-- Name: schedule_day_enum; Type: TYPE; Schema: public; Owner: postgres
+--
+
+CREATE TYPE public.schedule_day_enum AS ENUM (
+    '1',
+    '2',
+    '3',
+    '4',
+    '5',
+    '6',
+    '7'
+);
+
+
+ALTER TYPE public.schedule_day_enum OWNER TO postgres;
+
+--
+-- Name: user_role_enum; Type: TYPE; Schema: public; Owner: postgres
+--
+
+CREATE TYPE public.user_role_enum AS ENUM (
+    'super_admin',
+    'business_admin',
+    'employee',
+    'customer'
+);
+
+
+ALTER TYPE public.user_role_enum OWNER TO postgres;
+
+SET default_tablespace = '';
+
+SET default_table_access_method = heap;
+
+--
+-- Name: appointment; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.appointment (
+    id uuid DEFAULT public.uuid_generate_v4() NOT NULL,
+    status character varying DEFAULT 'inProcess'::character varying NOT NULL,
+    "customerId" uuid,
+    "serviceId" uuid,
+    "timeslotId" uuid,
+    "businessId" uuid
+);
+
+
+ALTER TABLE public.appointment OWNER TO postgres;
+
+--
+-- Name: business; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.business (
+    id uuid DEFAULT public.uuid_generate_v4() NOT NULL,
+    name character varying,
+    address character varying,
+    "logoPath" character varying,
+    "userInfoId" uuid
+);
+
+
+ALTER TABLE public.business OWNER TO postgres;
+
+--
+-- Name: customer; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.customer (
+    id uuid DEFAULT public.uuid_generate_v4() NOT NULL,
+    "userInfoId" uuid
+);
+
+
+ALTER TABLE public.customer OWNER TO postgres;
+
+--
+-- Name: plan; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.plan (
+    id uuid DEFAULT public.uuid_generate_v4() NOT NULL,
+    name character varying NOT NULL,
+    color character varying
+);
+
+
+ALTER TABLE public.plan OWNER TO postgres;
+
+--
+-- Name: price; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.price (
+    id uuid DEFAULT public.uuid_generate_v4() NOT NULL,
+    amount character varying NOT NULL,
+    "serviceId" uuid
+);
+
+
+ALTER TABLE public.price OWNER TO postgres;
+
+--
+-- Name: schedule; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.schedule (
+    id uuid DEFAULT public.uuid_generate_v4() NOT NULL,
+    day public.schedule_day_enum NOT NULL,
+    "startTime" time without time zone,
+    "endTime" time without time zone,
+    "interval" time without time zone,
+    "isOpen" boolean DEFAULT false NOT NULL,
+    "businessId" uuid NOT NULL
+);
+
+
+ALTER TABLE public.schedule OWNER TO postgres;
+
+--
+-- Name: service; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.service (
+    id uuid DEFAULT public.uuid_generate_v4() NOT NULL,
+    name character varying NOT NULL,
+    description character varying,
+    "isSystemService" boolean DEFAULT false NOT NULL,
+    icon character varying,
+    "businessId" uuid,
+    "parentId" uuid,
+    "planId" uuid
+);
+
+
+ALTER TABLE public.service OWNER TO postgres;
+
+--
+-- Name: service_closure; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.service_closure (
+    id_ancestor uuid NOT NULL,
+    id_descendant uuid NOT NULL
+);
+
+
+ALTER TABLE public.service_closure OWNER TO postgres;
+
+--
+-- Name: timeslot; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.timeslot (
+    id uuid DEFAULT public.uuid_generate_v4() NOT NULL,
+    date character varying NOT NULL,
+    "startTime" character varying NOT NULL,
+    "endTime" character varying NOT NULL,
+    status character varying NOT NULL,
+    "scheduleId" uuid,
+    "businessId" uuid
+);
+
+
+ALTER TABLE public.timeslot OWNER TO postgres;
+
+--
+-- Name: user; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public."user" (
+    id uuid DEFAULT public.uuid_generate_v4() NOT NULL,
+    "userName" character varying,
+    "phoneNumber" character varying NOT NULL,
+    password character varying,
+    role public.user_role_enum DEFAULT 'customer'::public.user_role_enum NOT NULL,
+    "otpCode" character varying,
+    "otpExpires" timestamp without time zone,
+    "isNew" boolean DEFAULT true NOT NULL,
+    "avatarPath" character varying
+);
+
+
+ALTER TABLE public."user" OWNER TO postgres;
+
+--
+-- Data for Name: appointment; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.appointment (id, status, "customerId", "serviceId", "timeslotId", "businessId") FROM stdin;
+07145737-a0bd-4575-91f0-c37e28dab493	done	b60e84b1-2c1d-4c25-a2e1-a57c1cd9cf4c	f4c7e9bf-8be7-4551-82ab-4dd367b9f65a	fe0630c0-23ca-4c18-9c19-73956d09bb80	eb51117d-6e07-48ff-8e58-8aae8a4148a2
+f7a6fbd4-d184-47ed-b212-895904f0ecdd	done	b60e84b1-2c1d-4c25-a2e1-a57c1cd9cf4c	9071a6bd-9ef7-4ec0-ae83-3e1a2d2a509d	dce34da9-a88a-4351-9049-244ad4d449ab	8ab49e6d-a594-4649-9b36-cc74bc8b3f48
+36e5cc24-b77c-427a-9da3-afc5cdcaf68b	done	b60e84b1-2c1d-4c25-a2e1-a57c1cd9cf4c	9071a6bd-9ef7-4ec0-ae83-3e1a2d2a509d	a40d23a1-c3ce-4019-844e-8f4366c94b37	8ab49e6d-a594-4649-9b36-cc74bc8b3f48
+\.
+
+
+--
+-- Data for Name: business; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.business (id, name, address, "logoPath", "userInfoId") FROM stdin;
+8ab49e6d-a594-4649-9b36-cc74bc8b3f48	AR-HzbZJo	\N	\N	42430bec-cf1f-4726-898a-dfae668d051c
+eb51117d-6e07-48ff-8e58-8aae8a4148a2	Elena beauty 	\N	\N	2ca32052-ad7a-4460-9670-b9d3b66af21a
+eda30b55-8570-4e23-9768-2e81a0b6d959	orJTdNKVJ	\N	\N	e90ee872-d43b-4730-8afb-a4346a4b191a
+ec35064d-beb9-4361-add5-8101c0b25f1d	oLDflFC5o	\N	\N	da57552f-bbfe-448a-93a8-901ad5a28953
+\.
+
+
+--
+-- Data for Name: customer; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.customer (id, "userInfoId") FROM stdin;
+89d71c97-fa7a-4a85-8ee3-077cf12317e2	42430bec-cf1f-4726-898a-dfae668d051c
+b60e84b1-2c1d-4c25-a2e1-a57c1cd9cf4c	4e2445cb-73a2-4533-9536-916091166320
+\.
+
+
+--
+-- Data for Name: plan; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.plan (id, name, color) FROM stdin;
+ce014676-605a-44ab-8420-52169a72d21b	اقتصادی	\N
+88c6e2ff-f8a8-4aea-ad53-0a68cbb08189	استاندارد	\N
+a62c0643-f23c-47b8-bb72-8edc91baff54	ویژه	\N
+\.
+
+
+--
+-- Data for Name: price; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.price (id, amount, "serviceId") FROM stdin;
+d9df90b7-e179-49ff-a1b7-847abf52cff7	20000	9071a6bd-9ef7-4ec0-ae83-3e1a2d2a509d
+0dde3e05-ea0b-4d21-ad32-530afb628aea	1000000	f4c7e9bf-8be7-4551-82ab-4dd367b9f65a
+773186ac-a324-437e-94d7-63a4aef13cbc		f04da52d-89cb-45c1-8e83-9d17fa13221c
+\.
+
+
+--
+-- Data for Name: schedule; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.schedule (id, day, "startTime", "endTime", "interval", "isOpen", "businessId") FROM stdin;
+a55e5c8f-b1ec-451a-9b62-68e0446e581c	1	09:00:00	17:00:00	00:35:00	t	8ab49e6d-a594-4649-9b36-cc74bc8b3f48
+3b2ad4b5-1418-440d-ac66-5a77ae6a9cec	2	09:00:00	17:00:00	00:35:00	t	8ab49e6d-a594-4649-9b36-cc74bc8b3f48
+4a8a2dd8-e03a-479f-8a6e-003badcd6d1f	3	09:00:00	17:00:00	00:35:00	t	8ab49e6d-a594-4649-9b36-cc74bc8b3f48
+006b5a6f-fdd9-4078-8be1-8989a763652a	4	09:00:00	17:00:00	00:35:00	t	8ab49e6d-a594-4649-9b36-cc74bc8b3f48
+efd1df77-eedf-4cc1-aab6-d49dfa1483e4	5	09:00:00	17:00:00	00:35:00	t	8ab49e6d-a594-4649-9b36-cc74bc8b3f48
+26fef49c-412f-49d5-bce5-377810b13a73	6	09:00:00	17:00:00	00:35:00	t	8ab49e6d-a594-4649-9b36-cc74bc8b3f48
+204b91c3-83bc-4a10-b59a-fe8a59be9618	7	\N	\N	00:35:00	f	8ab49e6d-a594-4649-9b36-cc74bc8b3f48
+cef67601-6216-46bb-a6d0-1230ce30c5dd	1	09:00:00	17:00:00	00:35:00	t	eb51117d-6e07-48ff-8e58-8aae8a4148a2
+3da8a214-f51b-4f9f-a368-beccafb8331b	3	09:00:00	17:00:00	00:35:00	t	eb51117d-6e07-48ff-8e58-8aae8a4148a2
+ca0f8c15-c23b-4cb7-b6e7-c3f2eb094b3a	4	09:00:00	17:00:00	00:35:00	t	eb51117d-6e07-48ff-8e58-8aae8a4148a2
+467d8eee-d378-44ff-8650-b4415ad3a6a5	5	09:00:00	17:00:00	00:35:00	t	eb51117d-6e07-48ff-8e58-8aae8a4148a2
+84d54287-4f1f-4629-92d3-d56d4f46e318	6	09:00:00	17:00:00	00:35:00	t	eb51117d-6e07-48ff-8e58-8aae8a4148a2
+a2a2cb9f-1cb6-43f6-8bf1-ba71c11cb47b	7	\N	\N	00:35:00	f	eb51117d-6e07-48ff-8e58-8aae8a4148a2
+f4946706-be6a-4245-80dd-7e028d38e014	2	09:00:00	17:00:00	00:35:00	t	eb51117d-6e07-48ff-8e58-8aae8a4148a2
+\.
+
+
+--
+-- Data for Name: service; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.service (id, name, description, "isSystemService", icon, "businessId", "parentId", "planId") FROM stdin;
+1c52c685-9a78-460e-9224-eb21e9092f99	میکاپ	\N	t	358ffcf1-9722-4b78-8f4c-2f00b98eeb17.png	\N	\N	\N
+a3475bcb-ace7-4cc3-8705-991fe403ae09	مو	\N	t	b0f784ec-ce70-4252-885d-29ce41dfc04d.png	\N	\N	\N
+9071a6bd-9ef7-4ec0-ae83-3e1a2d2a509d	تست۱		f	\N	8ab49e6d-a594-4649-9b36-cc74bc8b3f48	1c52c685-9a78-460e-9224-eb21e9092f99	\N
+f4c7e9bf-8be7-4551-82ab-4dd367b9f65a	رنگ مو		f	\N	eb51117d-6e07-48ff-8e58-8aae8a4148a2	a3475bcb-ace7-4cc3-8705-991fe403ae09	\N
+f04da52d-89cb-45c1-8e83-9d17fa13221c			f	\N	ec35064d-beb9-4361-add5-8101c0b25f1d	1c52c685-9a78-460e-9224-eb21e9092f99	\N
+\.
+
+
+--
+-- Data for Name: service_closure; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.service_closure (id_ancestor, id_descendant) FROM stdin;
+9071a6bd-9ef7-4ec0-ae83-3e1a2d2a509d	9071a6bd-9ef7-4ec0-ae83-3e1a2d2a509d
+f4c7e9bf-8be7-4551-82ab-4dd367b9f65a	f4c7e9bf-8be7-4551-82ab-4dd367b9f65a
+f04da52d-89cb-45c1-8e83-9d17fa13221c	f04da52d-89cb-45c1-8e83-9d17fa13221c
+\.
+
+
+--
+-- Data for Name: timeslot; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.timeslot (id, date, "startTime", "endTime", status, "scheduleId", "businessId") FROM stdin;
+2859071f-109d-4be7-aa68-87592e97c478	2025-07-22	09:35	10:10	idle	006b5a6f-fdd9-4078-8be1-8989a763652a	8ab49e6d-a594-4649-9b36-cc74bc8b3f48
+11fe6a8a-9455-46f8-8d42-f7716452296c	2025-07-22	10:10	10:45	idle	006b5a6f-fdd9-4078-8be1-8989a763652a	8ab49e6d-a594-4649-9b36-cc74bc8b3f48
+e4c62dfd-ccc7-46f5-89a9-bdfc6fff2f08	2025-07-22	10:45	11:20	idle	006b5a6f-fdd9-4078-8be1-8989a763652a	8ab49e6d-a594-4649-9b36-cc74bc8b3f48
+b365c4b9-7c7a-4757-aee9-cdf03e8b2476	2025-07-22	11:20	11:55	idle	006b5a6f-fdd9-4078-8be1-8989a763652a	8ab49e6d-a594-4649-9b36-cc74bc8b3f48
+d61926f1-5b50-41ee-bd75-3f3565b1a0de	2025-07-22	12:30	13:05	idle	006b5a6f-fdd9-4078-8be1-8989a763652a	8ab49e6d-a594-4649-9b36-cc74bc8b3f48
+8e4836a1-9212-44ff-97d3-9e96542802a6	2025-07-22	13:05	13:40	idle	006b5a6f-fdd9-4078-8be1-8989a763652a	8ab49e6d-a594-4649-9b36-cc74bc8b3f48
+5f34653b-b53d-4a3e-9f10-103db7869846	2025-07-22	13:40	14:15	idle	006b5a6f-fdd9-4078-8be1-8989a763652a	8ab49e6d-a594-4649-9b36-cc74bc8b3f48
+b0304d10-9367-4cbc-8d5a-4fc437e9c209	2025-07-22	14:15	14:50	idle	006b5a6f-fdd9-4078-8be1-8989a763652a	8ab49e6d-a594-4649-9b36-cc74bc8b3f48
+d76a2723-c050-4276-aa56-ec852a021d4d	2025-07-22	14:50	15:25	idle	006b5a6f-fdd9-4078-8be1-8989a763652a	8ab49e6d-a594-4649-9b36-cc74bc8b3f48
+3ecc3d52-6ca8-4e61-812b-01da17d30293	2025-07-22	15:25	16:00	idle	006b5a6f-fdd9-4078-8be1-8989a763652a	8ab49e6d-a594-4649-9b36-cc74bc8b3f48
+b142648c-0177-4138-a67e-c1af6098ff31	2025-07-22	16:00	16:35	idle	006b5a6f-fdd9-4078-8be1-8989a763652a	8ab49e6d-a594-4649-9b36-cc74bc8b3f48
+2ab7ab4f-0715-4611-b0c5-5f98c8b85922	2025-07-23	09:00	09:35	idle	efd1df77-eedf-4cc1-aab6-d49dfa1483e4	8ab49e6d-a594-4649-9b36-cc74bc8b3f48
+d07f4e68-e9d8-42e7-96d4-a48a59a5b10e	2025-07-23	09:35	10:10	idle	efd1df77-eedf-4cc1-aab6-d49dfa1483e4	8ab49e6d-a594-4649-9b36-cc74bc8b3f48
+fc5fbee7-529b-4047-a3aa-d067c0b1c9af	2025-07-23	10:10	10:45	idle	efd1df77-eedf-4cc1-aab6-d49dfa1483e4	8ab49e6d-a594-4649-9b36-cc74bc8b3f48
+8a45fecc-5e55-4603-96c9-571aaf6f9fd3	2025-07-23	10:45	11:20	idle	efd1df77-eedf-4cc1-aab6-d49dfa1483e4	8ab49e6d-a594-4649-9b36-cc74bc8b3f48
+4abebc50-7651-4789-b355-4379fabad4dd	2025-07-23	11:20	11:55	idle	efd1df77-eedf-4cc1-aab6-d49dfa1483e4	8ab49e6d-a594-4649-9b36-cc74bc8b3f48
+b83b5b16-c92a-416a-b5d0-9a0971241769	2025-07-23	11:55	12:30	idle	efd1df77-eedf-4cc1-aab6-d49dfa1483e4	8ab49e6d-a594-4649-9b36-cc74bc8b3f48
+d5cda0cd-8d80-437c-9907-bf140bd3ceda	2025-07-23	12:30	13:05	idle	efd1df77-eedf-4cc1-aab6-d49dfa1483e4	8ab49e6d-a594-4649-9b36-cc74bc8b3f48
+f7be30b7-5b9b-4d53-80ff-fe02ab33101a	2025-07-23	13:05	13:40	idle	efd1df77-eedf-4cc1-aab6-d49dfa1483e4	8ab49e6d-a594-4649-9b36-cc74bc8b3f48
+4768c5b2-a174-41c0-96fd-8fd9950d6850	2025-07-23	13:40	14:15	idle	efd1df77-eedf-4cc1-aab6-d49dfa1483e4	8ab49e6d-a594-4649-9b36-cc74bc8b3f48
+c2ecfc41-cea7-48fc-b60b-6189f7862ce1	2025-07-23	14:15	14:50	idle	efd1df77-eedf-4cc1-aab6-d49dfa1483e4	8ab49e6d-a594-4649-9b36-cc74bc8b3f48
+a8926e6d-62c0-434a-bf3f-4866e1774064	2025-07-23	14:50	15:25	idle	efd1df77-eedf-4cc1-aab6-d49dfa1483e4	8ab49e6d-a594-4649-9b36-cc74bc8b3f48
+7ffd0c7b-9172-4a42-8f98-f4edd4a96f61	2025-07-23	15:25	16:00	idle	efd1df77-eedf-4cc1-aab6-d49dfa1483e4	8ab49e6d-a594-4649-9b36-cc74bc8b3f48
+2fad22eb-5f4e-4e8d-978b-8c16d4b612b2	2025-07-23	16:00	16:35	idle	efd1df77-eedf-4cc1-aab6-d49dfa1483e4	8ab49e6d-a594-4649-9b36-cc74bc8b3f48
+a457a21b-3341-493f-80f9-afbd386d8575	2025-07-24	09:00	09:35	idle	26fef49c-412f-49d5-bce5-377810b13a73	8ab49e6d-a594-4649-9b36-cc74bc8b3f48
+8838420c-4ff6-42d5-99dc-e8c5d35f6efc	2025-07-24	09:35	10:10	idle	26fef49c-412f-49d5-bce5-377810b13a73	8ab49e6d-a594-4649-9b36-cc74bc8b3f48
+26f0f035-f3e0-4e52-8452-d2699dbbb198	2025-07-24	10:10	10:45	idle	26fef49c-412f-49d5-bce5-377810b13a73	8ab49e6d-a594-4649-9b36-cc74bc8b3f48
+50499cc1-8c9b-4f47-a7f8-784ae8684682	2025-07-24	10:45	11:20	idle	26fef49c-412f-49d5-bce5-377810b13a73	8ab49e6d-a594-4649-9b36-cc74bc8b3f48
+fda522fa-92df-4525-aa4a-3cece46615e8	2025-07-24	11:20	11:55	idle	26fef49c-412f-49d5-bce5-377810b13a73	8ab49e6d-a594-4649-9b36-cc74bc8b3f48
+89602abe-ce8c-4a7b-947d-0d6d763c12fb	2025-07-24	11:55	12:30	idle	26fef49c-412f-49d5-bce5-377810b13a73	8ab49e6d-a594-4649-9b36-cc74bc8b3f48
+b3a23e8f-c262-4784-a137-f53ea31227ee	2025-07-24	12:30	13:05	idle	26fef49c-412f-49d5-bce5-377810b13a73	8ab49e6d-a594-4649-9b36-cc74bc8b3f48
+fdd94832-b3f8-467e-a701-01f0b19fdba7	2025-07-24	13:05	13:40	idle	26fef49c-412f-49d5-bce5-377810b13a73	8ab49e6d-a594-4649-9b36-cc74bc8b3f48
+20aa146c-ffeb-4592-98fd-2cea0b64b912	2025-07-24	13:40	14:15	idle	26fef49c-412f-49d5-bce5-377810b13a73	8ab49e6d-a594-4649-9b36-cc74bc8b3f48
+b3eb246e-26f6-413e-a5e1-4830d9569020	2025-07-24	14:15	14:50	idle	26fef49c-412f-49d5-bce5-377810b13a73	8ab49e6d-a594-4649-9b36-cc74bc8b3f48
+3af1d570-efae-4b42-8dd8-a5a3d5d193e1	2025-07-24	14:50	15:25	idle	26fef49c-412f-49d5-bce5-377810b13a73	8ab49e6d-a594-4649-9b36-cc74bc8b3f48
+c57cd973-6635-4528-8b73-0aedba66465f	2025-07-24	15:25	16:00	idle	26fef49c-412f-49d5-bce5-377810b13a73	8ab49e6d-a594-4649-9b36-cc74bc8b3f48
+cc0869f6-9077-446e-8952-8452cbff3551	2025-07-24	16:00	16:35	idle	26fef49c-412f-49d5-bce5-377810b13a73	8ab49e6d-a594-4649-9b36-cc74bc8b3f48
+70714899-5501-4dbd-8258-d9eeb09bb2a8	2025-07-26	09:00	09:35	idle	a55e5c8f-b1ec-451a-9b62-68e0446e581c	8ab49e6d-a594-4649-9b36-cc74bc8b3f48
+dec172cd-84f5-4311-b89f-f03af4d0ad0c	2025-07-26	09:35	10:10	idle	a55e5c8f-b1ec-451a-9b62-68e0446e581c	8ab49e6d-a594-4649-9b36-cc74bc8b3f48
+6651f114-8f91-427c-b2d1-d8fa759102ee	2025-07-26	10:10	10:45	idle	a55e5c8f-b1ec-451a-9b62-68e0446e581c	8ab49e6d-a594-4649-9b36-cc74bc8b3f48
+0396b2d9-736c-4a4c-a05d-f3205936e3b1	2025-07-26	10:45	11:20	idle	a55e5c8f-b1ec-451a-9b62-68e0446e581c	8ab49e6d-a594-4649-9b36-cc74bc8b3f48
+0831dc6e-e9bf-41a5-b47e-fa1bfc2794a6	2025-07-26	11:20	11:55	idle	a55e5c8f-b1ec-451a-9b62-68e0446e581c	8ab49e6d-a594-4649-9b36-cc74bc8b3f48
+02b636f6-41c8-4606-9d44-588c63eba27f	2025-07-26	11:55	12:30	idle	a55e5c8f-b1ec-451a-9b62-68e0446e581c	8ab49e6d-a594-4649-9b36-cc74bc8b3f48
+9348529b-2952-43f1-9c90-45841ac810cd	2025-07-26	12:30	13:05	idle	a55e5c8f-b1ec-451a-9b62-68e0446e581c	8ab49e6d-a594-4649-9b36-cc74bc8b3f48
+e9218991-535c-4b28-b9ca-fea379c96920	2025-07-26	13:05	13:40	idle	a55e5c8f-b1ec-451a-9b62-68e0446e581c	8ab49e6d-a594-4649-9b36-cc74bc8b3f48
+bb0d857e-f0a3-42f6-b462-efe4498b57c9	2025-07-26	13:40	14:15	idle	a55e5c8f-b1ec-451a-9b62-68e0446e581c	8ab49e6d-a594-4649-9b36-cc74bc8b3f48
+180de357-d993-4d73-8c10-3188f9ac4be2	2025-07-26	14:15	14:50	idle	a55e5c8f-b1ec-451a-9b62-68e0446e581c	8ab49e6d-a594-4649-9b36-cc74bc8b3f48
+df012c33-ec2b-4bd1-aede-6fe8e2139514	2025-07-26	14:50	15:25	idle	a55e5c8f-b1ec-451a-9b62-68e0446e581c	8ab49e6d-a594-4649-9b36-cc74bc8b3f48
+b689033c-f371-4e89-b953-847857ca90be	2025-07-26	15:25	16:00	idle	a55e5c8f-b1ec-451a-9b62-68e0446e581c	8ab49e6d-a594-4649-9b36-cc74bc8b3f48
+e348f4f7-1667-4599-9719-271b792dfe81	2025-07-26	16:00	16:35	idle	a55e5c8f-b1ec-451a-9b62-68e0446e581c	8ab49e6d-a594-4649-9b36-cc74bc8b3f48
+18e7d144-057c-4e10-aceb-08a76a825f52	2025-07-27	09:00	09:35	idle	3b2ad4b5-1418-440d-ac66-5a77ae6a9cec	8ab49e6d-a594-4649-9b36-cc74bc8b3f48
+40b92e3a-82b9-457c-9690-9fda82921cd8	2025-07-27	09:35	10:10	idle	3b2ad4b5-1418-440d-ac66-5a77ae6a9cec	8ab49e6d-a594-4649-9b36-cc74bc8b3f48
+f2c652a0-2373-4877-83b9-aa5874431e2e	2025-07-27	10:10	10:45	idle	3b2ad4b5-1418-440d-ac66-5a77ae6a9cec	8ab49e6d-a594-4649-9b36-cc74bc8b3f48
+5e5b4ece-ee66-4d1b-b266-2f1df7272f4e	2025-07-27	10:45	11:20	idle	3b2ad4b5-1418-440d-ac66-5a77ae6a9cec	8ab49e6d-a594-4649-9b36-cc74bc8b3f48
+09020a30-eea1-4dd6-b387-bb369abe5a25	2025-07-27	11:20	11:55	idle	3b2ad4b5-1418-440d-ac66-5a77ae6a9cec	8ab49e6d-a594-4649-9b36-cc74bc8b3f48
+ac8b2173-fc9b-4712-843f-b72605a869e9	2025-07-27	11:55	12:30	idle	3b2ad4b5-1418-440d-ac66-5a77ae6a9cec	8ab49e6d-a594-4649-9b36-cc74bc8b3f48
+954bcbfc-7b7b-4c7b-a8ff-65b55ccdab57	2025-07-27	12:30	13:05	idle	3b2ad4b5-1418-440d-ac66-5a77ae6a9cec	8ab49e6d-a594-4649-9b36-cc74bc8b3f48
+42f0c08e-3f67-4b5f-9d9b-cccb4e5754ef	2025-07-27	13:05	13:40	idle	3b2ad4b5-1418-440d-ac66-5a77ae6a9cec	8ab49e6d-a594-4649-9b36-cc74bc8b3f48
+2954a08e-04f7-43d4-9f6b-d1c6eace3ae5	2025-07-27	13:40	14:15	idle	3b2ad4b5-1418-440d-ac66-5a77ae6a9cec	8ab49e6d-a594-4649-9b36-cc74bc8b3f48
+c545b38c-7e63-4d27-b056-d0d7996cd699	2025-07-27	14:15	14:50	idle	3b2ad4b5-1418-440d-ac66-5a77ae6a9cec	8ab49e6d-a594-4649-9b36-cc74bc8b3f48
+c1ea613c-0e1b-4bbc-b483-122940ae97c7	2025-07-27	14:50	15:25	idle	3b2ad4b5-1418-440d-ac66-5a77ae6a9cec	8ab49e6d-a594-4649-9b36-cc74bc8b3f48
+ca9ede5e-74d9-435c-b109-618597093864	2025-07-27	15:25	16:00	idle	3b2ad4b5-1418-440d-ac66-5a77ae6a9cec	8ab49e6d-a594-4649-9b36-cc74bc8b3f48
+31de3ea1-bd5a-46c6-b049-29843fb453d5	2025-07-27	16:00	16:35	idle	3b2ad4b5-1418-440d-ac66-5a77ae6a9cec	8ab49e6d-a594-4649-9b36-cc74bc8b3f48
+66317b6d-59b3-4bbc-8892-a87348e2f806	2025-07-28	09:00	09:35	idle	4a8a2dd8-e03a-479f-8a6e-003badcd6d1f	8ab49e6d-a594-4649-9b36-cc74bc8b3f48
+5057c2c2-e0c4-472b-abc3-e21636edd428	2025-07-28	09:35	10:10	idle	4a8a2dd8-e03a-479f-8a6e-003badcd6d1f	8ab49e6d-a594-4649-9b36-cc74bc8b3f48
+e2d194a0-885c-478e-a980-a45f3fb8e6dd	2025-07-28	10:10	10:45	idle	4a8a2dd8-e03a-479f-8a6e-003badcd6d1f	8ab49e6d-a594-4649-9b36-cc74bc8b3f48
+d8704e3a-8c60-4a72-a9da-1309d427f46e	2025-07-28	10:45	11:20	idle	4a8a2dd8-e03a-479f-8a6e-003badcd6d1f	8ab49e6d-a594-4649-9b36-cc74bc8b3f48
+b365c6bc-c91f-4def-afc0-7d00f81f19bf	2025-07-28	11:20	11:55	idle	4a8a2dd8-e03a-479f-8a6e-003badcd6d1f	8ab49e6d-a594-4649-9b36-cc74bc8b3f48
+ad129668-1726-4a55-b64a-5d174d07bee8	2025-07-28	11:55	12:30	idle	4a8a2dd8-e03a-479f-8a6e-003badcd6d1f	8ab49e6d-a594-4649-9b36-cc74bc8b3f48
+17bb2ecb-66ad-4e5e-a4b6-f86474dcc97e	2025-07-28	12:30	13:05	idle	4a8a2dd8-e03a-479f-8a6e-003badcd6d1f	8ab49e6d-a594-4649-9b36-cc74bc8b3f48
+417238ec-0a21-4039-bfba-b5c7732f3656	2025-07-28	13:05	13:40	idle	4a8a2dd8-e03a-479f-8a6e-003badcd6d1f	8ab49e6d-a594-4649-9b36-cc74bc8b3f48
+2429b68a-6282-427a-8aca-7bb4e4cf42ba	2025-07-28	13:40	14:15	idle	4a8a2dd8-e03a-479f-8a6e-003badcd6d1f	8ab49e6d-a594-4649-9b36-cc74bc8b3f48
+8e75aa8f-e515-4208-b825-1b879796c145	2025-07-28	14:15	14:50	idle	4a8a2dd8-e03a-479f-8a6e-003badcd6d1f	8ab49e6d-a594-4649-9b36-cc74bc8b3f48
+dce34da9-a88a-4351-9049-244ad4d449ab	2025-07-22	09:00	09:35	booked	006b5a6f-fdd9-4078-8be1-8989a763652a	8ab49e6d-a594-4649-9b36-cc74bc8b3f48
+6814356d-7fe7-41b4-9c3e-265b7562a9e4	2025-07-28	14:50	15:25	idle	4a8a2dd8-e03a-479f-8a6e-003badcd6d1f	8ab49e6d-a594-4649-9b36-cc74bc8b3f48
+8c851560-4529-48f1-b162-d32ab6a72a44	2025-07-28	15:25	16:00	idle	4a8a2dd8-e03a-479f-8a6e-003badcd6d1f	8ab49e6d-a594-4649-9b36-cc74bc8b3f48
+65869bac-eca1-4854-9603-03e4cffe430e	2025-07-28	16:00	16:35	idle	4a8a2dd8-e03a-479f-8a6e-003badcd6d1f	8ab49e6d-a594-4649-9b36-cc74bc8b3f48
+dc5df1b2-91ee-4231-bb41-ef93d4442dda	2025-07-29	09:00	09:35	idle	006b5a6f-fdd9-4078-8be1-8989a763652a	8ab49e6d-a594-4649-9b36-cc74bc8b3f48
+a9b7656d-612e-4b4e-b0ee-04bc7d4ed933	2025-07-29	09:35	10:10	idle	006b5a6f-fdd9-4078-8be1-8989a763652a	8ab49e6d-a594-4649-9b36-cc74bc8b3f48
+3318a418-b385-4a92-9f37-d33801b2224a	2025-07-29	10:10	10:45	idle	006b5a6f-fdd9-4078-8be1-8989a763652a	8ab49e6d-a594-4649-9b36-cc74bc8b3f48
+308c9c5e-2bee-4a83-a7e6-c5066daf3ebb	2025-07-29	10:45	11:20	idle	006b5a6f-fdd9-4078-8be1-8989a763652a	8ab49e6d-a594-4649-9b36-cc74bc8b3f48
+7471e453-4dee-4119-9f9a-e8639231d4b4	2025-07-29	11:20	11:55	idle	006b5a6f-fdd9-4078-8be1-8989a763652a	8ab49e6d-a594-4649-9b36-cc74bc8b3f48
+ac2f1905-6c92-4d40-922a-973b041bf192	2025-07-29	11:55	12:30	idle	006b5a6f-fdd9-4078-8be1-8989a763652a	8ab49e6d-a594-4649-9b36-cc74bc8b3f48
+97ab60ba-f115-408e-a865-ae3e5e2b1793	2025-07-29	12:30	13:05	idle	006b5a6f-fdd9-4078-8be1-8989a763652a	8ab49e6d-a594-4649-9b36-cc74bc8b3f48
+5edca1a6-2323-4422-b9b8-59f70e25bd22	2025-07-29	13:05	13:40	idle	006b5a6f-fdd9-4078-8be1-8989a763652a	8ab49e6d-a594-4649-9b36-cc74bc8b3f48
+22435bfc-833d-428f-a7b4-0ba47d8635cf	2025-07-29	13:40	14:15	idle	006b5a6f-fdd9-4078-8be1-8989a763652a	8ab49e6d-a594-4649-9b36-cc74bc8b3f48
+d847247f-05f4-4284-af8f-44dcbe33d777	2025-07-29	14:15	14:50	idle	006b5a6f-fdd9-4078-8be1-8989a763652a	8ab49e6d-a594-4649-9b36-cc74bc8b3f48
+799d8a6b-1669-4412-9ec5-e9523485f5c6	2025-07-29	14:50	15:25	idle	006b5a6f-fdd9-4078-8be1-8989a763652a	8ab49e6d-a594-4649-9b36-cc74bc8b3f48
+0c72b526-805f-4eec-b37f-d6eeeb85375b	2025-07-29	15:25	16:00	idle	006b5a6f-fdd9-4078-8be1-8989a763652a	8ab49e6d-a594-4649-9b36-cc74bc8b3f48
+500091c4-3212-4d8d-80f2-8c4d4391f885	2025-07-29	16:00	16:35	idle	006b5a6f-fdd9-4078-8be1-8989a763652a	8ab49e6d-a594-4649-9b36-cc74bc8b3f48
+0ef57f89-57a2-4e62-b69a-f15a777d211a	2025-07-30	09:00	09:35	idle	efd1df77-eedf-4cc1-aab6-d49dfa1483e4	8ab49e6d-a594-4649-9b36-cc74bc8b3f48
+bf48644a-eab8-44b8-872d-710781836a95	2025-07-30	09:35	10:10	idle	efd1df77-eedf-4cc1-aab6-d49dfa1483e4	8ab49e6d-a594-4649-9b36-cc74bc8b3f48
+a0f49d75-ff67-4386-97de-ea8a404bf41d	2025-07-30	10:10	10:45	idle	efd1df77-eedf-4cc1-aab6-d49dfa1483e4	8ab49e6d-a594-4649-9b36-cc74bc8b3f48
+9a25c60e-3bdd-4914-a554-da2590a08013	2025-07-30	10:45	11:20	idle	efd1df77-eedf-4cc1-aab6-d49dfa1483e4	8ab49e6d-a594-4649-9b36-cc74bc8b3f48
+143155d9-1f5d-4878-b80b-4f067e36cc1e	2025-07-30	11:20	11:55	idle	efd1df77-eedf-4cc1-aab6-d49dfa1483e4	8ab49e6d-a594-4649-9b36-cc74bc8b3f48
+1685453f-417d-42c3-ad53-1f323422507f	2025-07-30	11:55	12:30	idle	efd1df77-eedf-4cc1-aab6-d49dfa1483e4	8ab49e6d-a594-4649-9b36-cc74bc8b3f48
+d432d2aa-f436-43b9-b23d-fdeb3214c8b6	2025-07-30	12:30	13:05	idle	efd1df77-eedf-4cc1-aab6-d49dfa1483e4	8ab49e6d-a594-4649-9b36-cc74bc8b3f48
+ce9a4950-da28-4de1-90a4-f3c897eb07c2	2025-07-30	13:05	13:40	idle	efd1df77-eedf-4cc1-aab6-d49dfa1483e4	8ab49e6d-a594-4649-9b36-cc74bc8b3f48
+48f42f38-7a88-4298-8129-3af0fade178c	2025-07-30	13:40	14:15	idle	efd1df77-eedf-4cc1-aab6-d49dfa1483e4	8ab49e6d-a594-4649-9b36-cc74bc8b3f48
+f0b96976-d42f-43ce-bcfa-26e8733cf9f2	2025-07-30	14:15	14:50	idle	efd1df77-eedf-4cc1-aab6-d49dfa1483e4	8ab49e6d-a594-4649-9b36-cc74bc8b3f48
+95706fd0-2558-4f65-a652-b16b1985299d	2025-07-30	14:50	15:25	idle	efd1df77-eedf-4cc1-aab6-d49dfa1483e4	8ab49e6d-a594-4649-9b36-cc74bc8b3f48
+2c50efac-14e0-497e-8704-20603b5eb6b5	2025-07-30	15:25	16:00	idle	efd1df77-eedf-4cc1-aab6-d49dfa1483e4	8ab49e6d-a594-4649-9b36-cc74bc8b3f48
+2e0800c7-9866-4995-aa93-d75588f1fd63	2025-07-30	16:00	16:35	idle	efd1df77-eedf-4cc1-aab6-d49dfa1483e4	8ab49e6d-a594-4649-9b36-cc74bc8b3f48
+88401c57-83ee-4cb1-bc4f-15d4eb45a286	2025-07-31	09:00	09:35	idle	26fef49c-412f-49d5-bce5-377810b13a73	8ab49e6d-a594-4649-9b36-cc74bc8b3f48
+26aee25d-7323-41f2-b4d2-91dff8f6e614	2025-07-31	09:35	10:10	idle	26fef49c-412f-49d5-bce5-377810b13a73	8ab49e6d-a594-4649-9b36-cc74bc8b3f48
+cd86efa2-db60-4227-9f83-4fcf341bd8ed	2025-07-31	10:10	10:45	idle	26fef49c-412f-49d5-bce5-377810b13a73	8ab49e6d-a594-4649-9b36-cc74bc8b3f48
+e5a2db17-ec95-427a-af2a-1be3acb696c6	2025-07-31	10:45	11:20	idle	26fef49c-412f-49d5-bce5-377810b13a73	8ab49e6d-a594-4649-9b36-cc74bc8b3f48
+22b1d931-cc50-4523-86f2-77c42503b8eb	2025-07-31	11:20	11:55	idle	26fef49c-412f-49d5-bce5-377810b13a73	8ab49e6d-a594-4649-9b36-cc74bc8b3f48
+69a9cd51-ec43-4169-9c8b-54689762eb07	2025-07-31	11:55	12:30	idle	26fef49c-412f-49d5-bce5-377810b13a73	8ab49e6d-a594-4649-9b36-cc74bc8b3f48
+93c1c737-0110-4fc5-89e3-275a164aaa1b	2025-07-31	12:30	13:05	idle	26fef49c-412f-49d5-bce5-377810b13a73	8ab49e6d-a594-4649-9b36-cc74bc8b3f48
+5cd0a2d3-d0ed-4542-a367-d46c6d908597	2025-07-31	13:05	13:40	idle	26fef49c-412f-49d5-bce5-377810b13a73	8ab49e6d-a594-4649-9b36-cc74bc8b3f48
+88e19b26-b5e6-4831-80cd-38230a987294	2025-07-31	13:40	14:15	idle	26fef49c-412f-49d5-bce5-377810b13a73	8ab49e6d-a594-4649-9b36-cc74bc8b3f48
+128150ee-a7bb-447e-9ac0-ba20f1d6766a	2025-07-31	14:15	14:50	idle	26fef49c-412f-49d5-bce5-377810b13a73	8ab49e6d-a594-4649-9b36-cc74bc8b3f48
+2fa277ee-2a67-4ba6-b8a7-ca9c1b3177e4	2025-07-31	14:50	15:25	idle	26fef49c-412f-49d5-bce5-377810b13a73	8ab49e6d-a594-4649-9b36-cc74bc8b3f48
+16ac9198-8ed0-4545-954a-195cf4aa16d7	2025-07-31	15:25	16:00	idle	26fef49c-412f-49d5-bce5-377810b13a73	8ab49e6d-a594-4649-9b36-cc74bc8b3f48
+fb129154-3b5f-4ee0-ac00-ec0b74291572	2025-07-31	16:00	16:35	idle	26fef49c-412f-49d5-bce5-377810b13a73	8ab49e6d-a594-4649-9b36-cc74bc8b3f48
+7dd84718-d89d-46f1-86e9-230a47e23705	2025-08-02	09:00	09:35	idle	a55e5c8f-b1ec-451a-9b62-68e0446e581c	8ab49e6d-a594-4649-9b36-cc74bc8b3f48
+6d5f90f2-33c9-4899-93c3-fc9a42fed619	2025-08-02	09:35	10:10	idle	a55e5c8f-b1ec-451a-9b62-68e0446e581c	8ab49e6d-a594-4649-9b36-cc74bc8b3f48
+3870dbf1-e405-4614-bfda-626e5c243c9f	2025-08-02	10:10	10:45	idle	a55e5c8f-b1ec-451a-9b62-68e0446e581c	8ab49e6d-a594-4649-9b36-cc74bc8b3f48
+1e5f444b-18bc-42e6-afc9-0d323c387a34	2025-08-02	10:45	11:20	idle	a55e5c8f-b1ec-451a-9b62-68e0446e581c	8ab49e6d-a594-4649-9b36-cc74bc8b3f48
+1cab9d7c-432f-4fbc-9b4a-5e6da7f775de	2025-08-02	11:20	11:55	idle	a55e5c8f-b1ec-451a-9b62-68e0446e581c	8ab49e6d-a594-4649-9b36-cc74bc8b3f48
+26810d22-237d-425e-8535-9b1be90a6872	2025-08-02	11:55	12:30	idle	a55e5c8f-b1ec-451a-9b62-68e0446e581c	8ab49e6d-a594-4649-9b36-cc74bc8b3f48
+36580fe5-bb28-428f-be20-50a5d4892a37	2025-08-02	12:30	13:05	idle	a55e5c8f-b1ec-451a-9b62-68e0446e581c	8ab49e6d-a594-4649-9b36-cc74bc8b3f48
+319ee43a-3b4a-49db-b849-fda0ef95acf3	2025-08-02	13:05	13:40	idle	a55e5c8f-b1ec-451a-9b62-68e0446e581c	8ab49e6d-a594-4649-9b36-cc74bc8b3f48
+aad0cc93-8ff5-4452-a223-a3270aac037e	2025-08-02	13:40	14:15	idle	a55e5c8f-b1ec-451a-9b62-68e0446e581c	8ab49e6d-a594-4649-9b36-cc74bc8b3f48
+9ffcae72-d1ab-4be4-bbb0-2a4e798b532e	2025-08-02	14:15	14:50	idle	a55e5c8f-b1ec-451a-9b62-68e0446e581c	8ab49e6d-a594-4649-9b36-cc74bc8b3f48
+e6e9673e-6f83-4359-b5d5-1cfbb054670d	2025-08-02	14:50	15:25	idle	a55e5c8f-b1ec-451a-9b62-68e0446e581c	8ab49e6d-a594-4649-9b36-cc74bc8b3f48
+671f20ff-2102-456e-ab1c-17402ab25153	2025-08-02	15:25	16:00	idle	a55e5c8f-b1ec-451a-9b62-68e0446e581c	8ab49e6d-a594-4649-9b36-cc74bc8b3f48
+96e78f87-a1fb-4c1f-aefa-96b3b4bd3b32	2025-08-02	16:00	16:35	idle	a55e5c8f-b1ec-451a-9b62-68e0446e581c	8ab49e6d-a594-4649-9b36-cc74bc8b3f48
+a40d23a1-c3ce-4019-844e-8f4366c94b37	2025-07-22	11:55	12:30	booked	006b5a6f-fdd9-4078-8be1-8989a763652a	8ab49e6d-a594-4649-9b36-cc74bc8b3f48
+9a8103a9-5eb2-4e9f-8618-77bd305a752f	2025-07-22	09:35	10:10	idle	ca0f8c15-c23b-4cb7-b6e7-c3f2eb094b3a	eb51117d-6e07-48ff-8e58-8aae8a4148a2
+fe94d327-0fa9-4aef-90e0-bf9ef36fbbde	2025-07-22	10:10	10:45	idle	ca0f8c15-c23b-4cb7-b6e7-c3f2eb094b3a	eb51117d-6e07-48ff-8e58-8aae8a4148a2
+97630c7b-2cb9-46da-b20c-ba8e86912ba7	2025-07-22	10:45	11:20	idle	ca0f8c15-c23b-4cb7-b6e7-c3f2eb094b3a	eb51117d-6e07-48ff-8e58-8aae8a4148a2
+6cf18b20-97e9-4e43-9a0c-539ae7ff949e	2025-07-22	11:20	11:55	idle	ca0f8c15-c23b-4cb7-b6e7-c3f2eb094b3a	eb51117d-6e07-48ff-8e58-8aae8a4148a2
+ab73e8d4-3a5c-4c0f-8e67-346c49a6e38c	2025-07-22	11:55	12:30	idle	ca0f8c15-c23b-4cb7-b6e7-c3f2eb094b3a	eb51117d-6e07-48ff-8e58-8aae8a4148a2
+a799d223-716c-47e2-9bc3-8d4c3c7c5f1c	2025-07-22	12:30	13:05	idle	ca0f8c15-c23b-4cb7-b6e7-c3f2eb094b3a	eb51117d-6e07-48ff-8e58-8aae8a4148a2
+e546efdf-9343-448f-961c-65091036c3d9	2025-07-22	13:05	13:40	idle	ca0f8c15-c23b-4cb7-b6e7-c3f2eb094b3a	eb51117d-6e07-48ff-8e58-8aae8a4148a2
+c419a808-656c-4efe-9175-b2e9db55876b	2025-07-22	13:40	14:15	idle	ca0f8c15-c23b-4cb7-b6e7-c3f2eb094b3a	eb51117d-6e07-48ff-8e58-8aae8a4148a2
+a35e2407-fef0-41a9-83ea-0491f4d3b1e6	2025-07-22	14:15	14:50	idle	ca0f8c15-c23b-4cb7-b6e7-c3f2eb094b3a	eb51117d-6e07-48ff-8e58-8aae8a4148a2
+c70fea03-a877-4dff-8c44-5c5f82a8e4be	2025-07-22	14:50	15:25	idle	ca0f8c15-c23b-4cb7-b6e7-c3f2eb094b3a	eb51117d-6e07-48ff-8e58-8aae8a4148a2
+519c2c3f-e5f7-42b2-b582-808e9befbec1	2025-07-22	15:25	16:00	idle	ca0f8c15-c23b-4cb7-b6e7-c3f2eb094b3a	eb51117d-6e07-48ff-8e58-8aae8a4148a2
+51b602d4-c828-4e54-8f0e-682cb7031dcf	2025-07-22	16:00	16:35	idle	ca0f8c15-c23b-4cb7-b6e7-c3f2eb094b3a	eb51117d-6e07-48ff-8e58-8aae8a4148a2
+14fc8ee9-9156-4717-930a-6bef0b921632	2025-07-23	09:00	09:35	idle	467d8eee-d378-44ff-8650-b4415ad3a6a5	eb51117d-6e07-48ff-8e58-8aae8a4148a2
+9fc6aedb-db43-4482-8e89-33a1454f547a	2025-07-23	09:35	10:10	idle	467d8eee-d378-44ff-8650-b4415ad3a6a5	eb51117d-6e07-48ff-8e58-8aae8a4148a2
+b9651065-81cf-4e35-a063-c6794cc1a90d	2025-07-23	10:10	10:45	idle	467d8eee-d378-44ff-8650-b4415ad3a6a5	eb51117d-6e07-48ff-8e58-8aae8a4148a2
+63af6a5d-0536-4640-8dfc-8463d1ff033d	2025-07-23	10:45	11:20	idle	467d8eee-d378-44ff-8650-b4415ad3a6a5	eb51117d-6e07-48ff-8e58-8aae8a4148a2
+15070ff4-d1dd-4175-a5e9-163425a52a72	2025-07-23	11:20	11:55	idle	467d8eee-d378-44ff-8650-b4415ad3a6a5	eb51117d-6e07-48ff-8e58-8aae8a4148a2
+ce030a9e-05ef-4dc7-91e6-6c7d0dc867c0	2025-07-23	11:55	12:30	idle	467d8eee-d378-44ff-8650-b4415ad3a6a5	eb51117d-6e07-48ff-8e58-8aae8a4148a2
+afc43714-451c-487f-8300-74e1a5a43dff	2025-07-23	12:30	13:05	idle	467d8eee-d378-44ff-8650-b4415ad3a6a5	eb51117d-6e07-48ff-8e58-8aae8a4148a2
+c4c09dda-94c3-433c-830d-5808961136a0	2025-07-23	13:05	13:40	idle	467d8eee-d378-44ff-8650-b4415ad3a6a5	eb51117d-6e07-48ff-8e58-8aae8a4148a2
+2d6dc105-f761-42de-8629-958797157677	2025-07-23	13:40	14:15	idle	467d8eee-d378-44ff-8650-b4415ad3a6a5	eb51117d-6e07-48ff-8e58-8aae8a4148a2
+f1e3ea78-ab81-433c-814b-36da2f1fcee0	2025-07-23	14:15	14:50	idle	467d8eee-d378-44ff-8650-b4415ad3a6a5	eb51117d-6e07-48ff-8e58-8aae8a4148a2
+49087b60-4570-431b-8be9-f16743493c1d	2025-07-23	14:50	15:25	idle	467d8eee-d378-44ff-8650-b4415ad3a6a5	eb51117d-6e07-48ff-8e58-8aae8a4148a2
+00d6d9b9-07f1-4c2d-8050-11bb94dcae29	2025-07-23	15:25	16:00	idle	467d8eee-d378-44ff-8650-b4415ad3a6a5	eb51117d-6e07-48ff-8e58-8aae8a4148a2
+b9b26307-1b9f-4d0a-ba2e-a4afdaf9dd73	2025-07-23	16:00	16:35	idle	467d8eee-d378-44ff-8650-b4415ad3a6a5	eb51117d-6e07-48ff-8e58-8aae8a4148a2
+a9c12ace-0076-4a63-a658-a51f61dfdef0	2025-07-24	09:00	09:35	idle	84d54287-4f1f-4629-92d3-d56d4f46e318	eb51117d-6e07-48ff-8e58-8aae8a4148a2
+d4512298-d05a-4b56-a994-59530afab003	2025-07-24	09:35	10:10	idle	84d54287-4f1f-4629-92d3-d56d4f46e318	eb51117d-6e07-48ff-8e58-8aae8a4148a2
+30ce5a0c-d214-4fa5-a603-4280c6f2e241	2025-07-24	10:10	10:45	idle	84d54287-4f1f-4629-92d3-d56d4f46e318	eb51117d-6e07-48ff-8e58-8aae8a4148a2
+5e284c21-d650-417d-ab97-a3cf4112e96a	2025-07-24	10:45	11:20	idle	84d54287-4f1f-4629-92d3-d56d4f46e318	eb51117d-6e07-48ff-8e58-8aae8a4148a2
+414d7edc-3a17-4a23-8703-e4458a1df499	2025-07-24	11:20	11:55	idle	84d54287-4f1f-4629-92d3-d56d4f46e318	eb51117d-6e07-48ff-8e58-8aae8a4148a2
+2dcea25a-c57e-4947-9308-de2fdb46ab4b	2025-07-24	11:55	12:30	idle	84d54287-4f1f-4629-92d3-d56d4f46e318	eb51117d-6e07-48ff-8e58-8aae8a4148a2
+19129f67-7c12-4b17-aac5-f7e16478031d	2025-07-24	12:30	13:05	idle	84d54287-4f1f-4629-92d3-d56d4f46e318	eb51117d-6e07-48ff-8e58-8aae8a4148a2
+8ddbaea9-718c-438c-8e48-39fba08e1d19	2025-07-24	13:05	13:40	idle	84d54287-4f1f-4629-92d3-d56d4f46e318	eb51117d-6e07-48ff-8e58-8aae8a4148a2
+4669fcb2-0f37-4cf2-8184-77bb8668917c	2025-07-24	13:40	14:15	idle	84d54287-4f1f-4629-92d3-d56d4f46e318	eb51117d-6e07-48ff-8e58-8aae8a4148a2
+4c5e28a9-c04c-40a3-b660-a73500bcdb8b	2025-07-24	14:15	14:50	idle	84d54287-4f1f-4629-92d3-d56d4f46e318	eb51117d-6e07-48ff-8e58-8aae8a4148a2
+d1442d52-7613-4d43-8538-5ebfa06971fd	2025-07-24	14:50	15:25	idle	84d54287-4f1f-4629-92d3-d56d4f46e318	eb51117d-6e07-48ff-8e58-8aae8a4148a2
+da569123-dba6-43e8-acc3-06994bee6a29	2025-07-24	15:25	16:00	idle	84d54287-4f1f-4629-92d3-d56d4f46e318	eb51117d-6e07-48ff-8e58-8aae8a4148a2
+d994256f-2b47-4c21-8010-42df3f297ad0	2025-07-24	16:00	16:35	idle	84d54287-4f1f-4629-92d3-d56d4f46e318	eb51117d-6e07-48ff-8e58-8aae8a4148a2
+43cdcfef-8ac2-463a-986e-4374d4b077c6	2025-07-26	09:00	09:35	idle	cef67601-6216-46bb-a6d0-1230ce30c5dd	eb51117d-6e07-48ff-8e58-8aae8a4148a2
+f6e4dd79-858d-4436-9026-e38593140a9f	2025-07-26	09:35	10:10	idle	cef67601-6216-46bb-a6d0-1230ce30c5dd	eb51117d-6e07-48ff-8e58-8aae8a4148a2
+6e5c0af8-7860-4ca4-bd53-8994fa26c379	2025-07-26	10:10	10:45	idle	cef67601-6216-46bb-a6d0-1230ce30c5dd	eb51117d-6e07-48ff-8e58-8aae8a4148a2
+3833c708-65d5-4082-b98b-176b5f918fc7	2025-07-26	10:45	11:20	idle	cef67601-6216-46bb-a6d0-1230ce30c5dd	eb51117d-6e07-48ff-8e58-8aae8a4148a2
+5629824f-aa14-4665-a34f-d8d3cd98ed0c	2025-07-26	11:20	11:55	idle	cef67601-6216-46bb-a6d0-1230ce30c5dd	eb51117d-6e07-48ff-8e58-8aae8a4148a2
+609392e4-583c-484b-8053-4d31faa4c32f	2025-07-26	11:55	12:30	idle	cef67601-6216-46bb-a6d0-1230ce30c5dd	eb51117d-6e07-48ff-8e58-8aae8a4148a2
+fff09608-e0d8-41b8-b59e-340c8acf20be	2025-07-26	12:30	13:05	idle	cef67601-6216-46bb-a6d0-1230ce30c5dd	eb51117d-6e07-48ff-8e58-8aae8a4148a2
+aac36d7d-ab5b-4a6f-a085-19b95a8f99c1	2025-07-26	13:05	13:40	idle	cef67601-6216-46bb-a6d0-1230ce30c5dd	eb51117d-6e07-48ff-8e58-8aae8a4148a2
+94e11803-4a76-4703-a0dd-16490bca4caa	2025-07-26	13:40	14:15	idle	cef67601-6216-46bb-a6d0-1230ce30c5dd	eb51117d-6e07-48ff-8e58-8aae8a4148a2
+f98d76b0-1ec4-46f5-87fd-70c07babed27	2025-07-26	14:15	14:50	idle	cef67601-6216-46bb-a6d0-1230ce30c5dd	eb51117d-6e07-48ff-8e58-8aae8a4148a2
+280e188b-ffb2-4aa6-a952-15e1122ea588	2025-07-26	14:50	15:25	idle	cef67601-6216-46bb-a6d0-1230ce30c5dd	eb51117d-6e07-48ff-8e58-8aae8a4148a2
+7e6c448e-155c-4797-a5de-4d2f35a4c632	2025-07-26	15:25	16:00	idle	cef67601-6216-46bb-a6d0-1230ce30c5dd	eb51117d-6e07-48ff-8e58-8aae8a4148a2
+b8270564-fcce-43e5-bb12-45a5bceb032c	2025-07-26	16:00	16:35	idle	cef67601-6216-46bb-a6d0-1230ce30c5dd	eb51117d-6e07-48ff-8e58-8aae8a4148a2
+82a95cca-713a-46ba-a9e3-490cff3d4705	2025-07-27	09:00	09:35	idle	f4946706-be6a-4245-80dd-7e028d38e014	eb51117d-6e07-48ff-8e58-8aae8a4148a2
+1b56b88b-c663-4f43-9731-55aabcac0f5f	2025-07-27	09:35	10:10	idle	f4946706-be6a-4245-80dd-7e028d38e014	eb51117d-6e07-48ff-8e58-8aae8a4148a2
+768a8673-6068-41c2-adac-db8dd38c9986	2025-07-27	10:10	10:45	idle	f4946706-be6a-4245-80dd-7e028d38e014	eb51117d-6e07-48ff-8e58-8aae8a4148a2
+cc2a5b1d-8e7c-42ea-aa6b-bdb607c8145c	2025-07-27	10:45	11:20	idle	f4946706-be6a-4245-80dd-7e028d38e014	eb51117d-6e07-48ff-8e58-8aae8a4148a2
+c792a8b1-8b61-4d40-8de9-bf304e08cabd	2025-07-27	11:20	11:55	idle	f4946706-be6a-4245-80dd-7e028d38e014	eb51117d-6e07-48ff-8e58-8aae8a4148a2
+9f8cb108-89c2-4115-9a2f-27ca96f4c8eb	2025-07-27	11:55	12:30	idle	f4946706-be6a-4245-80dd-7e028d38e014	eb51117d-6e07-48ff-8e58-8aae8a4148a2
+352d1232-21fc-4053-acde-efe552b1750a	2025-07-27	12:30	13:05	idle	f4946706-be6a-4245-80dd-7e028d38e014	eb51117d-6e07-48ff-8e58-8aae8a4148a2
+d2238f34-505a-4b9b-9c41-a0cee142ac43	2025-07-27	13:05	13:40	idle	f4946706-be6a-4245-80dd-7e028d38e014	eb51117d-6e07-48ff-8e58-8aae8a4148a2
+a685efee-cfb5-42e8-ad6d-2ff8f8f68ebe	2025-07-27	13:40	14:15	idle	f4946706-be6a-4245-80dd-7e028d38e014	eb51117d-6e07-48ff-8e58-8aae8a4148a2
+d585b147-6981-4f1c-8f81-2f67d0e598f4	2025-07-27	14:15	14:50	idle	f4946706-be6a-4245-80dd-7e028d38e014	eb51117d-6e07-48ff-8e58-8aae8a4148a2
+eee46f32-2da3-4e85-b1f4-c48bb187785d	2025-07-27	14:50	15:25	idle	f4946706-be6a-4245-80dd-7e028d38e014	eb51117d-6e07-48ff-8e58-8aae8a4148a2
+e25b9760-1e26-4f64-8819-5d01ad3ba291	2025-07-27	15:25	16:00	idle	f4946706-be6a-4245-80dd-7e028d38e014	eb51117d-6e07-48ff-8e58-8aae8a4148a2
+66541790-9751-4486-89b2-436b042376a2	2025-07-27	16:00	16:35	idle	f4946706-be6a-4245-80dd-7e028d38e014	eb51117d-6e07-48ff-8e58-8aae8a4148a2
+7b6e5f5a-32fa-4c0b-8db6-7dc1c0e15512	2025-07-28	09:00	09:35	idle	3da8a214-f51b-4f9f-a368-beccafb8331b	eb51117d-6e07-48ff-8e58-8aae8a4148a2
+7b0ca188-2202-43c1-8cb6-9fd0fa770623	2025-07-28	09:35	10:10	idle	3da8a214-f51b-4f9f-a368-beccafb8331b	eb51117d-6e07-48ff-8e58-8aae8a4148a2
+d2ad6a64-5dc5-40b0-800f-1b741719c39a	2025-07-28	10:10	10:45	idle	3da8a214-f51b-4f9f-a368-beccafb8331b	eb51117d-6e07-48ff-8e58-8aae8a4148a2
+69cb6399-b40f-4059-8753-8fdbbd0f6f74	2025-07-28	10:45	11:20	idle	3da8a214-f51b-4f9f-a368-beccafb8331b	eb51117d-6e07-48ff-8e58-8aae8a4148a2
+3d738e5b-073e-4da1-bb1f-aeb53ac26253	2025-07-28	11:20	11:55	idle	3da8a214-f51b-4f9f-a368-beccafb8331b	eb51117d-6e07-48ff-8e58-8aae8a4148a2
+40394a7b-67e9-4750-b04f-5acfce4f3bfb	2025-07-28	11:55	12:30	idle	3da8a214-f51b-4f9f-a368-beccafb8331b	eb51117d-6e07-48ff-8e58-8aae8a4148a2
+ab8accda-19d6-4415-a26f-3090e5690186	2025-07-28	12:30	13:05	idle	3da8a214-f51b-4f9f-a368-beccafb8331b	eb51117d-6e07-48ff-8e58-8aae8a4148a2
+860e612f-d2bf-4ae3-96c1-942464906d9e	2025-07-28	13:05	13:40	idle	3da8a214-f51b-4f9f-a368-beccafb8331b	eb51117d-6e07-48ff-8e58-8aae8a4148a2
+bc1f6d19-e32e-4aea-b3f3-7cb227fbe91a	2025-07-28	13:40	14:15	idle	3da8a214-f51b-4f9f-a368-beccafb8331b	eb51117d-6e07-48ff-8e58-8aae8a4148a2
+1ad9398b-ed01-4d67-b952-c83005a1a192	2025-07-28	14:15	14:50	idle	3da8a214-f51b-4f9f-a368-beccafb8331b	eb51117d-6e07-48ff-8e58-8aae8a4148a2
+c234220a-4c36-4dc3-87d8-9e2c126122fe	2025-07-28	14:50	15:25	idle	3da8a214-f51b-4f9f-a368-beccafb8331b	eb51117d-6e07-48ff-8e58-8aae8a4148a2
+f67a1a34-8609-41f5-bff0-d26bf5e84e18	2025-07-28	15:25	16:00	idle	3da8a214-f51b-4f9f-a368-beccafb8331b	eb51117d-6e07-48ff-8e58-8aae8a4148a2
+6ac77f6d-8536-421a-b5b2-01001b648f7b	2025-07-28	16:00	16:35	idle	3da8a214-f51b-4f9f-a368-beccafb8331b	eb51117d-6e07-48ff-8e58-8aae8a4148a2
+f7af904b-34f8-4917-8c92-e2c29189cc05	2025-07-29	09:00	09:35	idle	ca0f8c15-c23b-4cb7-b6e7-c3f2eb094b3a	eb51117d-6e07-48ff-8e58-8aae8a4148a2
+36b577fa-33f6-4f2c-9b34-6522bca9c776	2025-07-29	09:35	10:10	idle	ca0f8c15-c23b-4cb7-b6e7-c3f2eb094b3a	eb51117d-6e07-48ff-8e58-8aae8a4148a2
+09132f4d-daef-4dc6-b8d9-f683d094773a	2025-07-29	10:10	10:45	idle	ca0f8c15-c23b-4cb7-b6e7-c3f2eb094b3a	eb51117d-6e07-48ff-8e58-8aae8a4148a2
+8cc18deb-230a-4637-8e31-eb93ad26e3ec	2025-07-29	10:45	11:20	idle	ca0f8c15-c23b-4cb7-b6e7-c3f2eb094b3a	eb51117d-6e07-48ff-8e58-8aae8a4148a2
+12aa901b-7333-4d94-bad4-a90c86c0e337	2025-07-29	11:20	11:55	idle	ca0f8c15-c23b-4cb7-b6e7-c3f2eb094b3a	eb51117d-6e07-48ff-8e58-8aae8a4148a2
+159e734a-40f7-491f-b278-6c0ce503291e	2025-07-29	11:55	12:30	idle	ca0f8c15-c23b-4cb7-b6e7-c3f2eb094b3a	eb51117d-6e07-48ff-8e58-8aae8a4148a2
+9be241e3-d1b1-4b28-a88e-6d58d5ae5b2e	2025-07-29	12:30	13:05	idle	ca0f8c15-c23b-4cb7-b6e7-c3f2eb094b3a	eb51117d-6e07-48ff-8e58-8aae8a4148a2
+c8b25e7a-add6-4b78-adb7-d0bc5db9790b	2025-07-29	13:05	13:40	idle	ca0f8c15-c23b-4cb7-b6e7-c3f2eb094b3a	eb51117d-6e07-48ff-8e58-8aae8a4148a2
+1ab6ac93-8b2b-45c7-b22d-7d195aa564a5	2025-07-29	13:40	14:15	idle	ca0f8c15-c23b-4cb7-b6e7-c3f2eb094b3a	eb51117d-6e07-48ff-8e58-8aae8a4148a2
+a390b651-7f3b-433c-bfd6-b3a49e2fb66a	2025-07-29	14:15	14:50	idle	ca0f8c15-c23b-4cb7-b6e7-c3f2eb094b3a	eb51117d-6e07-48ff-8e58-8aae8a4148a2
+c1520842-19c9-473e-b1c2-a0a761ded6be	2025-07-29	14:50	15:25	idle	ca0f8c15-c23b-4cb7-b6e7-c3f2eb094b3a	eb51117d-6e07-48ff-8e58-8aae8a4148a2
+377e5014-cb64-4341-be17-11dfcc38f8ac	2025-07-29	15:25	16:00	idle	ca0f8c15-c23b-4cb7-b6e7-c3f2eb094b3a	eb51117d-6e07-48ff-8e58-8aae8a4148a2
+4c7cf73f-e051-4786-89ae-871574095759	2025-07-29	16:00	16:35	idle	ca0f8c15-c23b-4cb7-b6e7-c3f2eb094b3a	eb51117d-6e07-48ff-8e58-8aae8a4148a2
+249c7aa7-df1a-4893-a704-f2d79ecc4e7d	2025-07-30	09:00	09:35	idle	467d8eee-d378-44ff-8650-b4415ad3a6a5	eb51117d-6e07-48ff-8e58-8aae8a4148a2
+1e64633c-a3e0-4e96-a79d-770393b851a6	2025-07-30	09:35	10:10	idle	467d8eee-d378-44ff-8650-b4415ad3a6a5	eb51117d-6e07-48ff-8e58-8aae8a4148a2
+b85400a0-c651-49ab-8eec-8979df9b99a2	2025-07-30	10:10	10:45	idle	467d8eee-d378-44ff-8650-b4415ad3a6a5	eb51117d-6e07-48ff-8e58-8aae8a4148a2
+8c5c0337-217c-4629-9109-250a0c484a03	2025-07-30	10:45	11:20	idle	467d8eee-d378-44ff-8650-b4415ad3a6a5	eb51117d-6e07-48ff-8e58-8aae8a4148a2
+3c1d063b-33cb-4e7e-abd1-20778e7b7389	2025-07-30	11:20	11:55	idle	467d8eee-d378-44ff-8650-b4415ad3a6a5	eb51117d-6e07-48ff-8e58-8aae8a4148a2
+c2742f16-c2ea-4177-ae5a-f753b5493811	2025-07-30	11:55	12:30	idle	467d8eee-d378-44ff-8650-b4415ad3a6a5	eb51117d-6e07-48ff-8e58-8aae8a4148a2
+a1a4a374-f8bb-4465-aa92-b4d4473a151e	2025-07-30	12:30	13:05	idle	467d8eee-d378-44ff-8650-b4415ad3a6a5	eb51117d-6e07-48ff-8e58-8aae8a4148a2
+4ddda557-c9e9-477b-8a2f-538789ad922a	2025-07-30	13:05	13:40	idle	467d8eee-d378-44ff-8650-b4415ad3a6a5	eb51117d-6e07-48ff-8e58-8aae8a4148a2
+8d2ccca3-6927-4bdc-9b7c-8c75ba630de6	2025-07-30	13:40	14:15	idle	467d8eee-d378-44ff-8650-b4415ad3a6a5	eb51117d-6e07-48ff-8e58-8aae8a4148a2
+d5b81d45-685f-47a2-a8a9-0ffd1f1a789c	2025-07-30	14:15	14:50	idle	467d8eee-d378-44ff-8650-b4415ad3a6a5	eb51117d-6e07-48ff-8e58-8aae8a4148a2
+5c8b004b-e91b-4dde-a0f9-065953c43cea	2025-07-30	14:50	15:25	idle	467d8eee-d378-44ff-8650-b4415ad3a6a5	eb51117d-6e07-48ff-8e58-8aae8a4148a2
+6a4fa43b-1b08-4255-86c3-4a0b8269c0a1	2025-07-30	15:25	16:00	idle	467d8eee-d378-44ff-8650-b4415ad3a6a5	eb51117d-6e07-48ff-8e58-8aae8a4148a2
+e7eb14cb-3182-4526-b601-591eca83fd16	2025-07-30	16:00	16:35	idle	467d8eee-d378-44ff-8650-b4415ad3a6a5	eb51117d-6e07-48ff-8e58-8aae8a4148a2
+de414d93-87b4-469f-813d-1e97b6aba511	2025-07-31	09:00	09:35	idle	84d54287-4f1f-4629-92d3-d56d4f46e318	eb51117d-6e07-48ff-8e58-8aae8a4148a2
+3156e97c-9bf4-47ae-a7a0-f3bfdfbaf350	2025-07-31	09:35	10:10	idle	84d54287-4f1f-4629-92d3-d56d4f46e318	eb51117d-6e07-48ff-8e58-8aae8a4148a2
+1a0a0282-ab6e-4368-94ea-80cb0753c499	2025-07-31	10:10	10:45	idle	84d54287-4f1f-4629-92d3-d56d4f46e318	eb51117d-6e07-48ff-8e58-8aae8a4148a2
+f241f15b-55cd-40e6-94ea-532fe6c91749	2025-07-31	10:45	11:20	idle	84d54287-4f1f-4629-92d3-d56d4f46e318	eb51117d-6e07-48ff-8e58-8aae8a4148a2
+c03fc14e-ef28-441a-b46a-fe2965710a5e	2025-07-31	11:20	11:55	idle	84d54287-4f1f-4629-92d3-d56d4f46e318	eb51117d-6e07-48ff-8e58-8aae8a4148a2
+ffeaaebc-5846-4c2f-98ac-94ca6abe6c73	2025-07-31	11:55	12:30	idle	84d54287-4f1f-4629-92d3-d56d4f46e318	eb51117d-6e07-48ff-8e58-8aae8a4148a2
+3c6ec7cd-fb04-4c47-bd05-c2ea777e8ab0	2025-07-31	12:30	13:05	idle	84d54287-4f1f-4629-92d3-d56d4f46e318	eb51117d-6e07-48ff-8e58-8aae8a4148a2
+1f251aed-2adf-4b9e-ab11-d065eded3242	2025-07-31	13:05	13:40	idle	84d54287-4f1f-4629-92d3-d56d4f46e318	eb51117d-6e07-48ff-8e58-8aae8a4148a2
+fd388785-16cc-4daa-a31b-f74332644fe1	2025-07-31	13:40	14:15	idle	84d54287-4f1f-4629-92d3-d56d4f46e318	eb51117d-6e07-48ff-8e58-8aae8a4148a2
+2c757972-1412-459a-9754-6db85779e482	2025-07-31	14:15	14:50	idle	84d54287-4f1f-4629-92d3-d56d4f46e318	eb51117d-6e07-48ff-8e58-8aae8a4148a2
+d6e74360-43ea-4d01-a6ef-3933d3c68db0	2025-07-31	14:50	15:25	idle	84d54287-4f1f-4629-92d3-d56d4f46e318	eb51117d-6e07-48ff-8e58-8aae8a4148a2
+afd74801-063d-4a2e-805d-24b2f9557dc7	2025-07-31	15:25	16:00	idle	84d54287-4f1f-4629-92d3-d56d4f46e318	eb51117d-6e07-48ff-8e58-8aae8a4148a2
+15a498ae-ef17-497e-9186-fff9a5c3ed9d	2025-07-31	16:00	16:35	idle	84d54287-4f1f-4629-92d3-d56d4f46e318	eb51117d-6e07-48ff-8e58-8aae8a4148a2
+88a570e8-1f78-44dd-8380-6668ce5a674d	2025-08-02	09:00	09:35	idle	cef67601-6216-46bb-a6d0-1230ce30c5dd	eb51117d-6e07-48ff-8e58-8aae8a4148a2
+64a304a5-4231-43ca-b4a5-0f07ae1e43ae	2025-08-02	09:35	10:10	idle	cef67601-6216-46bb-a6d0-1230ce30c5dd	eb51117d-6e07-48ff-8e58-8aae8a4148a2
+9865c0ce-f756-4117-8bfb-29107ade398e	2025-08-02	10:10	10:45	idle	cef67601-6216-46bb-a6d0-1230ce30c5dd	eb51117d-6e07-48ff-8e58-8aae8a4148a2
+13687926-86c3-4b90-91bc-898935d6726a	2025-08-02	10:45	11:20	idle	cef67601-6216-46bb-a6d0-1230ce30c5dd	eb51117d-6e07-48ff-8e58-8aae8a4148a2
+2fbe940c-6e6a-495d-bce2-ebcea356881d	2025-08-02	11:20	11:55	idle	cef67601-6216-46bb-a6d0-1230ce30c5dd	eb51117d-6e07-48ff-8e58-8aae8a4148a2
+56fe59b4-903f-4219-85bd-8c522b0d81d7	2025-08-02	11:55	12:30	idle	cef67601-6216-46bb-a6d0-1230ce30c5dd	eb51117d-6e07-48ff-8e58-8aae8a4148a2
+00e59962-bbd8-435c-b066-41d760d3e105	2025-08-02	12:30	13:05	idle	cef67601-6216-46bb-a6d0-1230ce30c5dd	eb51117d-6e07-48ff-8e58-8aae8a4148a2
+c1d1ead7-d2ab-42ee-8b01-0090a44b765e	2025-08-02	13:05	13:40	idle	cef67601-6216-46bb-a6d0-1230ce30c5dd	eb51117d-6e07-48ff-8e58-8aae8a4148a2
+59c2d9dc-61a3-4b30-b058-97f252ad4845	2025-08-02	13:40	14:15	idle	cef67601-6216-46bb-a6d0-1230ce30c5dd	eb51117d-6e07-48ff-8e58-8aae8a4148a2
+a1dcc5c7-a4d3-4bb6-bb57-b4ae855ce959	2025-08-02	14:15	14:50	idle	cef67601-6216-46bb-a6d0-1230ce30c5dd	eb51117d-6e07-48ff-8e58-8aae8a4148a2
+430165dd-2d9f-4a57-81df-857b7bbbc25a	2025-08-02	14:50	15:25	idle	cef67601-6216-46bb-a6d0-1230ce30c5dd	eb51117d-6e07-48ff-8e58-8aae8a4148a2
+9fc6accd-a95f-45b1-926f-45a26dff654b	2025-08-02	15:25	16:00	idle	cef67601-6216-46bb-a6d0-1230ce30c5dd	eb51117d-6e07-48ff-8e58-8aae8a4148a2
+a8f7560b-27f7-447b-95d9-791b0ca4152c	2025-08-02	16:00	16:35	idle	cef67601-6216-46bb-a6d0-1230ce30c5dd	eb51117d-6e07-48ff-8e58-8aae8a4148a2
+fe0630c0-23ca-4c18-9c19-73956d09bb80	2025-07-22	09:00	09:35	booked	ca0f8c15-c23b-4cb7-b6e7-c3f2eb094b3a	eb51117d-6e07-48ff-8e58-8aae8a4148a2
+\.
+
+
+--
+-- Data for Name: user; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public."user" (id, "userName", "phoneNumber", password, role, "otpCode", "otpExpires", "isNew", "avatarPath") FROM stdin;
+2ca32052-ad7a-4460-9670-b9d3b66af21a	+989926128775	+989926128775	\N	business_admin	\N	\N	t	\N
+e90ee872-d43b-4730-8afb-a4346a4b191a	+989393734747	+989393734747	\N	business_admin	\N	\N	t	\N
+80606717-cf90-4ebc-9394-b091bf3cd4e6	+989393734748	+989393734748	\N	customer	690901	2025-07-22 10:28:54.416	t	\N
+da57552f-bbfe-448a-93a8-901ad5a28953	+989115640955	+989115640955	\N	business_admin	\N	\N	t	\N
+4e2445cb-73a2-4533-9536-916091166320	+989926542477	+989926542477	\N	customer	\N	\N	f	\N
+42430bec-cf1f-4726-898a-dfae668d051c	+989032446913	+989032446913	\N	business_admin	\N	\N	f	\N
+\.
+
+
+--
+-- Name: business PK_0bd850da8dafab992e2e9b058e5; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.business
+    ADD CONSTRAINT "PK_0bd850da8dafab992e2e9b058e5" PRIMARY KEY (id);
+
+
+--
+-- Name: schedule PK_1c05e42aec7371641193e180046; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.schedule
+    ADD CONSTRAINT "PK_1c05e42aec7371641193e180046" PRIMARY KEY (id);
+
+
+--
+-- Name: plan PK_54a2b686aed3b637654bf7ddbb3; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.plan
+    ADD CONSTRAINT "PK_54a2b686aed3b637654bf7ddbb3" PRIMARY KEY (id);
+
+
+--
+-- Name: service PK_85a21558c006647cd76fdce044b; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.service
+    ADD CONSTRAINT "PK_85a21558c006647cd76fdce044b" PRIMARY KEY (id);
+
+
+--
+-- Name: service_closure PK_8bd17ea3baf7e6246526b115e12; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.service_closure
+    ADD CONSTRAINT "PK_8bd17ea3baf7e6246526b115e12" PRIMARY KEY (id_ancestor, id_descendant);
+
+
+--
+-- Name: customer PK_a7a13f4cacb744524e44dfdad32; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.customer
+    ADD CONSTRAINT "PK_a7a13f4cacb744524e44dfdad32" PRIMARY KEY (id);
+
+
+--
+-- Name: user PK_cace4a159ff9f2512dd42373760; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public."user"
+    ADD CONSTRAINT "PK_cace4a159ff9f2512dd42373760" PRIMARY KEY (id);
+
+
+--
+-- Name: timeslot PK_cd8bca557ee1eb5b090b9e63009; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.timeslot
+    ADD CONSTRAINT "PK_cd8bca557ee1eb5b090b9e63009" PRIMARY KEY (id);
+
+
+--
+-- Name: price PK_d163e55e8cce6908b2e0f27cea4; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.price
+    ADD CONSTRAINT "PK_d163e55e8cce6908b2e0f27cea4" PRIMARY KEY (id);
+
+
+--
+-- Name: appointment PK_e8be1a53027415e709ce8a2db74; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.appointment
+    ADD CONSTRAINT "PK_e8be1a53027415e709ce8a2db74" PRIMARY KEY (id);
+
+
+--
+-- Name: price REL_3a8069b70cf5958e21cef914c9; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.price
+    ADD CONSTRAINT "REL_3a8069b70cf5958e21cef914c9" UNIQUE ("serviceId");
+
+
+--
+-- Name: business REL_70ca167b3aac4acaf1e8e36dfa; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.business
+    ADD CONSTRAINT "REL_70ca167b3aac4acaf1e8e36dfa" UNIQUE ("userInfoId");
+
+
+--
+-- Name: customer REL_ac105e059be8ee1e1e7db930a6; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.customer
+    ADD CONSTRAINT "REL_ac105e059be8ee1e1e7db930a6" UNIQUE ("userInfoId");
+
+
+--
+-- Name: appointment REL_c180b61adc77d69ddb69c51c25; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.appointment
+    ADD CONSTRAINT "REL_c180b61adc77d69ddb69c51c25" UNIQUE ("timeslotId");
+
+
+--
+-- Name: service UQ_46240ff82558089d99ec69c6076; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.service
+    ADD CONSTRAINT "UQ_46240ff82558089d99ec69c6076" UNIQUE ("planId");
+
+
+--
+-- Name: user UQ_f2578043e491921209f5dadd080; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public."user"
+    ADD CONSTRAINT "UQ_f2578043e491921209f5dadd080" UNIQUE ("phoneNumber");
+
+
+--
+-- Name: IDX_4cf4c5689024ba40911061803f; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX "IDX_4cf4c5689024ba40911061803f" ON public.service_closure USING btree (id_ancestor);
+
+
+--
+-- Name: IDX_db8ce8417c184a1e246cccdf59; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX "IDX_db8ce8417c184a1e246cccdf59" ON public.service_closure USING btree (id_descendant);
+
+
+--
+-- Name: timeslot FK_07d9f4ced4681d78a56e4605b51; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.timeslot
+    ADD CONSTRAINT "FK_07d9f4ced4681d78a56e4605b51" FOREIGN KEY ("scheduleId") REFERENCES public.schedule(id) ON DELETE CASCADE;
+
+
+--
+-- Name: timeslot FK_39921011d8a19d36bcdd4321c0a; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.timeslot
+    ADD CONSTRAINT "FK_39921011d8a19d36bcdd4321c0a" FOREIGN KEY ("businessId") REFERENCES public.business(id);
+
+
+--
+-- Name: price FK_3a8069b70cf5958e21cef914c92; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.price
+    ADD CONSTRAINT "FK_3a8069b70cf5958e21cef914c92" FOREIGN KEY ("serviceId") REFERENCES public.service(id) ON DELETE CASCADE;
+
+
+--
+-- Name: appointment FK_3e12f9ea4df1c9a44482567d997; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.appointment
+    ADD CONSTRAINT "FK_3e12f9ea4df1c9a44482567d997" FOREIGN KEY ("businessId") REFERENCES public.business(id);
+
+
+--
+-- Name: service FK_3eb29dbcdd36a9b99a0ec2c2caa; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.service
+    ADD CONSTRAINT "FK_3eb29dbcdd36a9b99a0ec2c2caa" FOREIGN KEY ("businessId") REFERENCES public.business(id);
+
+
+--
+-- Name: service FK_46240ff82558089d99ec69c6076; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.service
+    ADD CONSTRAINT "FK_46240ff82558089d99ec69c6076" FOREIGN KEY ("planId") REFERENCES public.plan(id);
+
+
+--
+-- Name: service_closure FK_4cf4c5689024ba40911061803fa; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.service_closure
+    ADD CONSTRAINT "FK_4cf4c5689024ba40911061803fa" FOREIGN KEY (id_ancestor) REFERENCES public.service(id) ON DELETE CASCADE;
+
+
+--
+-- Name: business FK_70ca167b3aac4acaf1e8e36dfa0; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.business
+    ADD CONSTRAINT "FK_70ca167b3aac4acaf1e8e36dfa0" FOREIGN KEY ("userInfoId") REFERENCES public."user"(id);
+
+
+--
+-- Name: customer FK_ac105e059be8ee1e1e7db930a6d; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.customer
+    ADD CONSTRAINT "FK_ac105e059be8ee1e1e7db930a6d" FOREIGN KEY ("userInfoId") REFERENCES public."user"(id);
+
+
+--
+-- Name: appointment FK_c048c6004b69354f46183f93a85; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.appointment
+    ADD CONSTRAINT "FK_c048c6004b69354f46183f93a85" FOREIGN KEY ("customerId") REFERENCES public.customer(id);
+
+
+--
+-- Name: appointment FK_c180b61adc77d69ddb69c51c25e; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.appointment
+    ADD CONSTRAINT "FK_c180b61adc77d69ddb69c51c25e" FOREIGN KEY ("timeslotId") REFERENCES public.timeslot(id);
+
+
+--
+-- Name: service FK_c5906ffd2cd6fa558710901e4d0; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.service
+    ADD CONSTRAINT "FK_c5906ffd2cd6fa558710901e4d0" FOREIGN KEY ("parentId") REFERENCES public.service(id);
+
+
+--
+-- Name: schedule FK_c85ce6de727c64ef16ed4bf43cf; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.schedule
+    ADD CONSTRAINT "FK_c85ce6de727c64ef16ed4bf43cf" FOREIGN KEY ("businessId") REFERENCES public.business(id);
+
+
+--
+-- Name: appointment FK_cee8b55c31f700609674da96b0b; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.appointment
+    ADD CONSTRAINT "FK_cee8b55c31f700609674da96b0b" FOREIGN KEY ("serviceId") REFERENCES public.service(id) ON DELETE CASCADE;
+
+
+--
+-- Name: service_closure FK_db8ce8417c184a1e246cccdf592; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.service_closure
+    ADD CONSTRAINT "FK_db8ce8417c184a1e246cccdf592" FOREIGN KEY (id_descendant) REFERENCES public.service(id) ON DELETE CASCADE;
+
+
+--
+-- PostgreSQL database dump complete
+--
+

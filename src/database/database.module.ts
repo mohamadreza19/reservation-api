@@ -1,9 +1,7 @@
 // src/database/database.module.ts
 import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { join } from 'path';
-import { createDatabaseConfig } from './factories/database.factory';
+import { TypeOrmModule } from '@nestjs/typeorm';
 
 @Module({
   imports: [

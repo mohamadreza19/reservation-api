@@ -33,9 +33,16 @@ export class PriceService {
   }
 
   async create(createPriceDto: CreatePriceDto, service: Service) {
+    // Check if service already has a price
+    const existingPrice = await this.findByServiceId(service.id);
+    if (existingPrice) {
+      throw new BadRequestException(
+        `Service with ID ${service.id} already has a price`,
+      );
+    }
+
     const instance = this.priceRepo.create({
       amount: createPriceDto.amount,
-
       service: service,
     });
 
@@ -49,6 +56,18 @@ export class PriceService {
         },
       },
     });
+  }
+
+  async update(serviceId: string, updatePriceDto: CreatePriceDto) {
+    const existingPrice = await this.findByServiceId(serviceId);
+    if (!existingPrice) {
+      throw new NotFoundException(
+        `Price for service with ID ${serviceId} not found`,
+      );
+    }
+
+    existingPrice.amount = updatePriceDto.amount;
+    return this.priceRepo.save(existingPrice);
   }
 
   // async create(createPriceDto: CreatePriceDto, user: User) {

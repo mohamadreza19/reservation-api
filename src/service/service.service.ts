@@ -1,44 +1,44 @@
 import {
-  Injectable,
-  NotFoundException,
-  ForbiddenException,
-  Logger,
   BadRequestException,
+  ForbiddenException,
+  Injectable,
+  Logger,
+  NotFoundException,
 } from '@nestjs/common';
 
 import { InjectRepository } from '@nestjs/typeorm';
-import { Service } from './entities/service.entity';
-import { DeepPartial, FindOptionsWhere, Repository } from 'typeorm';
+import { BusinessService } from 'src/business/business.service';
+import { Role } from 'src/common/enums/role.enum';
+import {
+  FindByUserAccess,
+  FindOneById,
+  PaginatedResult,
+  Update,
+} from 'src/common/models/model';
 import { QueryService } from 'src/common/services/query.service';
-import { Business } from '../business/entities/business.entity';
+import { PriceService } from 'src/price/price.service';
+import { User } from 'src/user/entities/user.entity';
+import { DeepPartial, Repository } from 'typeorm';
 import {
   CreateServiceDto,
   FindServiceByBusiness,
   FindServicesDto,
-  UpdateServiceArgsDto,
   UpdateServiceDto,
 } from './dto/service.dto';
-import {
-  FindOneById,
-  FindByUserAccess,
-  PaginatedResult,
-  Update,
-} from 'src/common/models/model';
-import { User } from 'src/user/entities/user.entity';
-import { Role } from 'src/common/enums/role.enum';
-import { BusinessService } from 'src/business/business.service';
-import { PriceService } from 'src/price/price.service';
-import { DynamicEntityService } from '../file/dynamic-entity.service';
+import { Plan } from './entities/plan.entity';
+import { Service } from './entities/service.entity';
 
 @Injectable()
 export class ServiceService
-  implements FindByUserAccess<Service>, Update<Service>, FindOneById<Service>
+  implements FindByUserAccess<Service>, FindOneById<Service>, Update<Service>
 {
   private readonly logger = new Logger(ServiceService.name);
   queryService: QueryService<Service>;
   constructor(
     @InjectRepository(Service)
     private readonly serviceRepo: Repository<Service>,
+    @InjectRepository(Plan)
+    private readonly planRepo: Repository<Plan>,
     private businessService: BusinessService,
     private priceService: PriceService,
   ) {
@@ -79,6 +79,7 @@ export class ServiceService
         name: true,
         icon: true,
         isSystemService: true,
+        plan: true,
       },
     });
 
@@ -100,7 +101,8 @@ export class ServiceService
 
     const qb = this.serviceRepo
       .createQueryBuilder('service')
-      .leftJoinAndSelect('service.price', 'price'); // ✅ always join price
+      .leftJoinAndSelect('service.price', 'price');
+
     const { isSystemService, parentId } = query;
     // .where('service.isSystemService = :isSystem', { isSystem: true });
 
@@ -129,10 +131,10 @@ export class ServiceService
     }
     if (parentId && businessId) {
       // Filter for non-system services with specific parentId and businessId
-      qb.where('service.businessId = :businessId', { businessId }).andWhere(
-        'service.parentId = :parentId',
-        { parentId },
-      );
+      qb.where('service.businessId = :businessId', { businessId })
+        .andWhere('service.parentId = :parentId', { parentId })
+        .leftJoinAndSelect('service.plan', 'plan')
+        .addOrderBy('plan.order', 'DESC');
     } else if (businessId) {
       // Filter for non-system services with specific businessId
       qb.where('service.businessId = :businessId', { businessId });
@@ -176,6 +178,7 @@ export class ServiceService
     if (!business) {
       throw new ForbiddenException('problem with business');
     }
+
     const service = this.serviceRepo.create({ ...createServiceDto });
     service.business = business;
 
@@ -250,23 +253,83 @@ export class ServiceService
       throw new ForbiddenException('System services cannot be modified');
     }
 
-    if (updateDto.price) {
+    // Handle price update separately to avoid constraint violations
+    const { price, ...serviceUpdateData } = updateDto;
+
+    // Assign non-price properties to service
+    Object.assign(service, serviceUpdateData);
+
+    // Handle price update
+    if (price) {
       if (!service.price) {
         await this.priceService.create(
           {
-            amount: updateDto.price.amount,
+            amount: price.amount,
           },
           service,
         );
       } else {
-        service.price.amount = updateDto.price.amount;
+        await this.priceService.update(service.id, {
+          amount: price.amount,
+        });
       }
     }
 
     return await this.serviceRepo.save(service);
   }
-  async update(entities: DeepPartial<Service>) {
-    return this.serviceRepo.save(entities);
+
+  async updateById(id: string, updateServiceDto: UpdateServiceDto, user: User) {
+    const business = await this.businessService.findByUserId(user.id);
+
+    if (!business) throw new BadRequestException('Business not found');
+
+    const service = await this.serviceRepo.findOne({
+      where: {
+        business: business,
+        id,
+      },
+      relations: ['price'],
+    });
+    if (!service)
+      throw new NotFoundException(
+        `Service not found for business with Id ${business.id}`,
+      );
+
+    if (service.isSystemService)
+      throw new BadRequestException('Cannot update system services');
+
+    // Handle price update separately to avoid constraint violations
+    const { price, ...serviceUpdateData } = updateServiceDto;
+
+    // Assign non-price properties to service
+    Object.assign(service, serviceUpdateData);
+
+    // Handle price update
+    if (price) {
+      if (!service.price) {
+        // Create new price if service doesn't have one
+        await this.priceService.create(
+          {
+            amount: price.amount,
+          },
+          service,
+        );
+      } else {
+        // Update existing price
+        await this.priceService.update(service.id, {
+          amount: price.amount,
+        });
+      }
+    }
+
+    // Save the updated service
+    return await this.serviceRepo.save(service);
+  }
+
+  async update(
+    entities: DeepPartial<Service>,
+  ): Promise<DeepPartial<Service> & Service> {
+    return await this.serviceRepo.save(entities as Service);
   }
 
   async remove(id: string, user: User) {
@@ -282,5 +345,9 @@ export class ServiceService
       throw new NotFoundException();
     }
     return this.serviceRepo.remove(service);
+  }
+
+  async findAllPlans() {
+    return this.planRepo.find();
   }
 }

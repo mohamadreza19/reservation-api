@@ -1,23 +1,20 @@
+import { ApiProperty, ApiPropertyOptional, PartialType } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
 import {
-  ApiParam,
-  ApiProperty,
-  ApiPropertyOptional,
-  PartialType,
-} from '@nestjs/swagger';
-import {
-  IsOptional,
-  IsNumber,
-  IsString,
   IsBoolean,
+  IsEnum,
+  IsNumber,
+  IsOptional,
+  IsString,
   IsUUID,
   ValidateNested,
-  isUUID,
 } from 'class-validator';
-import { Type } from 'class-transformer';
+import { ToBoolean } from 'src/common/decorators/to-boolean';
+
+import { CreatePriceDto } from 'src/price/dto/price-dto';
 import { Price } from 'src/price/entities/price.entity';
 import { User } from 'src/user/entities/user.entity';
-import { ToBoolean } from 'src/common/decorators/to-boolean';
-import { CreatePriceDto } from 'src/price/dto/price-dto';
+import { Plan } from '../entities/plan.entity';
 
 export class CreateServiceDto {
   @ApiProperty({
@@ -75,6 +72,10 @@ export class CreateServiceDto {
 
   @IsOptional()
   icon: string;
+
+  @ApiPropertyOptional({ type: Plan })
+  @IsOptional()
+  plan: Plan;
 }
 export class UpdateServiceDto extends PartialType(CreateServiceDto) {}
 export class FindServicesDto {
@@ -128,6 +129,9 @@ export class ServiceDto {
   @ApiPropertyOptional({ type: () => [ServiceDto] })
   @Type(() => ServiceDto)
   children?: ServiceDto[];
+
+  @ApiPropertyOptional({ type: Plan })
+  plan?: Plan;
 }
 export class PaginatedServiceDto {
   @ApiProperty({ type: [ServiceDto] })
@@ -183,4 +187,17 @@ export class FindServiceByBusiness {
   @IsOptional()
   @ToBoolean()
   isSystemService?: boolean;
+}
+
+export class PlanDto {
+  @ApiPropertyOptional()
+  id: string;
+
+  @ApiProperty()
+  name: string;
+
+  @ApiPropertyOptional()
+  color: string;
+  @ApiPropertyOptional()
+  order: number;
 }

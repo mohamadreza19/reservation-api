@@ -68,11 +68,53 @@ export class AuthService {
       userId: user.id,
     };
 
+    // Generate access token (15 minutes)
+    const accessToken = this.jwtService.sign(payload);
+
+    // Generate refresh token (7 days)
+    const refreshToken = this.jwtService.sign(payload, { expiresIn: '7d' });
+
     return {
-      access_token: this.jwtService.sign(payload),
+      access_token: accessToken,
+      refresh_token: refreshToken,
       isNew: user.isNew,
       role: role,
     };
+  }
+
+  async refreshToken(
+    refreshToken: string,
+  ): Promise<{ access_token: string; refresh_token: string }> {
+    try {
+      // Verify refresh token
+      const payload = this.jwtService.verify(refreshToken);
+
+      // Find user
+      const user = await this.userService.findOne(payload.userId);
+
+      if (!user) {
+        throw new UnauthorizedException('Invalid refresh token');
+      }
+
+      // Generate new access token (15 minutes)
+      const newPayload: Payload = {
+        userId: user.id,
+      };
+
+      const accessToken = this.jwtService.sign(newPayload);
+
+      // Generate new refresh token (7 days)
+      const newRefreshToken = this.jwtService.sign(newPayload, {
+        expiresIn: '7d',
+      });
+
+      return {
+        access_token: accessToken,
+        refresh_token: newRefreshToken,
+      };
+    } catch (error) {
+      throw new UnauthorizedException('Invalid refresh token');
+    }
   }
 
   async generateAndSendOTP(phoneNumber: string): Promise<OtpResponseDto> {

@@ -1,29 +1,20 @@
 // auth.controller.ts
-import {
-  Controller,
-  Post,
-  Body,
-  Get,
-  Param,
-  UseGuards,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { Body, Controller, Post } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 
-import { RolesGuard } from 'src/common/guards/roles.guard';
-import { Roles } from 'src/common/decorators/roles.decorator';
-import { Role } from 'src/common/enums/role.enum';
+import { ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { OtpRequestDto } from './dto/otp-request.dto';
-import { VerifyOtpDto } from './dto/verify-otp.dto';
-import { ApiResponse } from '@nestjs/swagger';
+import { RefreshTokenResponseDto } from './dto/refresh-token-response.dto';
+import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { VerifyOtpResponseDto } from './dto/verify-otp-response.dto';
+import { VerifyOtpDto } from './dto/verify-otp.dto';
 
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
-  // @Post('login')
+  // @Post('login')∏
   // async login(@Body() loginDto: LoginDto) {
   //   const { user } = await this.authService.validateUser(
   //     loginDto.phoneNumber,
@@ -46,6 +37,18 @@ export class AuthController {
   async verifyOTP(@Body() verifyOtpDto: VerifyOtpDto) {
     return this.authService.verifyOTP(verifyOtpDto);
   }
+
+  @Post('refresh')
+  @ApiResponse({
+    status: 200,
+    description:
+      'Refresh token verified successfully, returns new access token',
+    type: RefreshTokenResponseDto,
+  })
+  async refreshToken(@Body() refreshTokenDto: RefreshTokenDto) {
+    return this.authService.refreshToken(refreshTokenDto.refreshToken);
+  }
+
   @Post('admin-login')
   @ApiResponse({
     status: 200,
@@ -55,9 +58,4 @@ export class AuthController {
   async adminLogin(@Body() loginDto: LoginDto) {
     return this.authService.adminLogin(loginDto);
   }
-
-  // @Get('initiate-verification/:phoneNumber')
-  // async initiateVerification(@Param('phoneNumber') phoneNumber: string) {
-  //   // return this.authService.initiatePhoneVerification(phoneNumber);
-  // }
 }

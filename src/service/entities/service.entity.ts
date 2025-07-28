@@ -5,16 +5,16 @@ import {
   Column,
   ManyToOne,
   OneToMany,
-  JoinColumn,
   OneToOne,
-  ManyToMany,
   Tree,
   TreeParent,
   TreeChildren,
+  JoinColumn,
 } from 'typeorm';
 import { Business } from '../../business/entities/business.entity';
 import { Price } from 'src/price/entities/price.entity';
 import { Appointment } from 'src/appointment/entities/appointment.entity';
+import { Plan } from './plan.entity';
 
 @Entity()
 @Tree('closure-table')
@@ -33,6 +33,10 @@ export class Service {
 
   @Column({ nullable: true }) // Add icon field to store file path
   icon: string;
+
+  @OneToOne(() => Plan, (p) => p.service)
+  @JoinColumn()
+  plan: Plan;
 
   @ManyToOne(() => Business, (business) => business.services, {
     nullable: true, // Constant services won't belong to a business
