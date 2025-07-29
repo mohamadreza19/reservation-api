@@ -1,6 +1,6 @@
 // create-user.dto.ts
 
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, PartialType } from '@nestjs/swagger';
 import { Role } from '../../common/enums/role.enum';
 import {
   IsEnum,
@@ -63,4 +63,9 @@ export class CreateUserDto {
   @IsOptional()
   @IsString()
   lastName?: string;
+}
+
+export class UpdateUserDto extends PartialType(CreateUserDto) {
+  otpCode?: string;
+  otpExpires?: Date;
 }

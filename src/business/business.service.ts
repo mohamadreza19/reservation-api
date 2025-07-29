@@ -33,7 +33,7 @@ export class BusinessService {
     });
 
     const result = await this.businessRepo.save(business);
-    this.userService.updateRole(user.id, Role.BUSINESS_ADMIN);
+    this.userService.update(user.id, { role: Role.BUSINESS_ADMIN });
 
     return result;
   }

@@ -1,10 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { CreateUserDto } from './dto/user.dto';
+import { FindOptionsWhere, Repository } from 'typeorm';
+import { CreateUserDto, UpdateUserDto } from './dto/user.dto';
 import { User } from './entities/user.entity';
 
-import { Role } from 'src/common/enums/role.enum';
 import { LoginDto } from 'src/auth/dto/login.dto';
 
 @Injectable()
@@ -50,29 +49,16 @@ export class UserService {
     return this.userRepository.find();
   }
 
-  findOne(id: string) {
-    return this.userRepository.findOne({ where: { id } });
+  findOne(where?: FindOptionsWhere<User>) {
+    return this.userRepository.findOne({ where });
   }
 
-  update(id: string, updateUserDto: Partial<CreateUserDto>) {
+  update(id: string, updateUserDto: UpdateUserDto) {
     return this.userRepository.update(id, updateUserDto);
   }
 
   remove(id: string) {
     return this.userRepository.delete(id);
-  }
-
-  async updateRole(id: string, role: Role) {
-    await this.userRepository.update(id, {
-      role,
-    });
-  }
-
-  async _create(user: User) {
-    return this.userRepository.save;
-  }
-  updateUserInstance(user: User) {
-    return this.userRepository.save(user);
   }
 
   async clearOTP(userId: string) {

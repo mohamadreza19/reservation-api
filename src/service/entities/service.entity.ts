@@ -15,10 +15,11 @@ import { Business } from '../../business/entities/business.entity';
 import { Price } from 'src/price/entities/price.entity';
 import { Appointment } from 'src/appointment/entities/appointment.entity';
 import { Plan } from './plan.entity';
+import { SharedColumn } from 'src/common/models/shared-columns';
 
 @Entity()
 @Tree('closure-table')
-export class Service {
+export class Service extends SharedColumn {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 

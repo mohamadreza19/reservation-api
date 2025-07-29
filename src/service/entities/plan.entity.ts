@@ -1,8 +1,9 @@
 import { Column, Entity, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { Service } from './service.entity';
 import { ApiProperty } from '@nestjs/swagger';
+import { SharedColumn } from 'src/common/models/shared-columns';
 @Entity()
-export class Plan {
+export class Plan extends SharedColumn {
   @PrimaryGeneratedColumn('uuid')
   @ApiProperty()
   id: string;

@@ -12,11 +12,16 @@ import {
 import { ServiceService } from './service.service';
 
 import {
-  ApiOperation,
-  ApiProperty,
-  ApiResponse,
-  ApiTags,
-} from '@nestjs/swagger';
+  ApiServiceCreateResponse,
+  ApiServiceDeleteResponse,
+  ApiServiceFindAllPlansResponse,
+  ApiServiceFindAllResponse,
+  ApiServiceFindByBusinessResponse,
+  ApiServiceFindOneResponse,
+  ApiServiceUpdateResponse,
+} from './decorators/service-swagger.decorator';
+
+import { ApiTags } from '@nestjs/swagger';
 import { AuthWithRoles } from 'src/common/decorators/auth.decorator';
 import { AuthUser } from 'src/common/decorators/business.decorators';
 import { Role } from 'src/common/enums/role.enum';
@@ -25,8 +30,6 @@ import {
   CreateServiceDto,
   FindServiceByBusiness,
   FindServicesDto,
-  PaginatedServiceDto,
-  PlanDto,
   UpdateServiceDto,
 } from './dto/service.dto';
 
@@ -37,72 +40,43 @@ export class ServiceController {
   @Post()
   @AuthWithRoles([Role.BUSINESS_ADMIN])
   @HttpCode(201)
-  @ApiOperation({ operationId: 'services_create' })
-  @ApiResponse({ status: 201, description: 'Service created successfully' })
-  @ApiResponse({
-    status: 404,
-    description: 'Parent service or business not found',
-  })
+  @ApiServiceCreateResponse()
   create(@Body() createServiceDto: CreateServiceDto, @AuthUser() user: User) {
     return this.serviceService.create(createServiceDto, user);
   }
 
   @Get()
   @AuthWithRoles([Role.BUSINESS_ADMIN])
-  @ApiOperation({ operationId: 'services_findAll' })
-  @ApiResponse({
-    status: 200,
-    description: 'Services retrieved successfully',
-    type: PaginatedServiceDto,
-  })
+  @ApiServiceFindAllResponse()
   findAll(@Query() dto: FindServicesDto, @AuthUser() user: User) {
     return this.serviceService.findAll(user, dto);
   }
 
   @Get('plans')
-  @ApiResponse({
-    type: [PlanDto],
-  })
-  @ApiOperation({ operationId: 'services_findAllPlans' })
+  @ApiServiceFindAllPlansResponse()
   get() {
     return this.serviceService.findAllPlans();
   }
 
   @Get('business/:businessId')
   @AuthWithRoles([Role.BUSINESS_ADMIN, Role.CUSTOMER])
-  @ApiOperation({ operationId: 'services_findByBusiness' })
-  @ApiResponse({
-    status: 200,
-    description: 'Business services retrieved successfully',
-    type: PaginatedServiceDto,
-  })
-  @ApiResponse({ status: 404, description: 'Business not found' })
+  @ApiServiceFindByBusinessResponse()
   findByBusiness(
     @Param('businessId') businessId: string,
-    @Query()
-    query: FindServiceByBusiness,
+    @Query() query: FindServiceByBusiness,
   ) {
     return this.serviceService.findSystemServices(businessId, query);
   }
 
   @Get(':id')
-  @ApiOperation({ summary: 'Get a service by ID' })
-  @ApiResponse({ status: 200, description: 'Service retrieved successfully' })
-  @ApiResponse({ status: 404, description: 'Service not found' })
+  @ApiServiceFindOneResponse()
   findOne(@Param('id') id: string) {
     return this.serviceService.findOne(id);
   }
 
   @Patch(':id')
   @AuthWithRoles([Role.BUSINESS_ADMIN])
-  @ApiOperation({ operationId: 'services_update' })
-  @ApiResponse({ status: 200, description: 'Service updated successfully' })
-  @ApiResponse({ status: 400, description: 'Bad request' })
-  @ApiResponse({ status: 403, description: 'Forbidden' })
-  @ApiResponse({
-    status: 404,
-    description: 'Service, parent or business not found',
-  })
+  @ApiServiceUpdateResponse()
   update(
     @Param('id') id: string,
     @Body() updateServiceDto: UpdateServiceDto,
@@ -113,28 +87,8 @@ export class ServiceController {
 
   @Delete(':id')
   @AuthWithRoles([Role.BUSINESS_ADMIN])
-  @ApiOperation({ operationId: 'services_delete' })
-  @ApiResponse({ status: 200, description: 'Service deleted successfully' })
-  @ApiResponse({ status: 403, description: 'Forbidden' })
-  @ApiResponse({ status: 404, description: 'Service not found' })
+  @ApiServiceDeleteResponse()
   remove(@Param('id') id: string, @AuthUser() user: User) {
     return this.serviceService.remove(id, user);
   }
-
-  // @Get(':id/children')
-  // @ApiOperation({ summary: 'Get child services of a service' })
-  // @ApiResponse({
-  //   status: 200,
-  //   description: 'Child services retrieved successfully',
-  // })
-  // @ApiResponse({ status: 404, description: 'Parent service not found' })
-  // async findChildren(@Param('id') id: string) {
-  //   await this.serviceService.findOne(id);
-  //   return this.serviceService.findAll({
-  //     businessId: undefined,
-  //     parentId: id,
-  //     isSystemService: undefined,
-  //     rootOnly: undefined,
-  //   });
-  // }
 }

@@ -1,26 +1,16 @@
 // src/schedule/schedule.controller.ts
-import {
-  Controller,
-  Post,
-  Get,
-  Patch,
-  Delete,
-  Body,
-  Param,
-  HttpCode,
-  ForbiddenException,
-} from '@nestjs/common';
-import { ScheduleService } from './schedule.service';
+import { Body, Controller, Get, Param, Patch, Post } from '@nestjs/common';
 import {
   CreateScheduleDto,
   UpdateIntervalForAllDto,
   UpdateScheduleDto,
 } from './dto/schedule.dto';
+import { ScheduleService } from './schedule.service';
 
-import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { AuthWithRoles } from 'src/common/decorators/auth.decorator';
-import { Role } from 'src/common/enums/role.enum';
 import { AuthUser } from 'src/common/decorators/business.decorators';
+import { Role } from 'src/common/enums/role.enum';
 import { User } from 'src/user/entities/user.entity';
 
 @ApiTags('schedules')

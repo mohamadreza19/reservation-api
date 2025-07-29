@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import axios, { AxiosError } from 'axios';
+import { SendOtpDto } from 'src/auth/dto/otp.dto';
 
 @Injectable()
 export class SmsService {
@@ -9,7 +10,7 @@ export class SmsService {
   private readonly patternCode = 'sa7baep8sklqk7q';
   private readonly authHeader = 'YozxdWeULThTwnGx9THvCHNnsDSq6ISeM0qY6Z9druA=';
 
-  async sendOtp(phoneNumber: string, code: string): Promise<void> {
+  async sendOtp({ otp, phoneNumber }: SendOtpDto): Promise<void> {
     try {
       const payload = {
         sending_type: 'pattern',
@@ -17,7 +18,7 @@ export class SmsService {
         code: this.patternCode,
         recipients: [phoneNumber],
         params: {
-          'verification-code': code,
+          'verification-code': otp,
         },
       };
       await axios.post(this.apiUrl, payload, {

@@ -1,18 +1,12 @@
-import {
-  Entity,
-  PrimaryGeneratedColumn,
-  Column,
-  ManyToOne,
-  OneToMany,
-  OneToOne,
-} from 'typeorm';
-import { Business } from '../../business/entities/business.entity';
-import { Role } from '../../common/enums/role.enum';
+import { Column, Entity, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { Business } from 'src/business/entities/business.entity';
+import { Role } from 'src/common/enums/role.enum';
 
+import { SharedColumn } from 'src/common/models/shared-columns';
 import { Customer } from 'src/customer/entities/customer.entity';
 
 @Entity()
-export class User {
+export class User extends SharedColumn {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
@@ -28,13 +22,6 @@ export class User {
   @Column({ type: 'enum', enum: Role, default: Role.CUSTOMER })
   role: Role;
 
-  // @Column({ nullable: true })
-  // firstName: string;
-
-  // @Column({ nullable: true })
-  // lastName: string;
-
-  // Business relationship (for employees)
   @OneToOne(() => Business, (business) => business.userInfo, {
     nullable: true,
   })
@@ -53,7 +40,4 @@ export class User {
   otpExpires: Date;
   @Column({ default: true })
   isNew: boolean;
-
-  @Column({ nullable: true })
-  avatarPath: string;
 }

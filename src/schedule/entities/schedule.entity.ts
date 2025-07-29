@@ -9,9 +9,10 @@ import {
 import { Business } from 'src/business/entities/business.entity';
 import { Day } from 'src/common/enums/day.enum';
 import { Timeslot } from 'src/time-slot/entities/time-slot.entity';
+import { SharedColumn } from 'src/common/models/shared-columns';
 
 @Entity()
-export class Schedule {
+export class Schedule extends SharedColumn {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 

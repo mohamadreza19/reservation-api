@@ -2,7 +2,7 @@
 import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { AuthService } from './auth.service';
+import { AuthService } from './services/auth.service';
 import { AuthController } from './auth.controller';
 import { UserModule } from '../user/user.module';
 import { BusinessModule } from '../business/business.module';
@@ -10,6 +10,7 @@ import { BusinessModule } from '../business/business.module';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { CustomerModule } from 'src/customer/customer.module';
 import { SmsService } from 'src/common/services';
+import { OtpService } from './services/otp.service';
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { SmsService } from 'src/common/services';
   controllers: [AuthController],
   providers: [
     AuthService,
+    OtpService,
     JwtStrategy,
     SmsService,
     // {

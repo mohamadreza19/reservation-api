@@ -14,9 +14,10 @@ import { User } from 'src/user/entities/user.entity';
 import { Customer } from 'src/customer/entities/customer.entity';
 import { Timeslot } from 'src/time-slot/entities/time-slot.entity';
 import { Appointment } from 'src/appointment/entities/appointment.entity';
+import { SharedColumn } from 'src/common/models/shared-columns';
 
 @Entity()
-export class Business {
+export class Business extends SharedColumn {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 

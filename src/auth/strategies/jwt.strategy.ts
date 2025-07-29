@@ -1,7 +1,7 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
-import { AuthService } from '../auth.service';
+import { AuthService } from '../services/auth.service';
 import { ConfigService } from '@nestjs/config';
 import { User } from 'src/user/entities/user.entity';
 import { UserService } from 'src/user/user.service';
@@ -22,7 +22,9 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   async validate(payload: Payload): Promise<User> {
-    const protectedUser = await this.userService.findOne(payload.userId);
+    const protectedUser = await this.userService.findOne({
+      id: payload.userId,
+    });
     // console.log('26', payload);
     // console.log('27', protectedUser);
     if (!protectedUser) {

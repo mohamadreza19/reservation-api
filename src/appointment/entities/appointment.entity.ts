@@ -17,9 +17,10 @@ import { ServiceDto } from 'src/service/dto/service.dto';
 import { TimeslotByDateDto } from 'src/time-slot/dto/time-slot-dto';
 import { BusinessProfileDto } from 'src/business/dto/business.dto';
 import { AppointmentStatus } from '../constants/const';
+import { SharedColumn } from 'src/common/models/shared-columns';
 
 @Entity()
-export class Appointment {
+export class Appointment extends SharedColumn {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 

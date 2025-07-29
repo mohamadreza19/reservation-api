@@ -13,9 +13,10 @@ import { Appointment } from '../../appointment/entities/appointment.entity';
 import { User } from 'src/user/entities/user.entity';
 import { ApiProperty } from '@nestjs/swagger';
 import { CreateUserDto } from 'src/user/dto/user.dto';
+import { SharedColumn } from 'src/common/models/shared-columns';
 
 @Entity()
-export class Customer {
+export class Customer extends SharedColumn {
   @ApiProperty({ example: 'uuid-value' })
   @PrimaryGeneratedColumn('uuid')
   id: string;

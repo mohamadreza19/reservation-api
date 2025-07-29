@@ -285,11 +285,14 @@ export class ServiceService
 
     const service = await this.serviceRepo.findOne({
       where: {
-        business: business,
+        business: {
+          id: business.id,
+        },
         id,
       },
       relations: ['price'],
     });
+
     if (!service)
       throw new NotFoundException(
         `Service not found for business with Id ${business.id}`,

@@ -1,30 +1,21 @@
-import {
-  Body,
-  Controller,
-  Get,
-  Param,
-  Patch,
-  Post,
-  Query,
-} from '@nestjs/common';
-import {
-  BusinessProfileDto,
-  CreateBusinessDto,
-  PublicBusinessDto,
-  UpdateBusinessDto,
-} from './dto/business.dto';
-import { BusinessService } from './business.service';
-import { AuthWithRoles } from 'src/common/decorators/auth.decorator';
-import { Role } from 'src/common/enums/role.enum';
-import { AuthUser } from 'src/common/decorators/business.decorators';
-import { User } from 'src/user/entities/user.entity';
+import { Body, Controller, Get, Param, Patch, Post } from '@nestjs/common';
 import {
   ApiOkResponse,
   ApiOperation,
   ApiParam,
   ApiResponse,
 } from '@nestjs/swagger';
-import { Business } from './entities/business.entity';
+import { AuthWithRoles } from 'src/common/decorators/auth.decorator';
+import { AuthUser } from 'src/common/decorators/business.decorators';
+import { Role } from 'src/common/enums/role.enum';
+import { User } from 'src/user/entities/user.entity';
+import { BusinessService } from './business.service';
+import {
+  BusinessProfileDto,
+  CreateBusinessDto,
+  PublicBusinessDto,
+  UpdateBusinessDto,
+} from './dto/business.dto';
 
 // business.controller.ts
 
