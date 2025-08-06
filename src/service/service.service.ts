@@ -338,12 +338,17 @@ export class ServiceService
   async remove(id: string, user: User) {
     const business = await this.businessService.findByUserId(user.id);
     if (!business) throw new NotFoundException('Business not found');
+    console.log(id);
     const service = await this.serviceRepo.findOne({
       where: {
-        business,
+        business: {
+          id: business.id,
+        },
         id: id,
+        isSystemService: false,
       },
     });
+    console.log(service);
     if (!service) {
       throw new NotFoundException();
     }

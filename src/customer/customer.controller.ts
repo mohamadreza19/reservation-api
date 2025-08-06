@@ -13,7 +13,7 @@ import { AuthWithRoles } from 'src/common/decorators/auth.decorator';
 import { Role } from 'src/common/enums/role.enum';
 import { AuthUser } from 'src/common/decorators/business.decorators';
 import { User } from 'src/user/entities/user.entity';
-import { ApiOkResponse } from '@nestjs/swagger';
+import { ApiOkResponse, ApiOperation } from '@nestjs/swagger';
 import { Customer } from './entities/customer.entity';
 
 @Controller('customer')
@@ -29,8 +29,9 @@ export class CustomerController {
   findAll() {
     return this.customerService.findAll();
   }
-  @AuthWithRoles([Role.CUSTOMER])
   @Get('profile')
+  @AuthWithRoles([Role.CUSTOMER])
+  @ApiOperation({ operationId: 'customer_profile' })
   @ApiOkResponse({ type: Customer })
   findProfile(@AuthUser() user: User) {
     return this.customerService.findByUserId(user.id);

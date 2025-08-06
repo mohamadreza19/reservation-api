@@ -4,18 +4,14 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Business } from './entities/business.entity';
-import { Repository } from 'typeorm';
-import { User } from 'src/user/entities/user.entity';
-import {
-  CreateBusinessDto,
-  PublicBusinessDto,
-  UpdateBusinessDto,
-} from './dto/business.dto';
-import { UserService } from 'src/user/user.service';
-import { Role } from 'src/common/enums/role.enum';
-import shortid, { generate } from 'shortid';
 import { isUUID } from 'class-validator';
+import { generate } from 'shortid';
+import { Role } from 'src/common/enums/role.enum';
+import { User } from 'src/user/entities/user.entity';
+import { UserService } from 'src/user/user.service';
+import { Repository } from 'typeorm';
+import { PublicBusinessDto, UpdateBusinessDto } from './dto/business.dto';
+import { Business } from './entities/business.entity';
 
 // business.service.ts
 @Injectable()
@@ -105,7 +101,7 @@ export class BusinessService {
       where: { id },
       select: ['id', 'name', 'address'], // Select only public fields
     });
-    console.log(id);
+
     if (!business) {
       throw new NotFoundException('Business not found');
     }

@@ -1,20 +1,18 @@
 // business.entity.ts
 import {
-  Entity,
-  PrimaryGeneratedColumn,
   Column,
+  Entity,
+  JoinColumn,
   OneToMany,
   OneToOne,
-  JoinColumn,
-  ManyToMany,
+  PrimaryGeneratedColumn,
 } from 'typeorm';
 
-import { Service } from '../../service/entities/service.entity';
-import { User } from 'src/user/entities/user.entity';
-import { Customer } from 'src/customer/entities/customer.entity';
-import { Timeslot } from 'src/time-slot/entities/time-slot.entity';
 import { Appointment } from 'src/appointment/entities/appointment.entity';
 import { SharedColumn } from 'src/common/models/shared-columns';
+import { Timeslot } from 'src/time-slot/entities/time-slot.entity';
+import { User } from 'src/user/entities/user.entity';
+import { Service } from '../../service/entities/service.entity';
 
 @Entity()
 export class Business extends SharedColumn {
