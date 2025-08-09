@@ -75,7 +75,7 @@ export class ScheduleService {
     if (!business) throw new NotFoundException('Business not found');
     return this.scheduleRepo.find({
       where: {
-        business,
+        business: { id: business.id },
       },
       select: {
         business: false,

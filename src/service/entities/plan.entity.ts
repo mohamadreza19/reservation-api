@@ -1,4 +1,10 @@
-import { Column, Entity, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  OneToMany,
+  OneToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 import { Service } from './service.entity';
 import { ApiProperty } from '@nestjs/swagger';
 import { SharedColumn } from 'src/common/models/shared-columns';
@@ -16,7 +22,7 @@ export class Plan extends SharedColumn {
   @ApiProperty()
   color: string;
 
-  @OneToOne(() => Service, (service) => service.plan)
+  @OneToMany(() => Service, (service) => service.plan)
   service: Service;
 
   @ApiProperty()

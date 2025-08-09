@@ -271,7 +271,9 @@ export class TimeslotService {
     if (!business) throw new NotFoundException('Business not found');
     const latestTimeSlot = await this.timeslotRepo.findOne({
       where: {
-        business,
+        business: {
+          id: business.id,
+        },
         // endTime: MoreThan(now),
       },
       order: {

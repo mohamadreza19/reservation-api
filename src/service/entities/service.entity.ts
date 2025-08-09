@@ -35,8 +35,7 @@ export class Service extends SharedColumn {
   @Column({ nullable: true }) // Add icon field to store file path
   icon: string;
 
-  @OneToOne(() => Plan, (p) => p.service)
-  @JoinColumn()
+  @ManyToOne(() => Plan, (p) => p.service)
   plan: Plan;
 
   @ManyToOne(() => Business, (business) => business.services, {

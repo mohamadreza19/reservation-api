@@ -178,10 +178,10 @@ export class ServiceService
     if (!business) {
       throw new ForbiddenException('problem with business');
     }
-
-    const service = this.serviceRepo.create({ ...createServiceDto });
+    console.log('createServiceDto', createServiceDto);
+    const service = this.serviceRepo.create(createServiceDto);
     service.business = business;
-
+    console.log('service', service);
     // Validate name uniqueness for non-system services within the business
     if (!createServiceDto.isSystemService) {
       const existingService = await this.serviceRepo.findOne({
@@ -221,7 +221,7 @@ export class ServiceService
         'All non-system services must have a parent',
       );
     }
-
+    console.log('lay');
     return await this.serviceRepo.save(service);
   }
   async updateByAuthorizeUser(
