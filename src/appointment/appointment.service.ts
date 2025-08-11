@@ -111,13 +111,11 @@ export class AppointmentService {
           minutesBefore,
         );
         if (TimeUtil.shouldScheduleReminder(delay)) {
-          console.log(REMINDER_MINUTES_BEFORE);
-          await this.reminder.scheduleReminder(
-            user.id,
-            appointment.id,
-
-            delay,
-          );
+          // await this.reminder.scheduleReminder(
+          //   user.id,
+          //   appointment.id,
+          //   delay,
+          // );
         }
       }
 
