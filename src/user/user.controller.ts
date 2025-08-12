@@ -8,7 +8,12 @@ import {
   Delete,
 } from '@nestjs/common';
 import { UserService } from './user.service';
-import { CreateUserDto } from './dto/user.dto';
+import { CreateUserDto, UserProfileDto } from './dto/user.dto';
+import { AuthWithRoles } from 'src/common/decorators/auth.decorator';
+import { Role } from 'src/common/enums/role.enum';
+import { AuthUser } from 'src/common/decorators/business.decorators';
+import { User } from './entities/user.entity';
+import { ApiOkResponse, ApiOperation } from '@nestjs/swagger';
 
 @Controller('user')
 export class UserController {
@@ -23,7 +28,17 @@ export class UserController {
   findAll() {
     return this.userService.findAll();
   }
-
+  @Get('profile')
+  @AuthWithRoles([Role.BUSINESS_ADMIN, Role.CUSTOMER])
+  @ApiOperation({
+    operationId: 'user_profile',
+  })
+  @ApiOkResponse({
+    type: () => UserProfileDto,
+  })
+  findProfile(@AuthUser() user: User) {
+    return this.userService.getProfile(user.id);
+  }
   @Get(':id')
   findOne(@Param('id') id: string) {
     // return this.userService.findOne(+id);

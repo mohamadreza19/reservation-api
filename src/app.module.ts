@@ -19,6 +19,7 @@ import { TimeslotModule } from './time-slot/time-slot.module';
 import { SwaggerModule } from './swagger/swagger.module';
 import { FileModule } from './file/file.module';
 import { BullModule } from '@nestjs/bull';
+import { FeedbackModule } from './feedback/feedback.module';
 
 @Module({
   imports: [
@@ -42,6 +43,9 @@ import { BullModule } from '@nestjs/bull';
     SwaggerModule,
 
     FileModule,
+
+    FeedbackModule,
+
     // RedisModule,
   ],
   controllers: [AppController],

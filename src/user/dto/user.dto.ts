@@ -65,6 +65,11 @@ export class CreateUserDto {
   lastName?: string;
 }
 
+export class UserProfileDto extends PartialType(CreateUserDto) {
+  @ApiProperty()
+  id: string;
+}
+
 export class UpdateUserDto extends PartialType(CreateUserDto) {
   otpCode?: string;
   otpExpires?: Date;

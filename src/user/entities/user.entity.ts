@@ -1,9 +1,16 @@
-import { Column, Entity, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  OneToMany,
+  OneToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 import { Business } from 'src/business/entities/business.entity';
 import { Role } from 'src/common/enums/role.enum';
 
 import { SharedColumn } from 'src/common/models/shared-columns';
 import { Customer } from 'src/customer/entities/customer.entity';
+import { Feedback } from 'src/feedback/entities/feedback.entity';
 
 @Entity()
 export class User extends SharedColumn {
@@ -40,4 +47,7 @@ export class User extends SharedColumn {
   otpExpires: Date;
   @Column({ default: true })
   isNew: boolean;
+
+  @OneToMany(() => Feedback, (feedback) => feedback.user)
+  feedbacks: Feedback[];
 }

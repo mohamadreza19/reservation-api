@@ -67,4 +67,16 @@ export class UserService {
       otpExpires: null as any,
     });
   }
+  async getProfile(id: string) {
+    return this.userRepository.findOne({
+      where: {
+        id,
+      },
+      select: {
+        password: false,
+        otpCode: false,
+        otpExpires: false,
+      },
+    });
+  }
 }
