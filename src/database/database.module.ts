@@ -9,17 +9,20 @@ import { TypeOrmModule } from '@nestjs/typeorm';
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: async (configService: ConfigService) => {
+        const synchronize =
+          configService.get<string>('DB_SYNCHRONIZE') === 'true';
+
         console.log('DATABASE_URL', configService.get<string>('DATABASE_URL'));
+        console.log('DB_SYNCHRONIZE', synchronize);
+
         return {
           type: 'postgres',
           url: configService.get<string>('DATABASE_URL'),
-          // entities: [join(__dirname, '../**/*.entity{.ts,.js}')],
-          // ssl: {
-          //   rejectUnauthorized: false, // Needed for Render
-          // },
-          // dropSchema: true, // development mode only
           autoLoadEntities: true,
-          synchronize: true, // Use migrations instead in production
+          synchronize, // controlled by env
+          // ssl: configService.get<string>('NODE_ENV') === 'production'
+          //   ? { rejectUnauthorized: false }
+          //   : false,
         };
       },
     }),
