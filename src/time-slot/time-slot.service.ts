@@ -8,9 +8,13 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import {
   DeepPartial,
+  Equal,
   FindManyOptions,
   FindOptionsWhere,
+  In,
+  LessThanOrEqual,
   MoreThan,
+  MoreThanOrEqual,
   Repository,
 } from 'typeorm';
 import { Service } from '../service/entities/service.entity';
@@ -37,6 +41,11 @@ import {
 import { QueryService } from 'src/common/services/query.service';
 import { Business } from 'src/business/entities/business.entity';
 import { TimeSlotStatus } from 'src/common/enums/time-slot-status.enum';
+import { ServiceService } from 'src/service/service.service';
+import {
+  GenerateTimeslotsFromScheduleDto,
+  UpdateServicesTimeSlots,
+} from './dto/timeslot.dto';
 
 @Injectable()
 export class TimeslotService {
@@ -48,6 +57,7 @@ export class TimeslotService {
     private readonly scheduleService: ScheduleService,
     @InjectRepository(Timeslot)
     private readonly timeslotRepo: Repository<Timeslot>,
+    private readonly service: ServiceService,
   ) {
     this.queryService = new QueryService(this.timeslotRepo);
   }
@@ -60,21 +70,13 @@ export class TimeslotService {
     if (!business) {
       throw new ForbiddenException('No business associated with this user');
     }
-
     const schedules = await this.scheduleService.getByBusinessId(business.id);
     if (schedules.length !== 7) {
       throw new BadRequestException(
         'Business must have schedules for all 7 days',
       );
     }
-
-    // const service = await this.serviceRepo.findOne({
-    //   where: { id: serviceId },
-    // });
-    // if (!service) {
-    //   throw new NotFoundException(`Service with ID ${serviceId} not found`);
-    // }
-
+    const services = await this.service.findByBusinessId(business.id);
     const today = moment(); // Get current date dynamically (e.g., 2025-05-25 23:49 CEST)
 
     // Create Map with lowercase day names as keys
@@ -92,52 +94,62 @@ export class TimeslotService {
       if (!schedule) {
         continue; // Should not happen due to 7-day validation
       }
-      await this.generateTimeslotsFromSchedule(business, schedule, date);
+      await this.generateTimeslotsFromSchedule({
+        business,
+        schedule,
+        date,
+        services,
+      });
     }
 
     return 'time slots created successfully';
   }
-  async generateTimeslotsFromSchedule(
-    business: Business,
-    schedule: Schedule,
-    date: moment.Moment,
-  ) {
-    let intervalMinutes = this.convertTimeToMinutes(schedule.interval);
+  async generateTimeslotsFromSchedule({
+    business,
+    schedule,
+    services,
+    date,
+  }: GenerateTimeslotsFromScheduleDto) {
+    // let intervalMinutes = this.convertTimeToMinutes(schedule.interval);
+    // const services = await this.service.findByBusinessId(business.id);
     let timeslots: Timeslot[] = [];
     let start: moment.Moment;
     let end: moment.Moment;
 
-    start = moment(
-      `${date.format('YYYY-MM-DD')} ${schedule.startTime}`,
-      'YYYY-MM-DD HH:mm:ss',
-    );
-    end = moment(
-      `${date.format('YYYY-MM-DD')} ${schedule.endTime}`,
-      'YYYY-MM-DD HH:mm:ss',
-    );
+    for (const service of services) {
+      start = moment(
+        `${date.format('YYYY-MM-DD')} ${schedule.startTime}`,
+        'YYYY-MM-DD HH:mm:ss',
+      );
+      end = moment(
+        `${date.format('YYYY-MM-DD')} ${schedule.endTime}`,
+        'YYYY-MM-DD HH:mm:ss',
+      );
 
-    while (start < end) {
-      // console.log('index', i);
+      while (start < end) {
+        // console.log('index', i);
 
-      const slotEnd = start.clone().add(intervalMinutes, 'minutes');
-      if (slotEnd > end) break;
+        const slotEnd = start.clone().add(service.durationInMinutes, 'minutes');
+        if (slotEnd > end) break;
 
-      const instance = this.timeslotRepo.create({
-        schedule: schedule,
-        date: date.format('YYYY-MM-DD'), // e.g., '2025-05-24'
-        startTime: start.format('HH:mm'), // e.g., '09:00'
-        endTime: slotEnd.format('HH:mm'), // e.g., '09:30'
-        // isAvailable: schedule.isOpen,
-        status: schedule.isOpen
-          ? TimeSlotStatus.IDLE
-          : TimeSlotStatus.UN_AVAILABLE,
-        business,
-      });
+        const instance = this.timeslotRepo.create({
+          // service: service,
+          date: date.format('YYYY-MM-DD'), // e.g., '2025-05-24'
+          // startTime: start.format('HH:mm'), // e.g., '09:00'
+          // endTime: slotEnd.format('HH:mm'), // e.g., '09:30'
+          // isAvailable: schedule.isOpen,
+          status: schedule.isOpen
+            ? TimeSlotStatus.IDLE
+            : TimeSlotStatus.UN_AVAILABLE,
+          business,
+        });
 
-      timeslots.push(instance);
+        timeslots.push(instance);
 
-      start.add(intervalMinutes, 'minutes');
+        start.add(service.durationInMinutes, 'minutes');
+      }
     }
+
     return this.timeslotRepo.save(timeslots);
   }
 
@@ -174,13 +186,13 @@ export class TimeslotService {
     // Update the fields from the DTO
     if (updateDto.date !== undefined) existing.date = updateDto.date;
     if (updateDto.startTime !== undefined)
-      existing.startTime = updateDto.startTime;
-    if (updateDto.endTime !== undefined) existing.endTime = updateDto.endTime;
-    if (updateDto.isAvailable !== undefined)
-      // existing.isAvailable = updateDto.isAvailable;
+      if (updateDto.isAvailable !== undefined)
+        // existing.startTime = updateDto.startTime;
+        // if (updateDto.endTime !== undefined) existing.endTime = updateDto.endTime;
+        // existing.isAvailable = updateDto.isAvailable;
 
-      // Save the updated entity
-      return this.timeslotRepo.save(existing);
+        // Save the updated entity
+        return this.timeslotRepo.save(existing);
   }
 
   async getAvailableDateRange(
@@ -256,11 +268,11 @@ export class TimeslotService {
       select: {
         id: true,
         date: true,
-        startTime: true,
-        endTime: true,
+        // startTime: true,
+        // endTime: true,
       },
       order: {
-        startTime: 'ASC',
+        // startTime: 'ASC',
       },
     });
   }
@@ -293,14 +305,38 @@ export class TimeslotService {
       gapFromNow: gap,
     };
   }
+  async updateByServices(
+    updateServicesTimeSlots: UpdateServicesTimeSlots,
+    user: User,
+  ) {
+    const business = await this.businessService.findByUserId(user.id);
+    if (!business) {
+      throw new ForbiddenException('No business associated with this user');
+    }
+    // const services = await this.service.findByBusinessId(
+    //   business.id,
+    //   updateServicesTimeSlots.serviceIds,
+    // );
 
-  async getBySchedule(scheduleId: string) {
-    return this.timeslotRepo.find({
-      where: {
-        schedule: {
-          id: scheduleId,
-        },
-      },
-    });
+    const now = moment();
+    const today = now.format('YYYY-MM-DD'); // only date part
+    const currentTime = now.format('HH:mm'); // only time part
+
+    await this.timeslotRepo
+      .createQueryBuilder('t')
+      .leftJoinAndSelect('t.service', 's')
+      .leftJoinAndSelect('t.business', 'b')
+      .where('b.id = :id', { id: business.id })
+      .andWhere('t.date >= :today', { today })
+
+      .andWhere('t.status IN (:...statuses)', {
+        statuses: [TimeSlotStatus.IDLE, TimeSlotStatus.UN_AVAILABLE],
+      })
+      .andWhere('t.startTime >= :currentTime', { currentTime })
+      .andWhere('t.endTime >= :currentTime', { currentTime }) // end after now
+      .andWhere('s.id IN (:...ids)', {
+        ids: updateServicesTimeSlots.serviceIds,
+      })
+      .delete();
   }
 }

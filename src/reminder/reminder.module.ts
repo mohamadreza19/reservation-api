@@ -19,7 +19,8 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
         const redisUrl = configService.get<string>('REDIS_URL');
 
         return {
-          redis: { db: 0 },
+          // redis: { db: 0 ,},
+          redis: redisUrl,
         };
       },
     }),

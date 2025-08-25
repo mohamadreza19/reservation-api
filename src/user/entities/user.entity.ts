@@ -1,3 +1,5 @@
+import { Business } from 'src/business/entities/business.entity';
+import { Role } from 'src/common/enums/role.enum';
 import {
   Column,
   Entity,
@@ -5,12 +7,13 @@ import {
   OneToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
-import { Business } from 'src/business/entities/business.entity';
-import { Role } from 'src/common/enums/role.enum';
 
 import { SharedColumn } from 'src/common/models/shared-columns';
 import { Customer } from 'src/customer/entities/customer.entity';
+import { EmployeeRegister } from 'src/employee/entities/employee-register.entity';
+import { Employee } from 'src/employee/entities/employee.entity';
 import { Feedback } from 'src/feedback/entities/feedback.entity';
+import { Notification } from 'src/notification/entities/notification.entity';
 
 @Entity()
 export class User extends SharedColumn {
@@ -45,9 +48,22 @@ export class User extends SharedColumn {
 
   @Column({ nullable: true })
   otpExpires: Date;
+
   @Column({ default: true })
   isNew: boolean;
 
+  @Column({ default: false })
+  isPhoneVerified: boolean;
+
   @OneToMany(() => Feedback, (feedback) => feedback.user)
   feedbacks: Feedback[];
+
+  @OneToOne(() => Employee, (employee) => employee.userInfo)
+  employee: Employee;
+
+  @OneToMany(() => EmployeeRegister, (er) => er.userInfo)
+  employeeRegisters: EmployeeRegister[];
+
+  @OneToMany(() => Notification, (notifications) => notifications.user)
+  notifications: Notification[];
 }

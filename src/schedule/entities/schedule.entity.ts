@@ -28,12 +28,9 @@ export class Schedule extends SharedColumn {
   @Column({ type: 'time', nullable: true })
   endTime: string | null;
 
-  @Column({ type: 'time', nullable: true })
-  interval: string;
+  // @Column({ type: 'time', nullable: true })
+  // interval: string;
 
   @Column({ type: 'boolean', default: false })
   isOpen: boolean;
-
-  @OneToMany(() => Timeslot, (timeslot) => timeslot.startTime)
-  timeslots: Timeslot[];
 }

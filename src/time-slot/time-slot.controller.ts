@@ -1,4 +1,13 @@
-import { Controller, Delete, Get, Param, Post, Query } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Post,
+  Put,
+  Query,
+} from '@nestjs/common';
 
 import { ApiTags, ApiOperation, ApiResponse, ApiQuery } from '@nestjs/swagger';
 import { AuthWithRoles } from 'src/common/decorators/auth.decorator';
@@ -13,6 +22,7 @@ import {
   TimeslotAvailableRangeQueryDto,
   TimeslotByDateDto,
 } from './dto/time-slot-dto';
+import { UpdateServicesTimeSlots } from './dto/timeslot.dto';
 
 @ApiTags('timeslots')
 @Controller('timeslots')
@@ -58,5 +68,14 @@ export class TimeslotController {
   })
   getStatus(@AuthUser() user: User) {
     return this.timeslotService.getStatus(user);
+  }
+
+  @Put()
+  @AuthWithRoles([Role.BUSINESS_ADMIN])
+  updateByService(
+    @Body() updateServicesTimeSlots: UpdateServicesTimeSlots,
+    @AuthUser() user: User,
+  ) {
+    return this.timeslotService.updateByServices(updateServicesTimeSlots, user);
   }
 }

@@ -1,21 +1,23 @@
 // service.entity.ts
+import { Appointment } from 'src/appointment/entities/appointment.entity';
+import { SharedColumn } from 'src/common/models/shared-columns';
+import { Price } from 'src/price/entities/price.entity';
 import {
-  Entity,
-  PrimaryGeneratedColumn,
   Column,
+  Entity,
+  ManyToMany,
   ManyToOne,
   OneToMany,
   OneToOne,
+  PrimaryGeneratedColumn,
   Tree,
-  TreeParent,
   TreeChildren,
-  JoinColumn,
+  TreeParent,
 } from 'typeorm';
 import { Business } from '../../business/entities/business.entity';
-import { Price } from 'src/price/entities/price.entity';
-import { Appointment } from 'src/appointment/entities/appointment.entity';
 import { Plan } from './plan.entity';
-import { SharedColumn } from 'src/common/models/shared-columns';
+import { Timeslot } from 'src/time-slot/entities/time-slot.entity';
+import { Employee } from 'src/employee/entities/employee.entity';
 
 @Entity()
 @Tree('closure-table')
@@ -28,6 +30,9 @@ export class Service extends SharedColumn {
 
   @Column({ nullable: true })
   description: string;
+
+  @Column('int', { nullable: true })
+  durationInMinutes: number;
 
   @Column({ default: false })
   isSystemService: boolean; // Marks constant/main services
@@ -60,4 +65,10 @@ export class Service extends SharedColumn {
 
   @OneToMany(() => Appointment, (appointment) => appointment.service)
   appointment: Appointment[];
+
+  // @OneToMany(() => Timeslot, (timeslot) => timeslot.service)
+  // timeslots: Timeslot[];
+
+  @ManyToMany(() => Employee, (employees) => employees.services)
+  employees: Employee[];
 }

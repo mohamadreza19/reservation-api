@@ -100,24 +100,20 @@ export class AppointmentService {
       }
 
       // Step 3: Schedule reminders
-      const { date, startTime } = timeslot;
-      const appointmentDateTime = TimeUtil.createAppointmentDateTime(
-        date,
-        startTime,
-      );
-      for (const minutesBefore of REMINDER_MINUTES_BEFORE) {
-        const { delay } = TimeUtil.calculateReminderTime(
-          appointmentDateTime,
-          minutesBefore,
-        );
-        if (TimeUtil.shouldScheduleReminder(delay)) {
-          // await this.reminder.scheduleReminder(
-          //   user.id,
-          //   appointment.id,
-          //   delay,
-          // );
-        }
-      }
+      // const { date, startTime } = timeslot;
+      // const appointmentDateTime = TimeUtil.createAppointmentDateTime(
+      //   date,
+      //   startTime,
+      // );
+      // for (const minutesBefore of REMINDER_MINUTES_BEFORE) {
+      //   const { delay } = TimeUtil.calculateReminderTime(
+      //     appointmentDateTime,
+      //     minutesBefore,
+      //   );
+      //   if (TimeUtil.shouldScheduleReminder(delay)) {
+      //     await this.reminder.scheduleReminder(user.id, appointment.id, delay);
+      //   }
+      // }
 
       return appointment;
     });

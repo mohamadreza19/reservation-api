@@ -29,8 +29,8 @@ export class BusinessController {
   create(dto: CreateBusinessDto, @AuthUser() user: User) {
     return this.service.create(user);
   }
-  @AuthWithRoles([Role.BUSINESS_ADMIN])
   @Patch()
+  @AuthWithRoles([Role.BUSINESS_ADMIN])
   @ApiOperation({ operationId: 'business_patch' })
   update(@Body() dto: UpdateBusinessDto, @AuthUser() user: User) {
     return this.service.update(dto, user);

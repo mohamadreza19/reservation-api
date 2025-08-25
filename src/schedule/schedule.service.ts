@@ -24,8 +24,6 @@ import { TimeslotService } from 'src/time-slot/time-slot.service';
 @Injectable()
 export class ScheduleService {
   queryService: QueryService<Schedule>;
-  private readonly redis: Redis;
-  private readonly DEFAULT_DURATION = 30; // Default duration in minutes
 
   constructor(
     @InjectRepository(Schedule)
@@ -56,7 +54,6 @@ export class ScheduleService {
         day: dayValue,
         startTime: isFriday ? null : '09:00',
         endTime: isFriday ? null : '17:00',
-        interval: '00:35',
         isOpen: !isFriday,
         business: { id: business.id },
       });
@@ -144,13 +141,14 @@ export class ScheduleService {
 
       const schedule = scheduleDayMap.get(dayOfWeek.toLocaleLowerCase());
 
-      if (schedule) {
-        this.timeslotService.generateTimeslotsFromSchedule(
-          business,
-          schedule,
-          moment(availableDate.date, 'YYYY-MM-DD'),
-        );
-      }
+      // if (schedule) {
+      //   this.timeslotService.generateTimeslotsFromSchedule(
+      //     business,
+      //     schedule,
+      //     moment(availableDate.date, 'YYYY-MM-DD'),
+
+      //   );
+      // }
     }
     return;
   }
@@ -166,14 +164,12 @@ export class ScheduleService {
       throw new BadRequestException('Invalid time format. Expected HH:mm:ss');
     }
 
-    await this.scheduleRepo.update(
-      {
-        business,
-      },
-      {
-        interval: data.time,
-      },
-    );
+    // await this.scheduleRepo.update(
+    //   {
+    //     business,
+    //   },
+
+    // );
 
     const scheduleDayMap = await this.getDayMapScheduleByPersianDayOrder(
       business.id,
@@ -195,13 +191,13 @@ export class ScheduleService {
       const dayOfWeek = moment(availableDate.date, 'YYYY-MM-DD').format('dddd');
       const schedule = scheduleDayMap.get(dayOfWeek.toLocaleLowerCase());
 
-      if (schedule) {
-        this.timeslotService.generateTimeslotsFromSchedule(
-          business,
-          schedule,
-          moment(availableDate.date, 'YYYY-MM-DD'),
-        );
-      }
+      // if (schedule) {
+      //   this.timeslotService.generateTimeslotsFromSchedule(
+      //     business,
+      //     schedule,
+      //     moment(availableDate.date, 'YYYY-MM-DD'),
+      //   );
+      // }
     }
   }
 

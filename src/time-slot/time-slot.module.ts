@@ -8,12 +8,14 @@ import { ScheduleModule } from 'src/schedule/schedule.module';
 
 import { Timeslot } from './entities/time-slot.entity';
 import { QueryService } from 'src/common/services/query.service';
+import { ServiceModule } from 'src/service/service.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Timeslot]),
     BusinessModule,
     ScheduleModule,
+    ServiceModule,
   ],
   providers: [TimeslotService],
   controllers: [TimeslotController],

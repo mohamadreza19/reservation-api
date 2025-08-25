@@ -1,25 +1,26 @@
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { DatabaseModule } from './database/database.module';
-import { CustomerModule } from './customer/customer.module';
-import { BusinessModule } from './business/business.module';
 import { AppointmentModule } from './appointment/appointment.module';
+import { BusinessModule } from './business/business.module';
+import { CustomerModule } from './customer/customer.module';
+import { DatabaseModule } from './database/database.module';
 
-import { ServiceModule } from './service/service.module';
-import { ReminderModule } from './reminder/reminder.module';
 import { ConfigModule } from '@nestjs/config';
-import { UserModule } from './user/user.module';
 import { AuthModule } from './auth/auth.module';
 import { PriceModule } from './price/price.module';
+import { ReminderModule } from './reminder/reminder.module';
 import { ScheduleModule } from './schedule/schedule.module';
+import { ServiceModule } from './service/service.module';
+import { UserModule } from './user/user.module';
 
-import { RedisModule } from './redis/redis.module';
-import { TimeslotModule } from './time-slot/time-slot.module';
-import { SwaggerModule } from './swagger/swagger.module';
-import { FileModule } from './file/file.module';
 import { BullModule } from '@nestjs/bull';
+import { EmployeeModule } from './employee/employee.module';
 import { FeedbackModule } from './feedback/feedback.module';
+import { FileModule } from './file/file.module';
+import { SwaggerModule } from './swagger/swagger.module';
+import { TimeslotModule } from './time-slot/time-slot.module';
+import { NotificationModule } from './notification/notification.module';
 
 @Module({
   imports: [
@@ -45,6 +46,10 @@ import { FeedbackModule } from './feedback/feedback.module';
     FileModule,
 
     FeedbackModule,
+
+    EmployeeModule,
+
+    NotificationModule,
 
     // RedisModule,
   ],

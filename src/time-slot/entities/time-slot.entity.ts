@@ -1,16 +1,15 @@
 import {
   Column,
   Entity,
-  JoinColumn,
   ManyToOne,
   OneToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 
-import { Schedule } from 'src/schedule/entities/schedule.entity';
 import { Appointment } from 'src/appointment/entities/appointment.entity';
 import { Business } from 'src/business/entities/business.entity';
 import { TimeSlotStatus } from 'src/common/enums/time-slot-status.enum';
+import { Schedule } from 'src/schedule/entities/schedule.entity';
 
 @Entity()
 export class Timeslot {
@@ -28,11 +27,11 @@ export class Timeslot {
   @Column()
   date: string;
 
-  @Column()
-  startTime: string;
+  // @Column()
+  // startTime: string;
 
-  @Column()
-  endTime: string;
+  // @Column()
+  // endTime: string;
 
   @Column({
     enum: TimeSlotStatus,

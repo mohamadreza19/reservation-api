@@ -13,6 +13,8 @@ import { SharedColumn } from 'src/common/models/shared-columns';
 import { Timeslot } from 'src/time-slot/entities/time-slot.entity';
 import { User } from 'src/user/entities/user.entity';
 import { Service } from '../../service/entities/service.entity';
+import { Employee } from 'src/employee/entities/employee.entity';
+import { EmployeeRegister } from 'src/employee/entities/employee-register.entity';
 
 @Entity()
 export class Business extends SharedColumn {
@@ -42,6 +44,15 @@ export class Business extends SharedColumn {
 
   @OneToMany(() => Appointment, (appo) => appo.business)
   appointments: Appointment[];
+
+  @OneToMany(() => Employee, (employees) => employees.business)
+  employees: Employee[];
+
+  @OneToMany(
+    () => EmployeeRegister,
+    (employeeRegister) => employeeRegister.business,
+  )
+  employeeRegisters: EmployeeRegister[];
 
   // @ManyToMany(() => Customer, (customer) => customer.businesses)
   // customers: Customer[];

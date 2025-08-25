@@ -18,7 +18,7 @@ import {
 import { QueryService } from 'src/common/services/query.service';
 import { PriceService } from 'src/price/price.service';
 import { User } from 'src/user/entities/user.entity';
-import { DeepPartial, Repository } from 'typeorm';
+import { DeepPartial, In, Repository } from 'typeorm';
 import {
   CreateServiceDto,
   FindServiceByBusiness,
@@ -90,7 +90,29 @@ export class ServiceService
       total: count,
     };
   }
-
+  findByBusinessId(businessId: string, ids?: string[]) {
+    if (ids && ids.length) {
+      return this.serviceRepo.find({
+        where: {
+          id: In(ids),
+          business: { id: businessId },
+          isSystemService: false,
+        },
+      });
+    }
+    return this.serviceRepo.find({
+      where: { business: { id: businessId }, isSystemService: false },
+    });
+  }
+  findOneByBusinessId(businessId: string, serviceId: string) {
+    return this.serviceRepo.findOne({
+      where: {
+        id: serviceId,
+        business: { id: businessId },
+        isSystemService: false,
+      },
+    });
+  }
   async findSystemServices(
     businessId: string | null,
     query: FindServiceByBusiness,

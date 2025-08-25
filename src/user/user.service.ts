@@ -65,6 +65,7 @@ export class UserService {
     await this.userRepository.update(userId, {
       otpCode: null as any,
       otpExpires: null as any,
+      isPhoneVerified: true,
     });
   }
   async getProfile(id: string) {

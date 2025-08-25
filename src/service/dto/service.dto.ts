@@ -7,6 +7,7 @@ import {
   IsOptional,
   IsString,
   IsUUID,
+  Min,
   ValidateNested,
 } from 'class-validator';
 import { ToBoolean } from 'src/common/decorators/to-boolean';
@@ -24,6 +25,13 @@ export class CreateServiceDto {
   })
   @IsString()
   name: string;
+
+  @ApiProperty({
+    type: Number,
+  })
+  @IsNumber()
+  @Min(20, { message: 'durationInMinutes must be at least 20 minutes' })
+  durationInMinutes: number;
 
   @ApiPropertyOptional({
     description: 'A description of the service (optional)',
@@ -119,6 +127,9 @@ export class ServiceDto {
 
   @ApiPropertyOptional()
   description?: string;
+
+  @ApiProperty()
+  durationInMinutes: number;
 
   @ApiProperty()
   isSystemService: boolean;

@@ -40,5 +40,6 @@ import { OtpService } from './services/otp.service';
     //   useClass: PermissionsGuard,
     // },
   ],
+  exports: [JwtModule],
 })
 export class AuthModule {}
