@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Socket Test</title>
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+  </head>
+  <body>
+    <h1>🔌 Socket Test Page</h1>
+    <button id="join">Join Room</button>
+    <button id="send">Send Test Message</button>
+
+    <script>
+      // اتصال به سرور NestJS
+      const token =
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI0MjQzMGJlYy1jZjFmLTQ3MjYtODk4YS1kZmFlNjY4ZDA1MWMiLCJpYXQiOjE3NTU5ODAwNjQsImV4cCI6MTc1NjA2NjQ2NH0.18phhkGQSqasSR6NetPkocPmF2hSpVtUTtIU3NyZPr4';
+      const socket = io('http://localhost:3030', {
+        transports: ['websocket'],
+        auth: {
+          token: token,
+        },
+      });
+
+      socket.on('connect', () => {
+        console.log('✅ Connected:', socket.id);
+      });
+
+      socket.on('disconnect', () => {
+        console.log('❌ Disconnected');
+      });
+
+      // وقتی نوتیف رسید
+      socket.on('newNotification', (data) => {
+        console.log('🔔 New notification:', data);
+        alert('New notification: ' + JSON.stringify(data));
+      });
+
+      // جوین شدن به روم با userId
+      document.getElementById('join').onclick = () => {
+        const userId = 'USER_123'; // فرضی
+        socket.emit('join', userId);
+        console.log(`📡 Joined room ${userId}`);
+      };
+
+      // ارسال پیام تست
+      document.getElementById('send').onclick = () => {
+        socket.emit('sendMessage', {
+          userId: 'USER_123',
+          message: 'سلام از فرانت!',
+        });
+        console.log('📨 Test message sent');
+      };
+    </script>
+  </body>
+</html>
