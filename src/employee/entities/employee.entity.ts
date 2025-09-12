@@ -4,6 +4,7 @@ import { User } from 'src/user/entities/user.entity';
 import {
   Entity,
   JoinColumn,
+  JoinTable,
   ManyToMany,
   ManyToOne,
   OneToMany,
@@ -12,6 +13,7 @@ import {
 } from 'typeorm';
 import { EmployeeRegister } from './employee-register.entity';
 import { SharedColumn } from 'src/common/models/shared-columns';
+import { Timeslot } from 'src/time-slot/entities/time-slot.entity';
 
 @Entity()
 export class Employee extends SharedColumn {
@@ -25,10 +27,12 @@ export class Employee extends SharedColumn {
   @ManyToOne(() => Business, (business: Business) => business.employees)
   business: Business;
 
-  @ManyToMany(() => Service, (services) => services.employees)
-  services: Service[];
+  // @ManyToMany(() => Service, (services) => services.employees)
+  // @JoinTable()
+  // services: Service[];
 
-  @OneToOne(() => EmployeeRegister, (re) => re.employee)
-  @JoinColumn()
-  employeeRegister: EmployeeRegister;
+  @OneToMany(() => EmployeeRegister, (er) => er.employee)
+  employeeRegisters: EmployeeRegister[];
+  @OneToMany(() => Timeslot, (t) => t.employees)
+  timeslots: Timeslot[];
 }

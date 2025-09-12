@@ -1,27 +1,16 @@
 import { Business } from 'src/business/entities/business.entity';
 import { EmployeeRegisterStatus } from 'src/common/enums/employee-register-status.enum';
-import { Notification } from 'src/notification/entities/notification.entity';
-import { User } from 'src/user/entities/user.entity';
-import {
-  Column,
-  Entity,
-  ManyToOne,
-  OneToMany,
-  OneToOne,
-  PrimaryGeneratedColumn,
-} from 'typeorm';
+import { SharedColumn } from 'src/common/models/shared-columns';
+import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { Employee } from './employee.entity';
 
 @Entity()
-export class EmployeeRegister {
+export class EmployeeRegister extends SharedColumn {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @OneToOne(() => Employee, (user) => user.employeeRegister)
+  @ManyToOne(() => Employee, (em) => em.employeeRegisters)
   employee: Employee;
-
-  @ManyToOne(() => User, (user) => user.employeeRegisters)
-  userInfo: User;
 
   @ManyToOne(() => Business, (business) => business.employeeRegisters)
   business: Business;
@@ -34,7 +23,4 @@ export class EmployeeRegister {
 
   @Column({ nullable: true })
   description: string;
-
-  @OneToMany(() => Notification, (un) => un.employeeRegister)
-  notifications: Notification[];
 }

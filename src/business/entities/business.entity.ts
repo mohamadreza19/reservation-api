@@ -15,26 +15,20 @@ import { User } from 'src/user/entities/user.entity';
 import { Service } from '../../service/entities/service.entity';
 import { Employee } from 'src/employee/entities/employee.entity';
 import { EmployeeRegister } from 'src/employee/entities/employee-register.entity';
+import { BProfile } from './b-profile.entity';
 
 @Entity()
 export class Business extends SharedColumn {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ nullable: true })
-  name: string;
-  @Column({ nullable: true })
-  address: string;
-
-  @Column({ nullable: true })
-  logoPath: string;
+  @OneToOne(() => BProfile, (bp) => bp.business, { cascade: true, eager: true })
+  @JoinColumn()
+  bProfile: BProfile;
 
   @OneToOne(() => User, (user) => user.business)
   @JoinColumn()
   userInfo: User;
-
-  // @OneToMany(() => Employee, (employee) => employee.business)
-  // employees: Employee[];
 
   @OneToMany(() => Timeslot, (timeslot) => timeslot.business)
   timeslots: Timeslot[];
@@ -53,7 +47,4 @@ export class Business extends SharedColumn {
     (employeeRegister) => employeeRegister.business,
   )
   employeeRegisters: EmployeeRegister[];
-
-  // @ManyToMany(() => Customer, (customer) => customer.businesses)
-  // customers: Customer[];
 }

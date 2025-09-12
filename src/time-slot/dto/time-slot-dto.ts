@@ -64,14 +64,14 @@ export class TimeslotByDateDto {
     example: '09:00',
   })
   @IsString()
-  startTime: string;
+  tStart: string;
 
   @ApiProperty({
     description: 'End time of the timeslot in HH:mm format',
     example: '09:30',
   })
   @IsString()
-  endTime: string;
+  tEnd: string;
 
   @ApiProperty({
     description: 'Indicates if the timeslot is available for booking',

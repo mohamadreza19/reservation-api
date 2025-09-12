@@ -1,9 +1,10 @@
-import { Body, Controller, Get, Param, Patch, Post } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Post, Put } from '@nestjs/common';
 import {
   ApiOkResponse,
   ApiOperation,
   ApiParam,
   ApiResponse,
+  ApiTags,
 } from '@nestjs/swagger';
 import { AuthWithRoles } from 'src/common/decorators/auth.decorator';
 import { AuthUser } from 'src/common/decorators/business.decorators';
@@ -16,15 +17,16 @@ import {
   PublicBusinessDto,
   UpdateBusinessDto,
 } from './dto/business.dto';
+import { UpdateBusinessProfileDto } from './dto/profile.dto';
 
 // business.controller.ts
-
+@ApiTags('Business')
 @Controller('business')
 export class BusinessController {
   constructor(private readonly service: BusinessService) {}
 
-  @AuthWithRoles([Role.BUSINESS_ADMIN, Role.CUSTOMER])
   @Post()
+  @AuthWithRoles([Role.BUSINESS_ADMIN, Role.CUSTOMER])
   @ApiOperation({ operationId: 'business_create' })
   create(dto: CreateBusinessDto, @AuthUser() user: User) {
     return this.service.create(user);
@@ -33,7 +35,7 @@ export class BusinessController {
   @AuthWithRoles([Role.BUSINESS_ADMIN])
   @ApiOperation({ operationId: 'business_patch' })
   update(@Body() dto: UpdateBusinessDto, @AuthUser() user: User) {
-    return this.service.update(dto, user);
+    // return this.service.update(dto, user);
   }
   @AuthWithRoles([Role.BUSINESS_ADMIN])
   @Get('profile')
@@ -54,10 +56,20 @@ export class BusinessController {
   getMyLink(@AuthUser() user: User) {
     return this.service.getBusinessLink(user);
   }
+
+  @Put('profile')
+  @AuthWithRoles([Role.BUSINESS_ADMIN])
+  updateProfile(
+    @AuthUser() user: User,
+    @Body() body: UpdateBusinessProfileDto,
+  ) {
+    return this.service.updateProfile(user, body);
+  }
+
   @AuthWithRoles([Role.BUSINESS_ADMIN])
   @Get(':id')
   getOne(@Param('id') id: string) {
-    return this.service.findOne(id);
+    return this.service.findOneById(id);
   }
   // New public endpoint for guest access
   @ApiResponse({

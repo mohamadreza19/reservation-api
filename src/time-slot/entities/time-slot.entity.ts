@@ -10,6 +10,8 @@ import { Appointment } from 'src/appointment/entities/appointment.entity';
 import { Business } from 'src/business/entities/business.entity';
 import { TimeSlotStatus } from 'src/common/enums/time-slot-status.enum';
 import { Schedule } from 'src/schedule/entities/schedule.entity';
+import { Service } from 'src/service/entities/service.entity';
+import { Employee } from 'src/employee/entities/employee.entity';
 
 @Entity()
 export class Timeslot {
@@ -25,13 +27,16 @@ export class Timeslot {
   business: Business;
 
   @Column()
-  date: string;
+  date: string; // // yyyy-mm-dd
 
-  // @Column()
-  // startTime: string;
+  @ManyToOne(() => Service, (ser) => ser.timeslots)
+  service: Service;
 
-  // @Column()
-  // endTime: string;
+  @Column()
+  tStart: string; // example '00:01:00'
+
+  @Column()
+  tEnd: string; // example '00:01:00'
 
   @Column({
     enum: TimeSlotStatus,
@@ -40,4 +45,7 @@ export class Timeslot {
 
   @OneToOne(() => Appointment, (appointment) => appointment.timeslot)
   appointment: Appointment;
+
+  @ManyToOne(() => Employee, (e) => e.timeslots)
+  employees: Employee[];
 }

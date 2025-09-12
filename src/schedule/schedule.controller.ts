@@ -1,10 +1,6 @@
 // src/schedule/schedule.controller.ts
 import { Body, Controller, Get, Param, Patch, Post } from '@nestjs/common';
-import {
-  CreateScheduleDto,
-  UpdateIntervalForAllDto,
-  UpdateScheduleDto,
-} from './dto/schedule.dto';
+import { CreateScheduleDto, UpdateScheduleDto } from './dto/schedule.dto';
 import { ScheduleService } from './schedule.service';
 
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
@@ -48,13 +44,6 @@ export class ScheduleController {
   @ApiResponse({ status: 403, description: 'Unauthorized to view schedules' })
   getSchedules(@AuthUser() user: User) {
     return this.scheduleService.getSchedules(user);
-  }
-  @Patch('interval-for-all')
-  updateIntervalForAll(
-    @AuthUser() user: User,
-    @Body() data: UpdateIntervalForAllDto,
-  ) {
-    return this.scheduleService.updateSchedulesInterval(data, user);
   }
 
   @Patch(':id')

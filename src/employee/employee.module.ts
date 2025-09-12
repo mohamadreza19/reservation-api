@@ -19,5 +19,6 @@ import { NotificationModule } from 'src/notification/notification.module';
   ],
   controllers: [EmployeeController],
   providers: [EmployeeService],
+  exports: [EmployeeService],
 })
 export class EmployeeModule {}

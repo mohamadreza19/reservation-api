@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { ServiceService } from './service.service';
 import { ServiceController } from './service.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -7,12 +7,14 @@ import { BusinessModule } from 'src/business/business.module';
 
 import { PriceModule } from 'src/price/price.module';
 import { Plan } from './entities/plan.entity';
+import { TimeslotModule } from 'src/time-slot/time-slot.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Service, Plan]),
     BusinessModule,
     PriceModule,
+    forwardRef(() => TimeslotModule),
   ],
   controllers: [ServiceController],
   providers: [ServiceService],

@@ -1,6 +1,8 @@
 import {
   BadRequestException,
   ForbiddenException,
+  forwardRef,
+  Inject,
   Injectable,
   Logger,
   NotFoundException,
@@ -18,7 +20,7 @@ import {
 import { QueryService } from 'src/common/services/query.service';
 import { PriceService } from 'src/price/price.service';
 import { User } from 'src/user/entities/user.entity';
-import { DeepPartial, In, Repository } from 'typeorm';
+import { DeepPartial, FindOptionsWhere, In, Repository } from 'typeorm';
 import {
   CreateServiceDto,
   FindServiceByBusiness,
@@ -27,6 +29,8 @@ import {
 } from './dto/service.dto';
 import { Plan } from './entities/plan.entity';
 import { Service } from './entities/service.entity';
+import { TimeslotService } from 'src/time-slot/time-slot.service';
+import * as moment from 'moment-jalaali';
 
 @Injectable()
 export class ServiceService
@@ -41,6 +45,8 @@ export class ServiceService
     private readonly planRepo: Repository<Plan>,
     private businessService: BusinessService,
     private priceService: PriceService,
+    @Inject(forwardRef(() => TimeslotService))
+    private timeslots: TimeslotService,
   ) {
     this.queryService = new QueryService(serviceRepo);
   }
@@ -90,6 +96,13 @@ export class ServiceService
       total: count,
     };
   }
+  async findAllByIds(ids: string[]) {
+    return this.serviceRepo.find({
+      where: {
+        id: In(ids),
+      },
+    });
+  }
   findByBusinessId(businessId: string, ids?: string[]) {
     if (ids && ids.length) {
       return this.serviceRepo.find({
@@ -113,72 +126,35 @@ export class ServiceService
       },
     });
   }
-  async findSystemServices(
-    businessId: string | null,
-    query: FindServiceByBusiness,
+  async _findByBusinessId(
+    businessId: string,
+    { parentId }: FindServiceByBusiness,
   ) {
-    const page = 1;
-    const limit = 999;
-    const skip = (page - 1) * limit;
+    const bus = await this.businessService.findOneById(businessId);
 
-    const qb = this.serviceRepo
-      .createQueryBuilder('service')
-      .leftJoinAndSelect('service.price', 'price');
+    if (!bus) throw BadRequestException;
 
-    const { isSystemService, parentId } = query;
-    // .where('service.isSystemService = :isSystem', { isSystem: true });
-
-    // Filter for system services
-
-    if (isSystemService) {
-      qb.where('service.isSystemService = :isSystem', { isSystem: true });
-
-      // If businessId is provided, find system services that have children services belonging to the business
-      if (businessId) {
-        qb.innerJoin(
-          'service.children',
-          'childService',
-          'childService.businessId = :businessId',
-          { businessId },
-        );
-      }
-      const [data, total] = await qb.getManyAndCount();
-
-      return {
-        data,
-        total,
-        page,
-        limit,
-      };
-    }
-    if (parentId && businessId) {
-      // Filter for non-system services with specific parentId and businessId
-      qb.where('service.businessId = :businessId', { businessId })
-        .andWhere('service.parentId = :parentId', { parentId })
-        .leftJoinAndSelect('service.plan', 'plan')
-        .addOrderBy('plan.order', 'DESC');
-    } else if (businessId) {
-      // Filter for non-system services with specific businessId
-      qb.where('service.businessId = :businessId', { businessId });
-    }
-
-    qb.skip(skip).take(limit);
-
-    // // Optional: Filter by businessId if provided
-    // if (businessId) {
-    //   qb.andWhere('service.businessId = :businessId', { businessId });
-    // }
-
-    const [data, total] = await qb.getManyAndCount();
-
-    return {
-      data,
-      total,
-      page,
-      limit,
+    const baseWhere: FindOptionsWhere<Service> = {
+      business: {
+        id: bus.id,
+      },
     };
-  }
 
+    if (!parentId) {
+      return this.serviceRepo.find({
+        where: baseWhere,
+      });
+    } else {
+      return this.serviceRepo.find({
+        where: {
+          ...baseWhere,
+          parent: {
+            id: parentId,
+          },
+        },
+      });
+    }
+  }
   async findOne(id: string) {
     const service = await this.serviceRepo.findOne({
       where: { id },
@@ -302,7 +278,7 @@ export class ServiceService
 
   async updateById(id: string, updateServiceDto: UpdateServiceDto, user: User) {
     const business = await this.businessService.findByUserId(user.id);
-
+    let isDurationUpdate = false;
     if (!business) throw new BadRequestException('Business not found');
 
     const service = await this.serviceRepo.findOne({
@@ -325,9 +301,38 @@ export class ServiceService
 
     // Handle price update separately to avoid constraint violations
     const { price, ...serviceUpdateData } = updateServiceDto;
-
+    if (
+      updateServiceDto.durationInMinutes &&
+      service.durationInMinutes !== updateServiceDto.durationInMinutes
+    ) {
+      isDurationUpdate = true;
+    }
     // Assign non-price properties to service
     Object.assign(service, serviceUpdateData);
+
+    if (isDurationUpdate) {
+      const schedules = await this.timeslots.findSchedulesByService(service.id);
+
+      if (!schedules.length)
+        throw new BadRequestException('Schedules not found');
+      for (const schedule of schedules) {
+        const dates = await this.timeslots.findDatesBySchedule(schedule.id);
+
+        await this.timeslots.deleteTimeslotsBySchedule(schedule.id, [
+          service.id,
+        ]);
+
+        for (const { date } of dates) {
+          const dateMoment = moment(date, 'YYYY-MM-DD');
+          await this.timeslots.generateTimeslotsFromSchedule({
+            businessId: business.id,
+            date: dateMoment,
+            schedule,
+            services: [service],
+          });
+        }
+      }
+    }
 
     // Handle price update
     if (price) {
@@ -348,7 +353,7 @@ export class ServiceService
     }
 
     // Save the updated service
-    return await this.serviceRepo.save(service);
+    await this.serviceRepo.save(service);
   }
 
   async update(
@@ -379,5 +384,12 @@ export class ServiceService
 
   async findAllPlans() {
     return this.planRepo.find();
+  }
+  async findSystems() {
+    return this.serviceRepo.find({
+      where: {
+        isSystemService: true,
+      },
+    });
   }
 }

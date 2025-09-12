@@ -12,6 +12,11 @@ import { CustomerModule } from 'src/customer/customer.module';
 import { SmsService } from 'src/common/services';
 import { OtpService } from './services/otp.service';
 
+import { AuthEmployeeService } from './services/auth-employee.service';
+import { EmployeeModule } from 'src/employee/employee.module';
+import { AuthBusinessService } from './services/auth-business.service';
+import { AuthCustomerService } from './services/auth-customer.service';
+
 @Module({
   imports: [
     ConfigModule, // Make sure ConfigModule is imported
@@ -28,6 +33,7 @@ import { OtpService } from './services/otp.service';
     UserModule,
     BusinessModule,
     CustomerModule,
+    EmployeeModule,
   ],
   controllers: [AuthController],
   providers: [
@@ -35,6 +41,9 @@ import { OtpService } from './services/otp.service';
     OtpService,
     JwtStrategy,
     SmsService,
+    AuthEmployeeService,
+    AuthBusinessService,
+    AuthCustomerService,
     // {
     //   provide: APP_GUARD,
     //   useClass: PermissionsGuard,

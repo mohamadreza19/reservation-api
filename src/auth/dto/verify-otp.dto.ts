@@ -3,7 +3,7 @@ import { IsEnum, IsPhoneNumber, IsString, Length } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { Role } from 'src/common/enums/role.enum';
 
-export class VerifyOtpDto {
+export class BaseVerifyOtpDto {
   @ApiProperty({
     example: '+989123456789',
     description: 'Phone number in international format',
@@ -19,10 +19,13 @@ export class VerifyOtpDto {
   @Length(6, 6, { message: 'OTP must be exactly 6 digits' })
   otp: string;
 
-  @ApiProperty({
-    enum: Role,
-    example: Role.CUSTOMER,
-  })
-  @IsEnum(Role)
+  // @ApiProperty({
+  //   enum: Role,
+  //   example: Role.CUSTOMER,
+  // })
+  // @IsEnum(Role)
+  // role: Role;
+}
+export class VerifyOtpDto extends BaseVerifyOtpDto {
   role: Role;
 }

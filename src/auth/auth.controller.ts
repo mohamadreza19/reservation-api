@@ -9,7 +9,8 @@ import {
 } from './decorators/auth-swagger.decorator';
 import { OtpRequestDto } from './dto/otp-request.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
-import { VerifyOtpDto } from './dto/verify-otp.dto';
+import { BaseVerifyOtpDto } from './dto/verify-otp.dto';
+import { Role } from 'src/common/enums/role.enum';
 
 @Controller('auth')
 export class AuthController {
@@ -20,10 +21,26 @@ export class AuthController {
     return this.authService.generateAndSendOTP(otpRequest.phoneNumber);
   }
 
-  @Post('verify-otp')
+  @Post('verify-otp/customer')
   @ApiVerifyOtpResponse()
-  async verifyOTP(@Body() verifyOtpDto: VerifyOtpDto) {
-    return this.authService.verifyOTP(verifyOtpDto);
+  async CustomerVerifyOTP(@Body() verifyOtpDto: BaseVerifyOtpDto) {
+    return this.authService.verifyOTP({ ...verifyOtpDto, role: Role.CUSTOMER });
+  }
+  @Post('verify-otp/business')
+  @ApiVerifyOtpResponse()
+  async businessVerifyOTP(@Body() verifyOtpDto: BaseVerifyOtpDto) {
+    return this.authService.verifyOTP({
+      ...verifyOtpDto,
+      role: Role.BUSINESS_ADMIN,
+    });
+  }
+  @Post('verify-otp/employee')
+  @ApiVerifyOtpResponse()
+  async employeeVerifyOTP(@Body() verifyOtpDto: BaseVerifyOtpDto) {
+    return this.authService.verifyOTP({
+      ...verifyOtpDto,
+      role: Role.EMPLOYEE,
+    });
   }
 
   @Post('refresh')

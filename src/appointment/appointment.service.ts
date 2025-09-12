@@ -63,7 +63,9 @@ export class AppointmentService {
       );
     }
 
-    business = await this.businessService.findOne(service.business?.id as any);
+    business = await this.businessService.findOneById(
+      service.business?.id as any,
+    );
 
     if (!business) throw BadRequestException;
 

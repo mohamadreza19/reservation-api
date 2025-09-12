@@ -57,6 +57,12 @@ export class ServiceController {
   get() {
     return this.serviceService.findAllPlans();
   }
+  @Get('system')
+  @AuthWithRoles([Role.BUSINESS_ADMIN, Role.CUSTOMER])
+  // @ApiServiceFindAllPlansResponse()
+  getAllSystems() {
+    return this.serviceService.findSystems();
+  }
 
   @Get('business/:businessId')
   @AuthWithRoles([Role.BUSINESS_ADMIN, Role.CUSTOMER])
@@ -65,7 +71,7 @@ export class ServiceController {
     @Param('businessId') businessId: string,
     @Query() query: FindServiceByBusiness,
   ) {
-    return this.serviceService.findSystemServices(businessId, query);
+    return this.serviceService._findByBusinessId(businessId, query);
   }
 
   @Get(':id')

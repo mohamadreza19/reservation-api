@@ -189,15 +189,6 @@ export class FindServiceByBusiness {
   @IsString()
   @IsUUID()
   parentId?: string;
-
-  @ApiPropertyOptional({
-    description: 'Flag to filter system services',
-    example: true,
-    type: 'boolean',
-  })
-  @IsOptional()
-  @ToBoolean()
-  isSystemService?: boolean;
 }
 
 export class PlanDto {

@@ -19,9 +19,4 @@ export class VerifyOtpResponseDto {
 
   @ApiProperty()
   isNew: boolean;
-  @ApiProperty({
-    type: 'string',
-    enum: Role,
-  })
-  role: Role;
 }

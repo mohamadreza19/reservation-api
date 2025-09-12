@@ -1,21 +1,28 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 
+import { InjectRepository } from '@nestjs/typeorm';
+import { BusinessService } from 'src/business/business.service';
+import { Business } from 'src/business/entities/business.entity';
+import { EmployeeRegisterStatus } from 'src/common/enums/employee-register-status.enum';
+import { Role } from 'src/common/enums/role.enum';
+import { NotificationService } from 'src/notification/notification.service';
 import { ServiceService } from 'src/service/service.service';
 import { User } from 'src/user/entities/user.entity';
+import { UserService } from 'src/user/user.service';
+import { Repository } from 'typeorm';
 import {
   AddServiceDto,
   EmployeeRegisterDto,
   HireToBusinessDto,
+  UpdateEmployeeRegisterDto,
 } from './dto/employee.dto';
-import { BusinessService } from 'src/business/business.service';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Employee } from './entities/employee.entity';
-import { Repository } from 'typeorm';
 import { EmployeeRegister } from './entities/employee-register.entity';
-import { UserService } from 'src/user/user.service';
-import { Business } from 'src/business/entities/business.entity';
-import { NotificationService } from 'src/notification/notification.service';
-import { EmployeeRegisterStatus } from 'src/common/enums/employee-register-status.enum';
+import { Employee } from './entities/employee.entity';
+import { tr } from '@faker-js/faker/.';
 
 @Injectable()
 export class EmployeeService {
@@ -29,7 +36,7 @@ export class EmployeeService {
     private readonly user: UserService,
     private readonly notification: NotificationService,
   ) {}
-  async addServices(user: User, addServiceDto: AddServiceDto) {
+  async assignServices(user: User, addServiceDto: AddServiceDto) {
     const business = await this.business.findByUserId(user.id);
 
     if (!business) {
@@ -45,114 +52,84 @@ export class EmployeeService {
   async createRegisterRequest(dto: EmployeeRegisterDto, user: User) {
     let business: Business | null;
     let businessUser = user;
-    let userToRegister: User | null;
+    let employeeToRegister: Employee | null;
 
-    let employeeRegister: EmployeeRegister;
+    let employeeRegister: EmployeeRegister | null;
 
     business = await this.business.findByUserId(businessUser.id);
 
     if (!business) throw new NotFoundException('Business not found');
 
-    userToRegister = await this.user.findByPhoneNumber(dto.phoneNumber);
+    employeeToRegister = await this.findByPhoneNumber(dto.phoneNumber);
 
-    if (!userToRegister) throw new NotFoundException('user are not found');
-    if (!userToRegister.isPhoneVerified)
-      throw new NotFoundException('user phone is not is not verified');
+    if (!employeeToRegister)
+      throw new NotFoundException('employee are not found');
 
-    employeeRegister = (await this.employeeRegisterRepo.findOne({
-      where: {
-        business: {
-          id: business.id,
-        },
-      },
-    })) as EmployeeRegister;
-
-    if (
-      employeeRegister &&
-      employeeRegister.status == EmployeeRegisterStatus.ACCEPTED
-    ) {
+    employeeRegister = await this.employeeRegisterRepo.findOneBy({
+      business: { id: business.id },
+      status: EmployeeRegisterStatus.ACCEPTED,
+    });
+    console.log('finded employeeRegister', employeeRegister);
+    if (employeeRegister) {
       return 'employee already registered';
     }
 
-    if (
-      employeeRegister &&
-      employeeRegister.status == EmployeeRegisterStatus.PENDING
-    ) {
-      return 'Already created and is still pending for user accept';
-    }
-    if (
-      employeeRegister &&
-      employeeRegister.status == EmployeeRegisterStatus.REJECTED
-    ) {
-      employeeRegister.status = EmployeeRegisterStatus.PENDING;
-
-      this.employeeRegisterRepo.save(employeeRegister);
-    }
-
-    if (!employeeRegister) {
-      const employeeRegisterInstance = this.employeeRegisterRepo.create({
-        business: {
-          id: business.id,
-        },
-        userInfo: {
-          id: userToRegister.id,
-        },
-      });
-
-      employeeRegister = await this.employeeRegisterRepo.save(
-        employeeRegisterInstance,
-      );
-    }
-
-    //   Business Notify
-    await this.notification.pushEmployeeRegister(
-      businessUser.id,
-      employeeRegister,
-    );
-    //   User Notify
-    await this.notification.pushEmployeeRegister(
-      userToRegister.id,
-      employeeRegister,
-    );
-  }
-  async hireToBusiness(dto: HireToBusinessDto, user: User) {
-    const employeeRegister = await this.employeeRegisterRepo.findOne({
-      where: { id: dto.employeeRegisterId, userInfo: { id: user.id } },
-      relations: ['business'],
+    const employeeRegisterInstance = this.employeeRegisterRepo.create({
+      business: {
+        id: business.id,
+      },
+      employee: {
+        id: employeeToRegister.id,
+      },
     });
-    const businessId = employeeRegister?.business.id;
+
+    await this.employeeRegisterRepo.save(employeeRegisterInstance);
+  }
+
+  async updateRegisterRequest(dto: UpdateEmployeeRegisterDto, user: User) {
+    if (dto.status == EmployeeRegisterStatus.PENDING)
+      throw new BadRequestException(
+        `status ${EmployeeRegisterStatus.PENDING} not allowed`,
+      );
+
+    const employee = await this.findOneByUserId(user.id);
+
+    if (!employee) throw new NotFoundException('Employee not found');
+
+    const employeeRegister = await this.findRegisterByIdAndEmployeeId(
+      dto.employeeRegisterId,
+      employee.id,
+    );
+    if (!employeeRegister)
+      throw new NotFoundException('Employee register request not found');
+
+    if (employeeRegister.status !== EmployeeRegisterStatus.PENDING) {
+      return;
+    }
+
+    const businessId = employeeRegister.business.id;
 
     if (!businessId)
       throw new NotFoundException('Business of register request not found');
 
-    const business = await this.business.findOne(businessId);
+    const business = await this.business.findOneById(businessId);
 
     if (!business)
       throw new NotFoundException('Business register request not found');
 
-    if (!employeeRegister)
-      throw new NotFoundException('Employee register request not found');
-
-    const employeeInstance = this.employeeRepo.create({
-      business: business,
-      userInfo: user,
-      employeeRegister: employeeRegister,
+    await this.employeeRegisterRepo.update(employeeRegister.id, {
+      status: dto.status,
+    });
+    await this.employeeRepo.update(employee.id, {
+      business: { id: businessId },
     });
 
-    employeeRegister.status = EmployeeRegisterStatus.ACCEPTED;
-
-    const updateEmployeeRegister =
-      await this.employeeRegisterRepo.save(employeeRegister);
-
-    const result = await this.employeeRepo.insert(employeeInstance);
-
-    this.notification.pushEmployeeRegister(user.id, updateEmployeeRegister);
-    this.notification.pushEmployeeRegister(
-      business.userInfo.id,
-      updateEmployeeRegister,
-    );
-
-    return result;
+    // this.notification.pushEmployeeRegister(user.id, updateEmployeeRegister);
+    // this.notification.pushEmployeeRegister(
+    //   business.userInfo.id,
+    //   updateEmployeeRegister,
+    // );
+    return;
   }
   async findAllBusinessEmployees(user: User) {
     const business = await this.business.findByUserId(user.id);
@@ -165,12 +142,153 @@ export class EmployeeService {
           id: business.id,
         },
       },
-      relations: ['userInfo', 'employeeRegister'],
+      relations: {
+        employeeRegisters: true,
+        userInfo: true,
+      },
+    });
+  }
+  async findRegisterRequests(user: User) {
+    if (user.role === Role.BUSINESS_ADMIN) {
+      const business = await this.business.findByUserId(user.id);
+      if (!business) throw new NotFoundException('Business not found');
+
+      return this.employeeRegisterRepo.find({
+        where: {
+          business: {
+            id: business.id,
+          },
+        },
+
+        relations: ['employee.userInfo'],
+      });
+    }
+
+    if (user.role === Role.EMPLOYEE) {
+      const employee = await this.findOneByUserId(user.id);
+      if (!employee) throw new NotFoundException('Employee not found');
+
+      return this.employeeRegisterRepo.find({
+        where: {
+          employee: {
+            id: employee.id,
+          },
+        },
+
+        relations: ['business.userInfo'],
+      });
+    }
+  }
+  async findRegisterByBusinessId(
+    businessId: string,
+  ): Promise<EmployeeRegister | null> {
+    const employeeRegister = await this.employeeRegisterRepo.findOne({
+      where: { business: { id: businessId } },
+    });
+
+    return employeeRegister;
+  }
+  async findRegisterByUserId(userId: string): Promise<EmployeeRegister | null> {
+    const employeeRegister = await this.employeeRegisterRepo.findOne({
+      where: { employee: { userInfo: { id: userId } } }, // navigate through employee -> userInfo
+      relations: ['employee', 'employee.userInfo', 'business'], // load needed relations
+    });
+
+    return employeeRegister;
+  }
+  async findRegisterByIdAndBusiness(
+    employeeRegisterId: string,
+    businessId: string,
+  ): Promise<EmployeeRegister | null> {
+    return this.employeeRegisterRepo.findOne({
+      where: {
+        id: employeeRegisterId,
+        business: {
+          id: businessId,
+        },
+      },
+      relations: ['employee'],
+    });
+  }
+  async findRegisterByEmployeeId(
+    employeeId: string,
+  ): Promise<EmployeeRegister | null> {
+    return this.employeeRegisterRepo.findOne({
+      where: {
+        employee: {
+          id: employeeId,
+        },
+      },
+    });
+  }
+  // employee-register.service.ts
+  async findRegisterByIdAndEmployeeId(
+    employeeRegisterId: string,
+    employeeId: string,
+  ): Promise<EmployeeRegister | null> {
+    return this.employeeRegisterRepo.findOne({
+      where: {
+        id: employeeRegisterId,
+        employee: {
+          id: employeeId,
+        },
+      },
+      relations: ['business'],
+    });
+  }
+  async findAll(user: User) {
+    const business = await this.business.findByUserId(user.id);
+    console.log('business', business);
+    if (!business) throw NotFoundException;
+
+    return this.employeeRepo.find();
+  }
+  async findAllByBusinessUser(user: User) {
+    const business = await this.business.findByUserId(user.id);
+
+    if (!business) throw NotFoundException;
+
+    return this.employeeRepo.find({
+      where: {
+        business: {
+          id: business.id,
+        },
+        employeeRegisters: {
+          status: EmployeeRegisterStatus.ACCEPTED,
+        },
+      },
+      relations: {
+        employeeRegisters: true,
+        userInfo: true,
+      },
+    });
+  }
+  async findAllAcceptedBusinessEmployees(
+    businessId: string,
+  ): Promise<Employee[]> {
+    return this.employeeRepo.find({
+      where: {},
+      relations: {
+        employeeRegisters: true,
+      },
     });
   }
 
-  findAll() {
-    return `This action returns all employee`;
+  findOneByUserId(id: string) {
+    return this.employeeRepo.findOne({
+      where: {
+        userInfo: {
+          id: id,
+        },
+      },
+    });
+  }
+  createByUserId(id: string) {
+    return this.employeeRepo.insert({
+      userInfo: {
+        id: id,
+      },
+    });
   }
 
   updateEmployeeRegisterStatus(id: string, status: EmployeeRegisterStatus) {
@@ -184,11 +302,74 @@ export class EmployeeService {
     );
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} employee`;
+  async deleteContract(employeeRegisterId: string, user: User) {
+    if (user.role === Role.BUSINESS_ADMIN) {
+      const business = await this.business.findByUserId(user.id);
+      if (!business) throw new NotFoundException('Business not found');
+
+      const employeeRegister = await this.findRegisterByIdAndBusiness(
+        employeeRegisterId,
+        business.id,
+      );
+      if (!employeeRegister) throw NotFoundException;
+
+      await this.deleteEmployeeFromBusinessAndServices(
+        employeeRegister.employee.id,
+      );
+
+      return await this.employeeRegisterRepo.remove(employeeRegister);
+    }
+
+    if (user.role === Role.EMPLOYEE) {
+      const employee = await this.findOneByUserId(user.id);
+      if (!employee) throw new NotFoundException('Employee not found');
+
+      const employeeRegister = await this.findRegisterByEmployeeId(employee.id);
+
+      if (!employeeRegister)
+        throw new BadRequestException('Employee register not found');
+
+      await this.deleteEmployeeFromBusinessAndServices(employee.id);
+
+      return await this.employeeRegisterRepo.remove(employeeRegister);
+    }
+  }
+  async deleteEmployeeFromBusinessAndServices(
+    employeeId: string,
+  ): Promise<void> {
+    // 1️⃣ Remove all services linked to the employee
+    await this.employeeRepo
+      .createQueryBuilder('employee')
+      .relation(Employee, 'services')
+      .of(employeeId)
+      .remove([]);
+
+    // 2️⃣ Remove the employee from the business
+    await this.employeeRepo
+      .createQueryBuilder()
+      .relation(Employee, 'business')
+      .of(employeeId)
+      .set(null);
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} employee`;
+  async findByPhoneNumber(phoneNumber: string): Promise<Employee> {
+    const employee = await this.employeeRepo.findOne({
+      where: {
+        userInfo: {
+          profile: {
+            phoneNumber: phoneNumber,
+          },
+        },
+      },
+      relations: ['userInfo.profile'],
+    });
+
+    if (!employee) {
+      throw new NotFoundException(
+        `Employee with phone number ${phoneNumber} not found`,
+      );
+    }
+
+    return employee;
   }
 }

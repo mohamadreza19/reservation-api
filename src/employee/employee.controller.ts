@@ -1,60 +1,75 @@
 import {
-  Controller,
-  Get,
-  Post,
   Body,
-  Patch,
-  Param,
+  Controller,
   Delete,
+  Get,
+  Param,
+  Post,
   Put,
 } from '@nestjs/common';
-import { EmployeeService } from './employee.service';
 import {
   AddServiceDto,
   EmployeeRegisterDto,
   HireToBusinessDto,
+  UpdateEmployeeRegisterDto,
 } from './dto/employee.dto';
+import { EmployeeService } from './employee.service';
 
 import { AuthWithRoles } from 'src/common/decorators/auth.decorator';
-import { Role } from 'src/common/enums/role.enum';
 import { AuthUser } from 'src/common/decorators/business.decorators';
+import { Role } from 'src/common/enums/role.enum';
 import { User } from 'src/user/entities/user.entity';
 
 @Controller('employee')
 export class EmployeeController {
   constructor(private readonly employeeService: EmployeeService) {}
 
-  @Post()
   @Get()
-  findAll() {
-    return this.employeeService.findAll();
+  @AuthWithRoles([Role.BUSINESS_ADMIN])
+  findAll(@AuthUser() user: User) {
+    return this.employeeService.findAll(user);
   }
 
   @Get('/business')
   @AuthWithRoles([Role.BUSINESS_ADMIN])
   findOne(@AuthUser() user: User) {
-    return this.employeeService.findAllBusinessEmployees(user);
+    return this.employeeService.findAllByBusinessUser(user);
+  }
+  @Get('register-request')
+  @AuthWithRoles([Role.BUSINESS_ADMIN, Role.EMPLOYEE])
+  findAllRegisterRequests(@AuthUser() user: User) {
+    return this.employeeService.findRegisterRequests(user);
   }
 
-  @Put('add-services')
+  @Post('register-request')
   @AuthWithRoles([Role.BUSINESS_ADMIN])
-  addServices(@Body() addServiceDto: AddServiceDto, @AuthUser() user: User) {
-    return this.employeeService.addServices(user, addServiceDto);
-  }
-  @Put('register-request')
-  @AuthWithRoles([Role.BUSINESS_ADMIN])
-  registerRequest(@Body() dto: EmployeeRegisterDto, @AuthUser() user: User) {
+  createRegister(@Body() dto: EmployeeRegisterDto, @AuthUser() user: User) {
     return this.employeeService.createRegisterRequest(dto, user);
   }
-
-  @Put('hire-to-business')
-  @AuthWithRoles([Role.CUSTOMER])
-  hireToBusiness(@Body() dto: HireToBusinessDto, @AuthUser() user: User) {
-    return this.employeeService.hireToBusiness(dto, user);
+  @Put('register-request')
+  @AuthWithRoles([Role.EMPLOYEE])
+  registerRequest(
+    @Body() dto: UpdateEmployeeRegisterDto,
+    @AuthUser() user: User,
+  ) {
+    return this.employeeService.updateRegisterRequest(dto, user);
   }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.employeeService.remove(+id);
+  @Put(':employeeId/assign-services')
+  @AuthWithRoles([Role.BUSINESS_ADMIN])
+  addServices(
+    @Param('employeeId') employeeId: string,
+    @Body() addServiceDto: AddServiceDto,
+    @AuthUser() user: User,
+  ) {
+    return this.employeeService.assignServices(user, addServiceDto);
+  }
+  @Delete(':employeeRegisterId')
+  @AuthWithRoles([Role.BUSINESS_ADMIN, Role.EMPLOYEE])
+  terminateContract(
+    @Param('employeeRegisterId') employeeRegisterId: string,
+    @AuthUser() user: User,
+  ) {
+    return this.employeeService.deleteContract(employeeRegisterId, user);
   }
 }

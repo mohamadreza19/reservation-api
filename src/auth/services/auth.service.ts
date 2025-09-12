@@ -22,60 +22,34 @@ import { GenerateOtpResponseDto } from '../dto/otp.dto';
 import { VerifyOtpResponseDto } from '../dto/verify-otp-response.dto';
 import { VerifyOtpDto } from '../dto/verify-otp.dto';
 import { OtpService } from './otp.service';
+import { AuthEmployeeService } from './auth-employee.service';
+import { AuthCustomerService } from './auth-customer.service';
+import { AuthBusinessService } from './auth-business.service';
 
 @Injectable()
 export class AuthService {
   constructor(
     public readonly userService: UserService,
     private readonly jwtService: JwtService,
-    private readonly businessService: BusinessService,
-    private readonly customerService: CustomerService,
     private readonly otp: OtpService,
+    private readonly authEmployee: AuthEmployeeService,
+    private readonly authCustomer: AuthCustomerService,
+    private readonly authBusiness: AuthBusinessService,
   ) {}
 
-  async validateUser(
-    phoneNumber: string,
-    password: string,
-  ): Promise<{ user: User }> {
-    const user = await this.userService.findByPhoneNumber(phoneNumber, true);
-
-    // Existing user with correct password
-    if (user && (await bcrypt.compare(password, user.password))) {
-      return { user };
-    }
-
-    // No user exists - create new one
-    if (!user) {
-      const hashedPassword = await bcrypt.hash(password, 10);
-      const newUser = await this.userService.create({
-        phoneNumber,
-        password: hashedPassword,
-        role: Role.CUSTOMER,
-      });
-
-      return { user: newUser };
-    }
-
-    // User exists but wrong password
-    throw new ConflictException('Invalid credentials');
-  }
-
-  async login(user: User, role: Role): Promise<VerifyOtpResponseDto> {
+  async login(user: User): Promise<VerifyOtpResponseDto> {
     const payload: Payload = {
       userId: user.id,
     };
 
-    // Generate access token (15 minutes)
     const accessToken = this.jwtService.sign(payload);
 
-    // Generate refresh token (7 days)
     const refreshToken = this.jwtService.sign(payload, { expiresIn: '7d' });
 
     return {
       access_token: accessToken,
       refresh_token: refreshToken,
       isNew: user.isNew,
-      role: role,
     };
   }
 
@@ -114,6 +88,7 @@ export class AuthService {
     phoneNumber: string,
   ): Promise<GenerateOtpResponseDto> {
     let user = await this.userService.findByPhoneNumber(phoneNumber);
+
     let isNew = true;
     if (user) {
       isNew = false;
@@ -121,21 +96,25 @@ export class AuthService {
 
     if (!user) {
       user = await this.userService.create({
-        phoneNumber,
+        profile: {
+          phoneNumber: phoneNumber,
+          name: phoneNumber,
+        },
         role: Role.CUSTOMER,
-        userName: phoneNumber,
       });
     }
     const { expires, otp } = this.otp.generateOtp();
 
-    await this.userService.update(user.id, {
+    this.userService.addOtp(user, {
       otpCode: otp,
       otpExpires: expires,
     });
-
+    console.log(user);
+    const result = await this.userService.save(user);
+    console.log(result);
     await this.otp.sendOtp({
       otp: otp,
-      phoneNumber: user.phoneNumber,
+      phoneNumber: user.profile.phoneNumber,
     });
 
     return {
@@ -144,11 +123,7 @@ export class AuthService {
       otp: otp,
     };
   }
-  async verifyOTP({
-    otp,
-    phoneNumber,
-    role,
-  }: VerifyOtpDto): Promise<VerifyOtpResponseDto> {
+  async verifyOTP({ otp, phoneNumber, role }: VerifyOtpDto) {
     const user = await this.userService.findByPhoneNumber(
       phoneNumber,
       false,
@@ -166,31 +141,30 @@ export class AuthService {
     if (user.otpExpires < new Date()) {
       throw new ConflictException('OTP expired');
     }
+
     if (role === Role.SUPER_ADMIN) {
       throw new BadRequestException("Admin'rule not allowed");
     }
-    let consumer: Customer | Business | null;
 
-    if (role == Role.CUSTOMER) {
-      consumer = await this.customerService.findByUserId(user.id);
-      if (!consumer) {
-        consumer = await this.customerService.create({ userInfo: user });
-      }
+    switch (role) {
+      case Role.CUSTOMER:
+        await this.authCustomer.ensureCustomerForUser(user);
+        break;
+
+      case Role.BUSINESS_ADMIN:
+        await this.authBusiness.ensureBusinessForUser(user);
+        break;
+
+      case Role.EMPLOYEE:
+        await this.authEmployee.ensureEmployeeForUser(user);
+        break;
     }
-    if (role == Role.BUSINESS_ADMIN) {
-      consumer = await this.businessService.findByUserId(user.id);
-      if (!consumer) {
-        consumer = await this.businessService.create(user);
-      }
-    }
 
-    // Clear OTP after successful verification
+    this.userService.updateRole(user, role);
+    this.userService.clearOtp(user);
+    await this.userService.save(user);
 
-    await this.userService.update(user.id, { role });
-
-    await this.userService.clearOTP(user.id);
-
-    return this.login(user, role);
+    return this.login(user);
   }
 
   async adminLogin(dto: LoginDto) {
@@ -202,6 +176,6 @@ export class AuthService {
       throw BadRequestException;
     }
 
-    return this.login(user, Role.SUPER_ADMIN);
+    return this.login(user);
   }
 }

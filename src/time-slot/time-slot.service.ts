@@ -1,36 +1,27 @@
 import {
+  BadRequestException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
-  ForbiddenException,
-  BadRequestException,
-  Inject,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import {
-  DeepPartial,
-  Equal,
-  FindManyOptions,
-  FindOptionsWhere,
-  In,
-  LessThanOrEqual,
-  MoreThan,
-  MoreThanOrEqual,
-  Repository,
-} from 'typeorm';
-import { Service } from '../service/entities/service.entity';
-import { Appointment } from '../appointment/entities/appointment.entity';
-import { Day, persianDayOrder } from 'src/common/enums/day.enum';
 import * as moment from 'moment-jalaali';
+import { persianDayOrder } from 'src/common/enums/day.enum';
+import { FindManyOptions, Repository } from 'typeorm';
+import { Service } from '../service/entities/service.entity';
 moment.loadPersian();
 
-import { User } from '../user/entities/user.entity';
 import { BusinessService } from '../business/business.service';
 import { ScheduleService } from '../schedule/schedule.service';
+import { User } from '../user/entities/user.entity';
 
 import { Schedule } from '../schedule/entities/schedule.entity';
 
 import { Timeslot } from './entities/time-slot.entity';
 
+import { TimeSlotStatus } from 'src/common/enums/time-slot-status.enum';
+import { QueryService } from 'src/common/services/query.service';
+import { ServiceService } from 'src/service/service.service';
 import {
   AvailableDateRangeDto,
   GetStatusResDto,
@@ -38,19 +29,19 @@ import {
   TimeslotAvailableRangeQueryDto,
   UpdateTimeslotDto,
 } from './dto/time-slot-dto';
-import { QueryService } from 'src/common/services/query.service';
-import { Business } from 'src/business/entities/business.entity';
-import { TimeSlotStatus } from 'src/common/enums/time-slot-status.enum';
-import { ServiceService } from 'src/service/service.service';
 import {
   GenerateTimeslotsFromScheduleDto,
   UpdateServicesTimeSlots,
+  UpdateStatusesByScheduleDto,
 } from './dto/timeslot.dto';
+import {
+  futureTimeslotCondition,
+  noEmployeeCondition,
+  statusInCondition,
+} from './utils/timeslot.util';
 
 @Injectable()
 export class TimeslotService {
-  private readonly DEFAULT_INTERVAL_MINUTES = 30; // Default if interval is null
-
   queryService: QueryService<Timeslot>;
   constructor(
     private readonly businessService: BusinessService,
@@ -95,7 +86,7 @@ export class TimeslotService {
         continue; // Should not happen due to 7-day validation
       }
       await this.generateTimeslotsFromSchedule({
-        business,
+        businessId: business.id,
         schedule,
         date,
         services,
@@ -104,8 +95,9 @@ export class TimeslotService {
 
     return 'time slots created successfully';
   }
+  /** 3. Generate new timeslots from schedule and service for a specific date */
   async generateTimeslotsFromSchedule({
-    business,
+    businessId,
     schedule,
     services,
     date,
@@ -118,11 +110,11 @@ export class TimeslotService {
 
     for (const service of services) {
       start = moment(
-        `${date.format('YYYY-MM-DD')} ${schedule.startTime}`,
+        `${date.format('YYYY-MM-DD')} ${schedule.workStart}`,
         'YYYY-MM-DD HH:mm:ss',
       );
       end = moment(
-        `${date.format('YYYY-MM-DD')} ${schedule.endTime}`,
+        `${date.format('YYYY-MM-DD')} ${schedule.workEnd}`,
         'YYYY-MM-DD HH:mm:ss',
       );
 
@@ -133,15 +125,21 @@ export class TimeslotService {
         if (slotEnd > end) break;
 
         const instance = this.timeslotRepo.create({
-          // service: service,
+          schedule: {
+            id: schedule.id,
+          },
+          service: {
+            id: service.id,
+          },
+          business: {
+            id: businessId,
+          },
           date: date.format('YYYY-MM-DD'), // e.g., '2025-05-24'
-          // startTime: start.format('HH:mm'), // e.g., '09:00'
-          // endTime: slotEnd.format('HH:mm'), // e.g., '09:30'
-          // isAvailable: schedule.isOpen,
+          tStart: start.format('HH:mm'), // e.g., '09:00'
+          tEnd: slotEnd.format('HH:mm'), // e.g., '09:30'
           status: schedule.isOpen
             ? TimeSlotStatus.IDLE
             : TimeSlotStatus.UN_AVAILABLE,
-          business,
         });
 
         timeslots.push(instance);
@@ -151,6 +149,66 @@ export class TimeslotService {
     }
 
     return this.timeslotRepo.save(timeslots);
+  }
+
+  async findServicesBySchedule(scheduleId: string) {
+    const results = await this.timeslotRepo
+      .createQueryBuilder('timeslot')
+      .leftJoin('timeslot.service', 'service')
+      .where('timeslot.scheduleId = :scheduleId', { scheduleId })
+      .andWhere(futureTimeslotCondition())
+      .andWhere(noEmployeeCondition())
+      .andWhere(
+        statusInCondition([TimeSlotStatus.IDLE, TimeSlotStatus.UN_AVAILABLE]),
+      )
+      .select('DISTINCT service.id', 'serviceId')
+      .getRawMany();
+
+    const ids = results.map((r) => r.serviceId);
+    const services = await this.service.findAllByIds(ids);
+
+    return services;
+  }
+
+  async findSchedulesByService(serviceId: string): Promise<Schedule[]> {
+    const timeslots = await this.timeslotRepo
+      .createQueryBuilder('timeslot')
+      .leftJoinAndSelect('timeslot.schedule', 'schedule')
+      .where('timeslot.service = :serviceId', { serviceId }) // note: use the relation name
+      .getMany();
+
+    // Extract unique schedules from timeslots
+    const schedulesMap = new Map<string, Schedule>();
+    timeslots.forEach((ts) => {
+      if (ts.schedule) {
+        schedulesMap.set(ts.schedule.id, ts.schedule);
+      }
+    });
+
+    return Array.from(schedulesMap.values());
+  }
+
+  async findDatesBySchedule(
+    scheduleId: string,
+    serviceIds?: string[],
+  ): Promise<{ date: string }[]> {
+    const query = this.timeslotRepo
+      .createQueryBuilder('timeslot')
+      .where('timeslot.scheduleId = :scheduleId', { scheduleId })
+      .andWhere(futureTimeslotCondition())
+      .andWhere(noEmployeeCondition())
+      .andWhere(
+        statusInCondition([TimeSlotStatus.IDLE, TimeSlotStatus.UN_AVAILABLE]),
+      );
+
+    if (serviceIds && serviceIds.length > 0) {
+      query.andWhere('timeslot.serviceId IN (:...serviceIds)', { serviceIds });
+    }
+
+    return query
+      .select('DISTINCT timeslot.date', 'date')
+      .orderBy('timeslot.date', 'ASC')
+      .getRawMany();
   }
 
   private convertTimeToMinutes(time: string): number {
@@ -170,6 +228,7 @@ export class TimeslotService {
   async findAll(options?: FindManyOptions<Timeslot> | undefined) {
     return this.timeslotRepo.find(options);
   }
+
   async removeAll(entities: Timeslot[]) {
     return this.timeslotRepo.remove(entities);
   }
@@ -198,7 +257,7 @@ export class TimeslotService {
   async getAvailableDateRange(
     query: TimeslotAvailableRangeQueryDto,
   ): Promise<AvailableDateRangeDto[]> {
-    const business = await this.businessService.findOne(query.businessId);
+    const business = await this.businessService.findOneById(query.businessId);
     const now = moment().format('YYYY-MM-DD');
 
     const isAvailable = query.isAvailable || true;
@@ -227,7 +286,7 @@ export class TimeslotService {
     return queryBuild.getRawMany();
   }
   async getBookedDateRange(query: TimeslotAvailableRangeQueryDto) {
-    const business = await this.businessService.findOne(query.businessId);
+    const business = await this.businessService.findOneById(query.businessId);
     const now = moment().format('YYYY-MM-DD');
     if (!business) throw new BadRequestException('Business not found');
 
@@ -253,7 +312,7 @@ export class TimeslotService {
       throw new BadRequestException(`${query.date} is before ${now}`);
     }
 
-    const business = await this.businessService.findOne(query.businessId);
+    const business = await this.businessService.findOneById(query.businessId);
     if (!business) throw new BadRequestException('Business not found');
 
     return this.timeslotRepo.find({
@@ -338,5 +397,64 @@ export class TimeslotService {
         ids: updateServicesTimeSlots.serviceIds,
       })
       .delete();
+  }
+  async updateStatusesByScheduleId({
+    scheduleId,
+    whereStatus,
+    toStatus,
+  }: UpdateStatusesByScheduleDto) {
+    return this.timeslotRepo.update(
+      {
+        schedule: {
+          id: scheduleId,
+        },
+        status: whereStatus,
+      },
+      {
+        status: toStatus,
+      },
+    );
+  }
+  /** Delete timeslots by array of IDs */
+  async deleteByIds(ids: string[]) {
+    if (!ids.length) return;
+    await this.timeslotRepo
+      .createQueryBuilder()
+      .delete()
+      .whereInIds(ids)
+      .execute();
+  }
+  /** 2. Delete timeslots by schedule ID with status idle/unavailable */
+  async deleteTimeslotsBySchedule(
+    scheduleId: string,
+    serviceIds?: string[],
+  ): Promise<void> {
+    const query = this.timeslotRepo
+      .createQueryBuilder()
+      .delete()
+      .from(Timeslot)
+      .where('scheduleId = :scheduleId', { scheduleId })
+      .andWhere(futureTimeslotCondition())
+      .andWhere(noEmployeeCondition())
+      .andWhere(
+        statusInCondition([TimeSlotStatus.IDLE, TimeSlotStatus.UN_AVAILABLE]),
+      );
+
+    if (serviceIds && serviceIds.length > 0) {
+      query.andWhere('serviceId IN (:...serviceIds)', { serviceIds });
+    }
+
+    await query.execute();
+  }
+
+  async findBySchedule(scheduleId: string) {
+    return this.timeslotRepo
+      .createQueryBuilder('t')
+      .select(['t.id', 't.date', 't.serviceId'])
+      .where('t.scheduleId = :scheduleId', { scheduleId })
+      .andWhere('t.status IN (:...statuses)', {
+        statuses: [TimeSlotStatus.IDLE, TimeSlotStatus.UN_AVAILABLE],
+      })
+      .getRawMany<{ id: string; date: string; serviceId: string }>();
   }
 }

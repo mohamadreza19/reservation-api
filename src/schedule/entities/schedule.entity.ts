@@ -22,15 +22,20 @@ export class Schedule extends SharedColumn {
   @Column({ type: 'enum', enum: Day })
   day: Day;
 
-  @Column({ type: 'time', nullable: true })
-  startTime: string | null;
+  @Column({ type: 'time' })
+  workStart: string;
 
-  @Column({ type: 'time', nullable: true })
-  endTime: string | null;
+  @Column({ type: 'time' })
+  workEnd: string;
 
   // @Column({ type: 'time', nullable: true })
   // interval: string;
 
   @Column({ type: 'boolean', default: false })
   isOpen: boolean;
+
+  @OneToMany(() => Timeslot, (t) => t.schedule, {
+    onDelete: 'CASCADE',
+  })
+  timeslots: Timeslot[];
 }

@@ -1,76 +1,13 @@
-// create-user.dto.ts
-
-import { ApiProperty, PartialType } from '@nestjs/swagger';
-import { Role } from '../../common/enums/role.enum';
-import {
-  IsEnum,
-  IsOptional,
-  IsPhoneNumber,
-  IsString,
-  MinLength,
-} from 'class-validator';
+import { Role } from 'src/common/enums/role.enum';
+import { ProfileDto } from './profile.dto';
 
 export class CreateUserDto {
-  @ApiProperty({
-    description: 'Phone number of the user',
-    example: '+989123456789',
-  })
-  @IsPhoneNumber('IR') // adjust for your region
-  phoneNumber: string;
+  profile: ProfileDto;
 
-  @ApiProperty({
-    description: 'Password for the user (if applicable)',
-    example: 'StrongP@ssw0rd!',
-    required: false,
-  })
-  @IsOptional()
-  @IsString()
-  @MinLength(6)
-  password?: string;
-
-  @ApiProperty({
-    description: 'Role of the user',
-    enum: Role,
-    default: Role.CUSTOMER,
-  })
-  @IsOptional()
-  @IsEnum(Role)
-  role?: Role;
-
-  @ApiProperty({
-    description: 'userName',
-    example: 'userName',
-    required: false,
-  })
-  @IsOptional()
-  @IsString()
-  userName?: string;
-
-  @ApiProperty({
-    description: 'First name of the user',
-    example: 'Ali',
-    required: false,
-  })
-  @IsOptional()
-  @IsString()
-  firstName?: string;
-
-  @ApiProperty({
-    description: 'Last name of the user',
-    example: 'Rezaei',
-    required: false,
-  })
-  @IsOptional()
-  @IsString()
-  lastName?: string;
+  role: Role;
 }
 
-export class UserProfileDto extends PartialType(CreateUserDto) {
-  @ApiProperty()
-  id: string;
-}
-
-export class UpdateUserDto extends PartialType(CreateUserDto) {
-  otpCode?: string;
-  otpExpires?: Date;
+export class AddOtp {
+  otpCode: string;
+  otpExpires: Date;
 }

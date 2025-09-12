@@ -1,59 +1,74 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { EmployeeRegister } from 'src/employee/entities/employee-register.entity';
-import { Repository } from 'typeorm';
-import { CreateNotificationDto } from './dto/create-notification.dto';
-import { UpdateNotificationDto } from './dto/update-notification.dto';
+import { User } from 'src/user/entities/user.entity';
+import { In, Repository } from 'typeorm';
 import { Notification } from './entities/notification.entity';
 import { NotificationGateway } from './notification.gateway';
-import { User } from 'src/user/entities/user.entity';
+import { NotificationStatus } from 'src/common/enums/notification-status.enum';
+import { UpdateNotificationDto } from './dto/notification.dto';
 
 @Injectable()
 export class NotificationService {
   constructor(
     private readonly gateway: NotificationGateway,
-
     @InjectRepository(Notification)
     private readonly notificationRepo: Repository<Notification>,
   ) {}
-  async pushEmployeeRegister(
-    userId: string,
-    employeeRegister: EmployeeRegister,
-  ) {
+  async push(userId: string, payload: string) {
     await this.notificationRepo.insert({
-      user: {
+      userInfo: {
         id: userId,
       },
-      employeeRegister: { id: employeeRegister.id },
+      payload: payload,
     });
 
-    return this.gateway.sendToUser(userId, employeeRegister);
-  }
-  create(createNotificationDto: CreateNotificationDto) {
-    return 'This action adds a new notification';
+    return this.gateway.sendToUser(userId, payload);
   }
 
-  getAllUserNotifications(user: User) {
-    return this.notificationRepo
-      .createQueryBuilder('notification')
-      .leftJoinAndSelect('notification.employeeRegister', 'employeeRegister') // inner join excludes null
-      .where('notification.userId = :userId', { userId: user.id })
-      .orderBy('notification.createdAt', 'DESC')
-      .getMany();
+  async findUserNotifications(user: User) {
+    return await this.notificationRepo.find({
+      where: {
+        userInfo: {
+          id: user.id,
+        },
+      },
+    });
   }
-  findAll() {
-    return `This action returns all notification`;
-  }
+  async updateOneStatus(id: string, user: User) {
+    const noti = await this.notificationRepo.findOne({
+      where: {
+        id,
+        userInfo: {
+          id: user.id,
+        },
+      },
+    });
 
-  findOne(id: number) {
-    return `This action returns a #${id} notification`;
-  }
+    if (!noti) throw NotFoundException;
 
-  update(id: number, updateNotificationDto: UpdateNotificationDto) {
-    return `This action updates a #${id} notification`;
-  }
+    if (noti.status === NotificationStatus.READ) return;
 
-  remove(id: number) {
-    return `This action removes a #${id} notification`;
+    noti.status = NotificationStatus.READ;
+
+    return this.notificationRepo.save(noti);
+  }
+  async updateAllStatuses(dto: UpdateNotificationDto, user: User) {
+    try {
+      const { ids } = dto;
+
+      await this.notificationRepo.update(
+        {
+          id: In(ids),
+          userInfo: {
+            id: user.id,
+          },
+        },
+        { status: NotificationStatus.READ },
+      );
+
+      return { message: 'Statuses updated successfully' };
+    } catch (error) {
+      throw new Error(`Failed to update statuses: ${error.message}`);
+    }
   }
 }

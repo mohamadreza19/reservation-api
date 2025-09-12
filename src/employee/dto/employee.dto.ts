@@ -1,5 +1,12 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsArray, IsPhoneNumber, IsUUID } from 'class-validator';
+import {
+  IsArray,
+  IsEnum,
+  isEnum,
+  IsPhoneNumber,
+  IsUUID,
+} from 'class-validator';
+import { EmployeeRegisterStatus } from 'src/common/enums/employee-register-status.enum';
 
 export class AddServiceDto {
   @IsArray()
@@ -24,4 +31,15 @@ export class HireToBusinessDto {
   @ApiProperty()
   @IsUUID()
   employeeRegisterId: string;
+}
+export class UpdateEmployeeRegisterDto {
+  @ApiProperty()
+  @IsUUID()
+  employeeRegisterId: string;
+
+  @ApiProperty({
+    enum: EmployeeRegisterStatus,
+  })
+  @IsEnum(EmployeeRegisterStatus)
+  status: EmployeeRegisterStatus;
 }

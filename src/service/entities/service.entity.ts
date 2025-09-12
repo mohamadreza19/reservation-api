@@ -69,6 +69,9 @@ export class Service extends SharedColumn {
   // @OneToMany(() => Timeslot, (timeslot) => timeslot.service)
   // timeslots: Timeslot[];
 
-  @ManyToMany(() => Employee, (employees) => employees.services)
-  employees: Employee[];
+  // @ManyToMany(() => Employee, (employees) => employees.services)
+  // employees: Employee[];
+
+  @OneToMany(() => Timeslot, (ts) => ts.service)
+  timeslots: Timeslot[];
 }

@@ -1,16 +1,10 @@
-import {
-  BadRequestException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { isUUID } from 'class-validator';
-import { generate } from 'shortid';
 import { Role } from 'src/common/enums/role.enum';
 import { User } from 'src/user/entities/user.entity';
 import { UserService } from 'src/user/user.service';
 import { Repository } from 'typeorm';
-import { PublicBusinessDto, UpdateBusinessDto } from './dto/business.dto';
+import { UpdateBusinessProfileDto } from './dto/profile.dto';
 import { Business } from './entities/business.entity';
 
 // business.service.ts
@@ -24,22 +18,36 @@ export class BusinessService {
 
   async create(user: User): Promise<Business> {
     const business = this.businessRepo.create({
-      name: generate(),
+      bProfile: {
+        name: user.profile.phoneNumber,
+      },
       userInfo: user,
     });
 
     const result = await this.businessRepo.save(business);
-    this.userService.update(user.id, { role: Role.BUSINESS_ADMIN });
+    this.userService.updateRole(user, Role.BUSINESS_ADMIN);
+
+    await this.userService.save(user);
 
     return result;
   }
 
-  async update(dto: UpdateBusinessDto, user: User) {
+  async updateProfile(
+    user: User,
+    dto: UpdateBusinessProfileDto,
+  ): Promise<Business> {
+    // 1️⃣ Find the business by user
     const business = await this.findByUserId(user.id);
-    if (business) {
-      await this.businessRepo.update(business.id, dto);
-      return this.findOne(business.id);
+    if (!business) {
+      throw new NotFoundException('Business not found');
     }
+    // Merge new values into existing profile
+    business.bProfile = {
+      ...business.bProfile,
+      ...dto,
+    };
+
+    return this.businessRepo.save(business);
   }
 
   async findAll(filter?: { address?: string }): Promise<Business[]> {
@@ -59,11 +67,23 @@ export class BusinessService {
         .getMany()
     );
   }
+  async findPublicProfile(id: string) {
+    const result = await this.businessRepo.findOne({
+      where: {
+        id,
+      },
+    });
 
-  async findOne(id: string) {
+    if (!result) throw NotFoundException;
+    return result.bProfile;
+  }
+  async findOneById(id: string) {
     const result = this.businessRepo.findOne({
       where: { id },
-      relations: ['userInfo'],
+      relations: {
+        bProfile: true,
+        userInfo: true,
+      },
     });
 
     return result;
@@ -95,21 +115,21 @@ export class BusinessService {
       return `${base}?businessId=${business.id}`;
     }
   }
-  async findPublicProfile(id: string): Promise<PublicBusinessDto> {
-    if (!isUUID(id)) throw BadRequestException;
-    const business = await this.businessRepo.findOne({
-      where: { id },
-      select: ['id', 'name', 'address'], // Select only public fields
-    });
+  // async findPublicProfile(id: string): Promise<PublicBusinessDto> {
+  //   if (!isUUID(id)) throw BadRequestException;
+  //   const business = await this.businessRepo.findOne({
+  //     where: { id },
+  //     select: ['id', 'profile'], // Select only public fields
+  //   });
 
-    if (!business) {
-      throw new NotFoundException('Business not found');
-    }
+  //   if (!business) {
+  //     throw new NotFoundException('Business not found');
+  //   }
 
-    return {
-      id: business.id,
-      name: business.name,
-      address: business.address,
-    };
-  }
+  //   return {
+  //     id: business.id,
+  //     name: business.name,
+  //     address: business.address,
+  //   };
+  // }
 }

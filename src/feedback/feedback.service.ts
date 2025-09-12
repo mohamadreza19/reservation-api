@@ -29,12 +29,15 @@ export class FeedbackService {
     return this.feedbackRepo.find({
       select: {
         user: {
-          userName: true,
           role: true,
-          phoneNumber: true,
+          profile: {
+            name: true,
+
+            phoneNumber: true,
+          },
         },
       },
-      relations: ['user'],
+      relations: ['user.profile'],
     });
   }
 
