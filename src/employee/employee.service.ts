@@ -256,6 +256,12 @@ export class EmployeeService {
 
     return this.employeeRepo.find();
   }
+  async findByUser(user: User) {
+    const result = await this.findOneByUserId(user.id);
+
+    if (!result) throw NotFoundException;
+    return result;
+  }
   async findAllByBusinessUser(user: User) {
     const business = await this.business.findByUserId(user.id);
 
