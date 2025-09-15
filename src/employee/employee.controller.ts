@@ -34,7 +34,7 @@ export class EmployeeController {
     return this.employeeService.findAll(user);
   }
   @Get('profile')
-  @ApiOperation({ operationId: 'employeeFindProfile' })
+  @ApiOperation({ operationId: 'findEmployeeProfile' })
   @ApiOkResponse({
     type: FindEmployeeProfile,
   })
