@@ -62,3 +62,8 @@ export class FindRegisterRequestsDto {
   @IsOptional()
   status?: EmployeeRegisterStatus;
 }
+
+export class FindEmployeeProfile {
+  @ApiProperty()
+  id: string;
+}

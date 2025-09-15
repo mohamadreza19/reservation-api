@@ -11,6 +11,7 @@ import {
 import {
   AddServiceDto,
   EmployeeRegisterDto,
+  FindEmployeeProfile,
   FindRegisterRequestsDto,
   HireToBusinessDto,
   UpdateEmployeeRegisterDto,
@@ -21,6 +22,7 @@ import { AuthWithRoles } from 'src/common/decorators/auth.decorator';
 import { AuthUser } from 'src/common/decorators/business.decorators';
 import { Role } from 'src/common/enums/role.enum';
 import { User } from 'src/user/entities/user.entity';
+import { ApiOkResponse, ApiOperation } from '@nestjs/swagger';
 
 @Controller('employee')
 export class EmployeeController {
@@ -32,6 +34,10 @@ export class EmployeeController {
     return this.employeeService.findAll(user);
   }
   @Get('profile')
+  @ApiOperation({ operationId: 'employeeFindProfile' })
+  @ApiOkResponse({
+    type: FindEmployeeProfile,
+  })
   @AuthWithRoles([Role.EMPLOYEE])
   findProfile(@AuthUser() user: User) {
     return this.employeeService.findByUser(user);
