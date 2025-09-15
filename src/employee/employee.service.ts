@@ -13,7 +13,7 @@ import { NotificationService } from 'src/notification/notification.service';
 import { ServiceService } from 'src/service/service.service';
 import { User } from 'src/user/entities/user.entity';
 import { UserService } from 'src/user/user.service';
-import { FindOptionsWhere, Repository } from 'typeorm';
+import { FindOptionsWhere, Not, Repository } from 'typeorm';
 import {
   AddServiceDto,
   EmployeeRegisterDto,
@@ -149,8 +149,17 @@ export class EmployeeService {
     if (!business)
       throw new NotFoundException('Business register request not found');
 
+    await this.employeeRegisterRepo.update(
+      { id: Not(employeeRegister.id) }, // condition: exclude this ID
+      {
+        status: dto.status,
+        isActive: false,
+      },
+    );
+
     await this.employeeRegisterRepo.update(employeeRegister.id, {
       status: dto.status,
+      isActive: true,
     });
     await this.employeeRepo.update(employee.id, {
       business: { id: businessId },
