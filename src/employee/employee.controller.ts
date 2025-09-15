@@ -31,6 +31,11 @@ export class EmployeeController {
   findAll(@AuthUser() user: User) {
     return this.employeeService.findAll(user);
   }
+  @Get('profile')
+  @AuthWithRoles([Role.EMPLOYEE])
+  findProfile(@AuthUser() user: User) {
+    return this.employeeService.findByUser(user);
+  }
 
   @Get('/business')
   @AuthWithRoles([Role.BUSINESS_ADMIN])
