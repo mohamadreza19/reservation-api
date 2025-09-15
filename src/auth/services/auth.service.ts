@@ -162,6 +162,7 @@ export class AuthService {
 
     this.userService.updateRole(user, role);
     this.userService.clearOtp(user);
+
     await this.userService.save(user);
 
     return this.login(user);

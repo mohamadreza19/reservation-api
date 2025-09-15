@@ -1,8 +1,9 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
   IsArray,
   IsEnum,
   isEnum,
+  IsOptional,
   IsPhoneNumber,
   IsUUID,
 } from 'class-validator';
@@ -42,4 +43,22 @@ export class UpdateEmployeeRegisterDto {
   })
   @IsEnum(EmployeeRegisterStatus)
   status: EmployeeRegisterStatus;
+}
+
+export class FindRegisterRequestsDto {
+  @ApiPropertyOptional({
+    description: 'ID of the employee register request',
+    type: String,
+  })
+  @IsUUID()
+  @IsOptional()
+  employeeRegisterId?: string;
+
+  @ApiPropertyOptional({
+    description: 'Status of the register request',
+    enum: EmployeeRegisterStatus,
+  })
+  @IsEnum(EmployeeRegisterStatus)
+  @IsOptional()
+  status?: EmployeeRegisterStatus;
 }

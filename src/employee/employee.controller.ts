@@ -6,10 +6,12 @@ import {
   Param,
   Post,
   Put,
+  Query,
 } from '@nestjs/common';
 import {
   AddServiceDto,
   EmployeeRegisterDto,
+  FindRegisterRequestsDto,
   HireToBusinessDto,
   UpdateEmployeeRegisterDto,
 } from './dto/employee.dto';
@@ -37,8 +39,11 @@ export class EmployeeController {
   }
   @Get('register-request')
   @AuthWithRoles([Role.BUSINESS_ADMIN, Role.EMPLOYEE])
-  findAllRegisterRequests(@AuthUser() user: User) {
-    return this.employeeService.findRegisterRequests(user);
+  findAllRegisterRequests(
+    @Query() query: FindRegisterRequestsDto,
+    @AuthUser() user: User,
+  ) {
+    return this.employeeService.findRegisterRequests(user, query);
   }
 
   @Post('register-request')

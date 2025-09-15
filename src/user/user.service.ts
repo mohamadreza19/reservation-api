@@ -91,6 +91,9 @@ export class UserService {
   save(user: User) {
     return this.userRepository.save(user);
   }
+  update(user: User) {
+    return this.userRepository.update(user.id, user);
+  }
 
   async getProfile(id: string) {
     return this.userRepository.findOne({

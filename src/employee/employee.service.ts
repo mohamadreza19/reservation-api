@@ -13,10 +13,11 @@ import { NotificationService } from 'src/notification/notification.service';
 import { ServiceService } from 'src/service/service.service';
 import { User } from 'src/user/entities/user.entity';
 import { UserService } from 'src/user/user.service';
-import { Repository } from 'typeorm';
+import { FindOptionsWhere, Repository } from 'typeorm';
 import {
   AddServiceDto,
   EmployeeRegisterDto,
+  FindRegisterRequestsDto,
   HireToBusinessDto,
   UpdateEmployeeRegisterDto,
 } from './dto/employee.dto';
@@ -36,6 +37,36 @@ export class EmployeeService {
     private readonly user: UserService,
     private readonly notification: NotificationService,
   ) {}
+  private async buildRegisterRequestWhere(
+    user: User,
+    query: FindRegisterRequestsDto,
+  ): Promise<FindOptionsWhere<EmployeeRegister>> {
+    const where: FindOptionsWhere<EmployeeRegister> = {};
+
+    if (user.role === Role.BUSINESS_ADMIN) {
+      const business = await this.business.findByUserId(user.id);
+      if (!business) throw new NotFoundException('Business not found');
+      where.business = { id: business.id };
+    } else if (user.role === Role.EMPLOYEE) {
+      const employee = await this.findOneByUserId(user.id);
+      if (!employee) throw new NotFoundException('Employee not found');
+      where.employee = { id: employee.id };
+    } else {
+      throw new BadRequestException('Role not supported');
+    }
+
+    // Apply query filters
+    if (query.employeeRegisterId) {
+      where.id = query.employeeRegisterId;
+    }
+    if (query.status) {
+      where.status = query.status as EmployeeRegisterStatus;
+    }
+
+    return where;
+  }
+  //
+
   async assignServices(user: User, addServiceDto: AddServiceDto) {
     const business = await this.business.findByUserId(user.id);
 
@@ -148,36 +179,18 @@ export class EmployeeService {
       },
     });
   }
-  async findRegisterRequests(user: User) {
-    if (user.role === Role.BUSINESS_ADMIN) {
-      const business = await this.business.findByUserId(user.id);
-      if (!business) throw new NotFoundException('Business not found');
+  async findRegisterRequests(user: User, query: FindRegisterRequestsDto) {
+    const where = await this.buildRegisterRequestWhere(user, query);
 
-      return this.employeeRegisterRepo.find({
-        where: {
-          business: {
-            id: business.id,
-          },
-        },
+    const relations =
+      user.role === Role.BUSINESS_ADMIN
+        ? ['employee.userInfo']
+        : ['business.userInfo'];
 
-        relations: ['employee.userInfo'],
-      });
-    }
-
-    if (user.role === Role.EMPLOYEE) {
-      const employee = await this.findOneByUserId(user.id);
-      if (!employee) throw new NotFoundException('Employee not found');
-
-      return this.employeeRegisterRepo.find({
-        where: {
-          employee: {
-            id: employee.id,
-          },
-        },
-
-        relations: ['business.userInfo'],
-      });
-    }
+    return this.employeeRegisterRepo.find({
+      where,
+      relations,
+    });
   }
   async findRegisterByBusinessId(
     businessId: string,
