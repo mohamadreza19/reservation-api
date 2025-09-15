@@ -8,6 +8,7 @@ import {
   IsUUID,
 } from 'class-validator';
 import { EmployeeRegisterStatus } from 'src/common/enums/employee-register-status.enum';
+import { FindUserProfileDto } from 'src/user/dto/user.dto';
 
 export class AddServiceDto {
   @IsArray()
@@ -66,4 +67,8 @@ export class FindRegisterRequestsDto {
 export class FindEmployeeProfile {
   @ApiProperty()
   id: string;
+  @ApiProperty({
+    type: FindUserProfileDto,
+  })
+  userInfo: FindUserProfileDto;
 }

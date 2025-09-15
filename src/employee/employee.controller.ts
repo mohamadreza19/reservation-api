@@ -39,7 +39,7 @@ export class EmployeeController {
     type: FindEmployeeProfile,
   })
   @AuthWithRoles([Role.EMPLOYEE])
-  findProfile(@AuthUser() user: User) {
+  findProfile(@AuthUser() user: User): Promise<FindEmployeeProfile> {
     return this.employeeService.findByUser(user);
   }
 
