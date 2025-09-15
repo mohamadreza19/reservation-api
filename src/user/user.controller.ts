@@ -43,9 +43,7 @@ export class UserController {
   }
   @Get('profile')
   @AuthWithRoles([Role.BUSINESS_ADMIN, Role.CUSTOMER, Role.EMPLOYEE])
-  @ApiOperation({
-    operationId: 'user_profile',
-  })
+  @ApiOperation({ operationId: 'findUserProfile' })
   @ApiOkResponse({
     type: () => UpdateProfileDto,
   })

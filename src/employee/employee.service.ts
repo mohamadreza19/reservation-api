@@ -17,6 +17,7 @@ import { FindOptionsWhere, Repository } from 'typeorm';
 import {
   AddServiceDto,
   EmployeeRegisterDto,
+  FindEmployeeProfile,
   FindRegisterRequestsDto,
   HireToBusinessDto,
   UpdateEmployeeRegisterDto,
@@ -256,7 +257,7 @@ export class EmployeeService {
 
     return this.employeeRepo.find();
   }
-  async findByUser(user: User) {
+  async findByUser(user: User): Promise<FindEmployeeProfile> {
     const result = await this.findOneByUserId(user.id);
 
     if (!result) throw NotFoundException;
@@ -299,6 +300,10 @@ export class EmployeeService {
         userInfo: {
           id: id,
         },
+      },
+      select: { userInfo: true },
+      relations: {
+        userInfo: true,
       },
     });
   }
