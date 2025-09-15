@@ -44,6 +44,8 @@ export class UpdateEmployeeRegisterDto {
   })
   @IsEnum(EmployeeRegisterStatus)
   status: EmployeeRegisterStatus;
+  @ApiProperty()
+  isActive: boolean;
 }
 
 export class FindRegisterRequestsDto {

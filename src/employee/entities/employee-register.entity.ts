@@ -21,6 +21,9 @@ export class EmployeeRegister extends SharedColumn {
   })
   status: EmployeeRegisterStatus;
 
+  @Column({ default: false })
+  isActive: boolean;
+
   @Column({ nullable: true })
   description: string;
 }
