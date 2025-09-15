@@ -11,6 +11,7 @@ import { OtpRequestDto } from './dto/otp-request.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { BaseVerifyOtpDto } from './dto/verify-otp.dto';
 import { Role } from 'src/common/enums/role.enum';
+import { ApiOperation } from '@nestjs/swagger';
 
 @Controller('auth')
 export class AuthController {
@@ -22,11 +23,13 @@ export class AuthController {
   }
 
   @Post('verify-otp/customer')
+  @ApiOperation({ operationId: 'AuthVerifyCustomer' })
   @ApiVerifyOtpResponse()
   async CustomerVerifyOTP(@Body() verifyOtpDto: BaseVerifyOtpDto) {
     return this.authService.verifyOTP({ ...verifyOtpDto, role: Role.CUSTOMER });
   }
   @Post('verify-otp/business')
+  @ApiOperation({ operationId: 'AuthVerifyBusiness' })
   @ApiVerifyOtpResponse()
   async businessVerifyOTP(@Body() verifyOtpDto: BaseVerifyOtpDto) {
     return this.authService.verifyOTP({
@@ -35,6 +38,7 @@ export class AuthController {
     });
   }
   @Post('verify-otp/employee')
+  @ApiOperation({ operationId: 'AuthVerifyEmployee' })
   @ApiVerifyOtpResponse()
   async employeeVerifyOTP(@Body() verifyOtpDto: BaseVerifyOtpDto) {
     return this.authService.verifyOTP({

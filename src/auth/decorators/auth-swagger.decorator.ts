@@ -1,5 +1,5 @@
 import { applyDecorators } from '@nestjs/common';
-import { ApiResponse } from '@nestjs/swagger';
+import { ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { RefreshTokenResponseDto } from '../dto/refresh-token-response.dto';
 import { VerifyOtpResponseDto } from '../dto/verify-otp-response.dto';
 
