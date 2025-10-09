@@ -1,4 +1,13 @@
-import { Body, Controller, Get, Param, Patch, Post, Put } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Put,
+  Req,
+} from '@nestjs/common';
 import {
   ApiOkResponse,
   ApiOperation,
@@ -12,6 +21,7 @@ import { Role } from 'src/common/enums/role.enum';
 import { User } from 'src/user/entities/user.entity';
 import { BusinessService } from './business.service';
 import {
+  BusinessLinkDto,
   BusinessProfileDto,
   CreateBusinessDto,
   PublicBusinessDto,
@@ -37,28 +47,33 @@ export class BusinessController {
   update(@Body() dto: UpdateBusinessDto, @AuthUser() user: User) {
     // return this.service.update(dto, user);
   }
-  @AuthWithRoles([Role.BUSINESS_ADMIN])
   @Get('profile')
+  @AuthWithRoles([Role.BUSINESS_ADMIN])
   @ApiOperation({ operationId: 'business_getProfile' })
   @ApiOkResponse({
     type: BusinessProfileDto,
   })
-  getProfile(@AuthUser() user: User) {
+  getProfile(@Req() req: any, @AuthUser() user: User) {
+    console.count('cash');
     return this.service.findByUserId(user.id);
   }
   @Get()
   getAll() {
     return this.service.findAll();
   }
+  @Get('my-link')
+  @ApiOkResponse({
+    type: BusinessLinkDto,
+  })
   @AuthWithRoles([Role.BUSINESS_ADMIN])
   @ApiOperation({ operationId: 'business_getMyLink' })
-  @Get('my-link')
   getMyLink(@AuthUser() user: User) {
     return this.service.getBusinessLink(user);
   }
 
   @Put('profile')
   @AuthWithRoles([Role.BUSINESS_ADMIN])
+  @ApiOperation({ operationId: 'business_PutProfile' })
   updateProfile(
     @AuthUser() user: User,
     @Body() body: UpdateBusinessProfileDto,

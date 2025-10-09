@@ -19,4 +19,7 @@ export class VerifyOtpResponseDto {
 
   @ApiProperty()
   isNew: boolean;
+
+  @ApiProperty()
+  expiredAt: string;
 }

@@ -25,7 +25,7 @@ import { AuthCustomerService } from './services/auth-customer.service';
       useFactory: async (configService: ConfigService) => ({
         secret: configService.get<string>('JWT_SECRET', 'fallback-secret-key'),
         signOptions: {
-          expiresIn: '24h', // Access token expires in 15 minutes
+          // expiresIn: '24h', // Access token expires in 15 minutes
         },
       }),
       inject: [ConfigService],

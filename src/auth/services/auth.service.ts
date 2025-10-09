@@ -26,6 +26,8 @@ import { AuthEmployeeService } from './auth-employee.service';
 import { AuthCustomerService } from './auth-customer.service';
 import { AuthBusinessService } from './auth-business.service';
 
+import * as moment from 'moment';
+
 @Injectable()
 export class AuthService {
   constructor(
@@ -37,50 +39,73 @@ export class AuthService {
     private readonly authBusiness: AuthBusinessService,
   ) {}
 
+  private generateTokenWithExpiry(
+    payload: Payload,
+    expiresIn: string, // e.g., '15m', '7d', '24h'
+  ): { token: string; expiredAt: string } {
+    const token = this.jwtService.sign(payload, { expiresIn });
+
+    // Calculate expiration using moment
+    const now = moment();
+    let expiredAt: string;
+
+    if (expiresIn.endsWith('m')) {
+      const mins = parseInt(expiresIn.replace('m', ''), 10);
+      expiredAt = now.add(mins, 'minutes').toISOString();
+    } else if (expiresIn.endsWith('h')) {
+      const hours = parseInt(expiresIn.replace('h', ''), 10);
+      expiredAt = now.add(hours, 'hours').toISOString();
+    } else if (expiresIn.endsWith('d')) {
+      const days = parseInt(expiresIn.replace('d', ''), 10);
+      expiredAt = now.add(days, 'days').toISOString();
+    } else {
+      throw new Error('Invalid expiresIn format');
+    }
+
+    return { token, expiredAt };
+  }
+
   async login(user: User): Promise<VerifyOtpResponseDto> {
     const payload: Payload = {
       userId: user.id,
     };
 
-    const accessToken = this.jwtService.sign(payload);
-
-    const refreshToken = this.jwtService.sign(payload, { expiresIn: '7d' });
+    const { token: access_token, expiredAt } = this.generateTokenWithExpiry(
+      payload,
+      '15m',
+    );
+    const { token: refresh_token } = this.generateTokenWithExpiry(
+      payload,
+      '7d',
+    );
 
     return {
-      access_token: accessToken,
-      refresh_token: refreshToken,
+      access_token,
+      refresh_token,
+      expiredAt, // access token expiry
       isNew: user.isNew,
     };
   }
 
-  async refreshToken(
-    refreshToken: string,
-  ): Promise<{ access_token: string; refresh_token: string }> {
-    // Verify refresh token
+  async refreshToken(refreshToken: string) {
     const payload = this.jwtService.verify(refreshToken);
-
-    // Find user
     const user = await this.userService.findOne({ id: payload.userId });
 
-    if (!user) {
-      throw new UnauthorizedException('Invalid refresh token');
-    }
+    if (!user) throw new UnauthorizedException('Invalid refresh token');
 
-    // Generate new access token (15 minutes)
-    const newPayload: Payload = {
-      userId: user.id,
-    };
-
-    const accessToken = this.jwtService.sign(newPayload);
-
-    // Generate new refresh token (7 days)
-    const newRefreshToken = this.jwtService.sign(newPayload, {
-      expiresIn: '7d',
-    });
+    const { token: access_token, expiredAt } = this.generateTokenWithExpiry(
+      { userId: user.id },
+      '15m',
+    );
+    const { token: refresh_token } = this.generateTokenWithExpiry(
+      { userId: user.id },
+      '7d',
+    );
 
     return {
-      access_token: accessToken,
-      refresh_token: newRefreshToken,
+      access_token,
+      refresh_token,
+      expiredAt,
     };
   }
 
@@ -109,13 +134,14 @@ export class AuthService {
       otpCode: otp,
       otpExpires: expires,
     });
-    console.log(user);
+
     const result = await this.userService.save(user);
-    console.log(result);
-    await this.otp.sendOtp({
-      otp: otp,
-      phoneNumber: user.profile.phoneNumber,
-    });
+
+    // temp
+    // await this.otp.sendOtp({
+    //   otp: otp,
+    //   phoneNumber: user.profile.phoneNumber,
+    // });
 
     return {
       isNew,

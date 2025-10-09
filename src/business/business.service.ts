@@ -6,6 +6,7 @@ import { UserService } from 'src/user/user.service';
 import { Repository } from 'typeorm';
 import { UpdateBusinessProfileDto } from './dto/profile.dto';
 import { Business } from './entities/business.entity';
+import { BusinessLinkDto } from './dto/business.dto';
 
 // business.service.ts
 @Injectable()
@@ -108,12 +109,14 @@ export class BusinessService {
 
     return business;
   }
-  async getBusinessLink(user: User) {
+  async getBusinessLink(user: User): Promise<BusinessLinkDto> {
     const business = await this.findByUserId(user.id);
     const base = process.env.CUSTOMER_URL;
-    if (business) {
-      return `${base}?businessId=${business.id}`;
-    }
+
+    if (!business) throw NotFoundException;
+    return {
+      url: `${base}?businessId=${business.id}`,
+    };
   }
   // async findPublicProfile(id: string): Promise<PublicBusinessDto> {
   //   if (!isUUID(id)) throw BadRequestException;
