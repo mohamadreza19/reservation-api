@@ -10,6 +10,7 @@ import { NotificationController } from './notification.controller';
   imports: [
     TypeOrmModule.forFeature([Notification]),
     forwardRef(() => AuthModule),
+    // AuthModule,
   ],
   providers: [NotificationGateway, NotificationService],
   exports: [NotificationService],

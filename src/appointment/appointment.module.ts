@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { AppointmentService } from './appointment.service';
 import { AppointmentController } from './appointment.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -8,16 +8,18 @@ import { CustomerModule } from 'src/customer/customer.module';
 import { ServiceModule } from 'src/service/service.module';
 import { TimeslotModule } from 'src/time-slot/time-slot.module';
 import { ReminderModule } from 'src/reminder/reminder.module';
+import { NotificationModule } from 'src/notification/notification.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Appointment]),
-
     BusinessModule,
     CustomerModule,
     ServiceModule,
     TimeslotModule,
     ReminderModule,
+    forwardRef(() => NotificationModule),
+    // NotificationModule,
   ],
   controllers: [AppointmentController],
   providers: [AppointmentService],
