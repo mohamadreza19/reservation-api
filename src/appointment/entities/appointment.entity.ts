@@ -33,12 +33,6 @@ export class Appointment extends SharedColumn {
   @ApiProperty({
     type: () => ServiceDto,
   })
-  @ManyToOne(() => Service, (service) => service.appointment, {
-    onDelete: 'CASCADE',
-    // cascade: true,
-  })
-  service: Service;
-
   @ApiProperty({
     type: () => TimeslotByDateDto,
   })

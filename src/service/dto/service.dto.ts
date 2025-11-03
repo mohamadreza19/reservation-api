@@ -15,7 +15,7 @@ import { ToBoolean } from 'src/common/decorators/to-boolean';
 import { CreatePriceDto } from 'src/price/dto/price-dto';
 import { Price } from 'src/price/entities/price.entity';
 import { User } from 'src/user/entities/user.entity';
-import { Plan } from '../entities/plan.entity';
+// import { Plan } from '../entities/plan.entity';
 
 export class CreateServiceDto {
   @ApiProperty({
@@ -80,10 +80,6 @@ export class CreateServiceDto {
 
   @IsOptional()
   icon: string;
-
-  @ApiPropertyOptional({ type: Plan })
-  @IsOptional()
-  plan: Plan;
 }
 export class UpdateServiceDto extends PartialType(CreateServiceDto) {}
 export class FindServicesDto {
@@ -140,9 +136,6 @@ export class ServiceDto {
   @ApiPropertyOptional({ type: () => [ServiceDto] })
   @Type(() => ServiceDto)
   children?: ServiceDto[];
-
-  @ApiPropertyOptional({ type: Plan })
-  plan?: Plan;
 }
 export class PaginatedServiceDto {
   @ApiProperty({ type: [ServiceDto] })

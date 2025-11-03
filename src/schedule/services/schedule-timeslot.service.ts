@@ -41,12 +41,12 @@ export class ScheduleTimeslotService {
       for (const { date } of dates) {
         const dateMoment = moment(date, 'YYYY-MM-DD');
 
-        await this.timeslotService.generateTimeslotsFromSchedule({
-          businessId: business.id,
-          date: dateMoment,
-          schedule: schedule,
-          services: services,
-        });
+        // await this.timeslotService.generateTimeslotsFromSchedule({
+        //   businessId: business.id,
+        //   date: dateMoment,
+        //   schedule: schedule,
+        //   services: services,
+        // });
       }
     }
   }

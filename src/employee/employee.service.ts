@@ -74,11 +74,10 @@ export class EmployeeService {
     if (!business) {
       throw new NotFoundException('Business not found');
     }
-    const services = await this.service.findByBusinessId(
-      business.id,
-      addServiceDto.serviceIds,
-    );
-    console.log(services);
+    // const services = await this.service.findByBusinessId(
+    //   business.id,
+    //   addServiceDto.serviceIds,
+    // );
   }
 
   async createRegisterRequest(dto: EmployeeRegisterDto, user: User) {

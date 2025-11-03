@@ -59,18 +59,18 @@ export class AppointmentService {
       throw new NotFoundException(`Customer not found`);
     }
 
-    service = await this.serviceService.findOne(createAppointmentDto.serviceId);
-    if (!service) {
-      throw new NotFoundException(
-        `Service with ID ${createAppointmentDto.serviceId} not found`,
-      );
-    }
+    // service = await this.serviceService.findOne(createAppointmentDto.serviceId);
+    // if (!service) {
+    //   throw new NotFoundException(
+    //     `Service with ID ${createAppointmentDto.serviceId} not found`,
+    //   );
+    // }
 
-    business = await this.businessService.findOneById(
-      service.business?.id as any,
-    );
+    // business = await this.businessService.findOneById(
+    //   service.business?.id as any,
+    // );
 
-    if (!business) throw BadRequestException;
+    // if (!business) throw BadRequestException;
 
     timeslot = await this.timeslotService.findOneById(
       createAppointmentDto.timeslotId,
@@ -85,25 +85,22 @@ export class AppointmentService {
       throw new BadRequestException('Selected timeslot is not available');
     }
 
-    appointmentInstance = this.appointmentRepo.create({
-      customer,
-      service,
-      timeslot,
-      business,
-    });
+    // appointmentInstance = this.appointmentRepo.create({
+    //   customer,
+    //   service,
+    //   timeslot,
+    //   business,
+    // });
     return await this.dataSource.transaction(async (manager) => {
       // Step 1: Save the appointment
-
-      const appointment = manager.create(Appointment, appointmentInstance);
-      await manager.save(appointment);
-
+      // const appointment = manager.create(Appointment, appointmentInstance);
+      // await manager.save(appointment);
       // Step 2: Set timeslot availability to false
-      if (appointment.timeslot) {
-        await manager.update(Timeslot, appointment.timeslot.id, {
-          status: TimeSlotStatus.BOOKED,
-        });
-      }
-
+      // if (appointment.timeslot) {
+      //   await manager.update(Timeslot, appointment.timeslot.id, {
+      //     status: TimeSlotStatus.BOOKED,
+      //   });
+      // }
       // Step 3: Schedule reminders
       // const { date, startTime } = timeslot;
       // const appointmentDateTime = TimeUtil.createAppointmentDateTime(
@@ -119,22 +116,16 @@ export class AppointmentService {
       //     await this.reminder.scheduleReminder(user.id, appointment.id, delay);
       //   }
       // }
-
-      console.log('business', business);
-      console.log('customer', customer);
       // this.notification.push()
-
-      const userIds = [business.userInfo.id, customer.userInfo.id];
-
-      for (const id of userIds) {
-        this.notification.push(
-          id,
-          NotificationEvent.APPOINTMENT_PUSH,
-          appointment,
-        );
-      }
-
-      return appointment;
+      // const userIds = [business.userInfo.id, customer.userInfo.id];
+      // for (const id of userIds) {
+      //   this.notification.push(
+      //     id,
+      //     NotificationEvent.APPOINTMENT_PUSH,
+      //     appointment,
+      //   );
+      // }
+      // return appointment;
     });
   }
   async trigger() {

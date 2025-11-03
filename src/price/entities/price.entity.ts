@@ -24,9 +24,9 @@ export class Price {
   @Column()
   amount: string;
 
-  @OneToOne(() => Service, (service) => service.price, {
-    onDelete: 'CASCADE',
-  })
+  // @OneToOne(() => Service, (service) => service.price, {
+  //   onDelete: 'CASCADE',
+  // })
   @JoinColumn({ name: 'serviceId' })
   service: Service;
 }
