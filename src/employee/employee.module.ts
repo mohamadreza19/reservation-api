@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { EmployeeService } from './employee.service';
 import { EmployeeController } from './employee.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -15,7 +15,8 @@ import { NotificationModule } from 'src/notification/notification.module';
     UserModule,
     ServiceModule,
     BusinessModule,
-    NotificationModule,
+    forwardRef(() => NotificationModule),
+    // NotificationModule,
   ],
   controllers: [EmployeeController],
   providers: [EmployeeService],

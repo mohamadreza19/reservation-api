@@ -28,6 +28,8 @@ import { TimeSlotStatus } from 'src/common/enums/time-slot-status.enum';
 import { ReminderService } from 'src/reminder/reminder.service';
 import { REMINDER_MINUTES_BEFORE } from '../common/constants/reminder.config';
 import { TimeUtil } from '../common/utils/time.util';
+import { NotificationService } from 'src/notification/notification.service';
+import { NotificationEvent } from 'src/common/enums/notification-event.enum';
 
 @Injectable()
 export class AppointmentService {
@@ -39,6 +41,7 @@ export class AppointmentService {
     private readonly serviceService: ServiceService,
     private readonly businessService: BusinessService,
     private readonly reminder: ReminderService,
+    private readonly notification: NotificationService,
     @InjectDataSource() private readonly dataSource: DataSource,
   ) {}
 
@@ -116,6 +119,20 @@ export class AppointmentService {
       //     await this.reminder.scheduleReminder(user.id, appointment.id, delay);
       //   }
       // }
+
+      console.log('business', business);
+      console.log('customer', customer);
+      // this.notification.push()
+
+      const userIds = [business.userInfo.id, customer.userInfo.id];
+
+      for (const id of userIds) {
+        this.notification.push(
+          id,
+          NotificationEvent.APPOINTMENT_PUSH,
+          appointment,
+        );
+      }
 
       return appointment;
     });

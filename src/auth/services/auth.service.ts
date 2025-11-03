@@ -95,7 +95,7 @@ export class AuthService {
 
     const { token: access_token, expiredAt } = this.generateTokenWithExpiry(
       { userId: user.id },
-      '15m',
+      '10h',
     );
     const { token: refresh_token } = this.generateTokenWithExpiry(
       { userId: user.id },

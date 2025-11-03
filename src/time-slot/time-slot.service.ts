@@ -326,12 +326,15 @@ export class TimeslotService {
       },
       select: {
         id: true,
-        date: true,
+        // date: true,
+        tStart: true,
+        tEnd: true,
         // startTime: true,
         // endTime: true,
       },
       order: {
-        // startTime: 'ASC',
+        tStart: 'ASC',
+        tEnd: 'ASC',
       },
     });
   }

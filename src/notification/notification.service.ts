@@ -1,74 +1,92 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { User } from 'src/user/entities/user.entity';
-import { In, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Notification } from './entities/notification.entity';
-import { NotificationGateway } from './notification.gateway';
+
 import { NotificationStatus } from 'src/common/enums/notification-status.enum';
-import { UpdateNotificationDto } from './dto/notification.dto';
+import { NotificationEvent } from 'src/common/enums/notification-event.enum';
+import { NotificationFilterDto } from './dto/notification-filter.dto';
+import { UserService } from 'src/user/user.service';
 
 @Injectable()
 export class NotificationService {
   constructor(
-    private readonly gateway: NotificationGateway,
     @InjectRepository(Notification)
     private readonly notificationRepo: Repository<Notification>,
+    private readonly eventEmitter: EventEmitter2,
+    private readonly user: UserService,
   ) {}
-  async push(userId: string, payload: string) {
-    await this.notificationRepo.insert({
-      userInfo: {
-        id: userId,
-      },
-      payload: payload,
+
+  // Push a new notification
+  async push(userId: string, type: NotificationEvent, payload: any) {
+    const notification = await this.notificationRepo.save({
+      userInfo: { id: userId },
+      payload: JSON.stringify(payload),
+      isRead: false,
+      type: type,
     });
 
-    return this.gateway.sendToUser(userId, payload);
+    this.eventEmitter.emit(NotificationStatus.UN_READ, {
+      userId,
+      notification,
+    });
+
+    return notification;
   }
 
-  async findUserNotifications(user: User) {
-    return await this.notificationRepo.find({
-      where: {
-        userInfo: {
-          id: user.id,
-        },
-      },
+  // Fetch unread notifications
+  async findUnreadByUserId(userId: string) {
+    return this.notificationRepo.find({
+      where: { userInfo: { id: userId }, isRead: false },
+      order: { createdAt: 'DESC' },
     });
   }
-  async updateOneStatus(id: string, user: User) {
+
+  // Mark a notification as read
+  async markAsRead(id: string, userId: string) {
     const noti = await this.notificationRepo.findOne({
+      where: { id, userInfo: { id: userId } },
+    });
+    if (!noti) throw new NotFoundException();
+
+    noti.isRead = true;
+    await this.notificationRepo.save(noti);
+
+    // this.eventEmitter.emit(NotificationStatus.READ, {
+    //   userId,
+    //   notification: noti,
+    // });
+    return noti;
+  }
+
+  async findUserNotifications(
+    userId: string,
+    // { isRead }: NotificationFilterDto,
+  ) {
+    return this.notificationRepo.find({
       where: {
-        id,
         userInfo: {
-          id: user.id,
+          id: userId,
         },
+        // isRead: isRead,
+      },
+      order: {
+        createdAt: 'DESC',
       },
     });
-
-    if (!noti) throw NotFoundException;
-
-    if (noti.status === NotificationStatus.READ) return;
-
-    noti.status = NotificationStatus.READ;
-
-    return this.notificationRepo.save(noti);
   }
-  async updateAllStatuses(dto: UpdateNotificationDto, user: User) {
-    try {
-      const { ids } = dto;
-
-      await this.notificationRepo.update(
-        {
-          id: In(ids),
-          userInfo: {
-            id: user.id,
-          },
+  async markAllAsRead(userId: string) {
+    return await this.notificationRepo.update(
+      {
+        userInfo: {
+          id: userId,
         },
-        { status: NotificationStatus.READ },
-      );
-
-      return { message: 'Statuses updated successfully' };
-    } catch (error) {
-      throw new Error(`Failed to update statuses: ${error.message}`);
-    }
+        isRead: false,
+      },
+      {
+        isRead: true,
+      },
+    );
   }
 }
