@@ -1,6 +1,5 @@
 // business.entity.ts
 import {
-  Column,
   Entity,
   JoinColumn,
   OneToMany,
@@ -9,13 +8,14 @@ import {
 } from 'typeorm';
 
 import { Appointment } from 'src/appointment/entities/appointment.entity';
+import { BusinessService } from 'src/business-service/entities/business-service.entity';
 import { SharedColumn } from 'src/common/models/shared-columns';
+import { EmployeeRegister } from 'src/employee/entities/employee-register.entity';
+import { Employee } from 'src/employee/entities/employee.entity';
 import { Timeslot } from 'src/time-slot/entities/time-slot.entity';
 import { User } from 'src/user/entities/user.entity';
-import { Service } from '../../service/entities/service.entity';
-import { Employee } from 'src/employee/entities/employee.entity';
-import { EmployeeRegister } from 'src/employee/entities/employee-register.entity';
 import { BProfile } from './b-profile.entity';
+import { BusinessServicePrice } from 'src/business-service/entities/business-service-price.entity';
 
 @Entity()
 export class Business extends SharedColumn {
@@ -33,9 +33,6 @@ export class Business extends SharedColumn {
   @OneToMany(() => Timeslot, (timeslot) => timeslot.business)
   timeslots: Timeslot[];
 
-  @OneToMany(() => Service, (service) => service.business)
-  services: Service[];
-
   @OneToMany(() => Appointment, (appo) => appo.business)
   appointments: Appointment[];
 
@@ -47,4 +44,13 @@ export class Business extends SharedColumn {
     (employeeRegister) => employeeRegister.business,
   )
   employeeRegisters: EmployeeRegister[];
+
+  @OneToMany(() => BusinessService, (bs: BusinessService) => bs.business)
+  businessServices: BusinessService[];
+
+  @OneToMany(
+    () => BusinessServicePrice,
+    (bsPrice: BusinessServicePrice) => bsPrice.business,
+  )
+  businessServicesPrices: BusinessServicePrice[];
 }

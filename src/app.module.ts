@@ -22,6 +22,7 @@ import { SwaggerModule } from './swagger/swagger.module';
 import { TimeslotModule } from './time-slot/time-slot.module';
 import { NotificationModule } from './notification/notification.module';
 import { RoleModule } from './role/role.module';
+import { BusinessServiceModule } from './business-service/business-service.module';
 
 @Module({
   imports: [
@@ -53,6 +54,8 @@ import { RoleModule } from './role/role.module';
     NotificationModule,
 
     RoleModule,
+
+    BusinessServiceModule,
 
     // RedisModule,
   ],

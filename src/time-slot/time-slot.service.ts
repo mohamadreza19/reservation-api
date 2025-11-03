@@ -67,7 +67,7 @@ export class TimeslotService {
         'Business must have schedules for all 7 days',
       );
     }
-    const services = await this.service.findByBusinessId(business.id);
+    // const services = await this.service.findByBusinessId(business.id);
     const today = moment(); // Get current date dynamically (e.g., 2025-05-25 23:49 CEST)
 
     // Create Map with lowercase day names as keys
@@ -85,12 +85,12 @@ export class TimeslotService {
       if (!schedule) {
         continue; // Should not happen due to 7-day validation
       }
-      await this.generateTimeslotsFromSchedule({
-        businessId: business.id,
-        schedule,
-        date,
-        services,
-      });
+      // await this.generateTimeslotsFromSchedule({
+      //   businessId: business.id,
+      //   schedule,
+      //   date,
+      //   services,
+      // });
     }
 
     return 'time slots created successfully';
@@ -120,31 +120,27 @@ export class TimeslotService {
 
       while (start < end) {
         // console.log('index', i);
-
-        const slotEnd = start.clone().add(service.durationInMinutes, 'minutes');
-        if (slotEnd > end) break;
-
-        const instance = this.timeslotRepo.create({
-          schedule: {
-            id: schedule.id,
-          },
-          service: {
-            id: service.id,
-          },
-          business: {
-            id: businessId,
-          },
-          date: date.format('YYYY-MM-DD'), // e.g., '2025-05-24'
-          tStart: start.format('HH:mm'), // e.g., '09:00'
-          tEnd: slotEnd.format('HH:mm'), // e.g., '09:30'
-          status: schedule.isOpen
-            ? TimeSlotStatus.IDLE
-            : TimeSlotStatus.UN_AVAILABLE,
-        });
-
-        timeslots.push(instance);
-
-        start.add(service.durationInMinutes, 'minutes');
+        // const slotEnd = start.clone().add(service.durationInMinutes, 'minutes');
+        // if (slotEnd > end) break;
+        // const instance = this.timeslotRepo.create({
+        //   schedule: {
+        //     id: schedule.id,
+        //   },
+        //   service: {
+        //     id: service.id,
+        //   },
+        //   business: {
+        //     id: businessId,
+        //   },
+        //   date: date.format('YYYY-MM-DD'), // e.g., '2025-05-24'
+        //   tStart: start.format('HH:mm'), // e.g., '09:00'
+        //   tEnd: slotEnd.format('HH:mm'), // e.g., '09:30'
+        //   status: schedule.isOpen
+        //     ? TimeSlotStatus.IDLE
+        //     : TimeSlotStatus.UN_AVAILABLE,
+        // });
+        // timeslots.push(instance);
+        // start.add(service.durationInMinutes, 'minutes');
       }
     }
 
@@ -165,9 +161,9 @@ export class TimeslotService {
       .getRawMany();
 
     const ids = results.map((r) => r.serviceId);
-    const services = await this.service.findAllByIds(ids);
+    // const services = await this.service.findAllByIds(ids);
 
-    return services;
+    // return services;
   }
 
   async findSchedulesByService(serviceId: string): Promise<Schedule[]> {

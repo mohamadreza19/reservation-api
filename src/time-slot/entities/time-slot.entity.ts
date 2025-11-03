@@ -29,8 +29,8 @@ export class Timeslot {
   @Column()
   date: string; // // yyyy-mm-dd
 
-  @ManyToOne(() => Service, (ser) => ser.timeslots)
-  service: Service;
+  // @ManyToOne(() => Service, (ser) => ser.timeslots)
+  // service: Service;
 
   @Column()
   tStart: string; // example '00:01:00'

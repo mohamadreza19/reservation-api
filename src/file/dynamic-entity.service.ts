@@ -26,22 +26,22 @@ export class DynamicEntityService {
   >;
 
   constructor(private readonly serService: ServiceService) {
-    this.allowedEntities = {
-      // user: { repo: this.userRepo, fileField: 'avatarPath' },
-      // business: { repo: this.businessRepo, fileField: 'logoPath' },
-      business: {
-        repo: undefined as any,
-        fileField: 'logoPath',
-        storageProfile:
-          defaultFileServiceConfig.profiles[StorageProfile.BUSINESS_ASSETS],
-      },
-      service: {
-        repo: this.serService,
-        fileField: 'icon',
-        storageProfile:
-          defaultFileServiceConfig.profiles[StorageProfile.SERVICE_ICONS],
-      },
-    };
+    // this.allowedEntities = {
+    //   // user: { repo: this.userRepo, fileField: 'avatarPath' },
+    //   // business: { repo: this.businessRepo, fileField: 'logoPath' },
+    //   business: {
+    //     repo: undefined as any,
+    //     fileField: 'logoPath',
+    //     storageProfile:
+    //       defaultFileServiceConfig.profiles[StorageProfile.BUSINESS_ASSETS],
+    //   },
+    //   // service: {
+    //   //   repo: this.serService,
+    //   //   fileField: 'icon',
+    //   //   storageProfile:
+    //   //     defaultFileServiceConfig.profiles[StorageProfile.SERVICE_ICONS],
+    //   // },
+    // };
   }
 
   getAllowedEntities(): string[] {
