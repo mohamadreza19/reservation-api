@@ -1,4 +1,4 @@
-import { NotificationStatus } from 'src/common/enums/notification-status.enum';
+import { NotificationEvent } from 'src/common/enums/notification-event.enum';
 import { SharedColumn } from 'src/common/models/shared-columns';
 import { User } from 'src/user/entities/user.entity';
 import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
@@ -14,6 +14,14 @@ export class Notification extends SharedColumn {
   @Column({ nullable: true })
   payload: string;
 
-  @Column({ default: NotificationStatus.UN_READ, enum: NotificationStatus })
-  status: NotificationStatus;
+  @Column({
+    enum: NotificationEvent,
+    default: NotificationEvent.APPOINTMENT_PUSH,
+  })
+  type: NotificationEvent;
+
+  @Column({
+    default: false,
+  })
+  isRead: boolean;
 }

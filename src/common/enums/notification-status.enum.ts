@@ -1,4 +1,4 @@
 export enum NotificationStatus {
-  UN_READ = 0,
-  READ = 1,
+  UN_READ = 'notification.new',
+  MARK_AS_READ = 'notification.markAsRead',
 }
